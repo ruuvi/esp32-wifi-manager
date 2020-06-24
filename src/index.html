@@ -1,138 +1,723 @@
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<script src="/jquery.js"></script>
-		<link rel="stylesheet" href="/style.css">
-		<script src="/code.js"></script>
-		<title>esp32-wifi-manager</title>
-	</head>
-	<body>
-		<div id="app">
-			<div id="app-wrap">
-				<div id="wifi">
-					<a href="ruuvi.html"><h1>Ruuvi configuration</h1></a>
-					<header>
-						<h1>Wi-Fi</h1>
-					</header>
-					<div id="wifi-status">
-						<h2>Connected to:</h2>
-						<section id="connected-to">
-							<div class="ape"><div class="w0"><div class="pw"><span></span></div></div></div>
-						</section>
-					</div>
-					<h2>Manual connect</h2>
-					<section id="manual_add">
-					<div class="ape">ADD (HIDDEN) SSID<div>
-					</section>
-					<h2>or choose a network...</h2>
-					<section id="wifi-list">
-					</section>
-					<div id="pwrdby"><em>Powered by </em><a id="acredits" href="#"><strong>esp32-wifi-manager</strong></a>.</div>
-				</div>
-				<div id="connect_manual">
-					<header>
-						<h1>Enter Details</h1>
-					</header>
-					<h2>Manual Connection</span></h2>
-					<section>
-						<input id="manual_ssid" type="text" placeholder="SSID" value="">
-						<input id="manual_pwd" type="password" placeholder="Password" value="">
-					</section>
-					<div class="buttons">
-							<input id="manual_join" type="button" value="Join" data-connect="manual" />
-							<input id="manual_cancel" type="button" value="Cancel"/>
-					</div>
-				</div>
-				<div id="connect">
-					<header>
-						<h1>Enter Password</h1>
-					</header>
-					<h2>Password for <span id="ssid-pwd"></span></h2>
-					<section>
-						<input id="pwd" type="password" placeholder="Password" value="">
-					</section>
-					<div class="buttons">
-							<input id="join" type="button" value="Join" />
-							<input id="cancel" type="button" value="Cancel"/>
-					</div>
-				</div>
-				<div id="connect-wait">
-					<header>
-						<h1>Please wait...</h1>
-					</header>
-					<h2>Connecting to <span id="ssid-wait"></span></h2>
-					<section>
-						<div id="loading">
-							<div class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div>
-							<p class="tctr">You may lose wifi access while the esp32 recalibrates its radio. Please wait until your device automatically reconnects. This can take up to 30s.</p>
-						</div>
-						<div id="connect-success">
-							<h3 class="gr">Success!</h3>
-						</div>
-						<div id="connect-fail">
-							<h3 class="rd">Connection failed</h3>
-							<p class="tctr">Please double-check wifi password if any and make sure the access point has good signal.</p>
-						</div>
-					</section>
-					<div class="buttons">
-						<input id="ok-connect" type="button" value="OK" class="ctr" />
-					</div>
-				</div>
-				<div id="connect-details">
-					<div id="connect-details-wrap">
-						<header>
-							<h1></h1>
-						</header>
-						<h2></h2>
-						<section>
-							<div class="buttons">
-								<input id="disconnect" type="button" value="Disconnect" class="ctr"/>
-							</div>
-						</section>
-						<h2>IP Address</h2>
-						<section>
-							<div class="ape brdb">IP Address:<div id="ip" class="fr"></div></div>
-							<div class="ape brdb">Subnet Mask:<div id="netmask" class="fr"></div></div>
-							<div class="ape">Default Gateway:<div id="gw" class="fr"></div></div>
-						</section>
-						<div class="buttons">
-							<input id="ok-details" type="button" value="OK" class="ctr" />
-						</div>
-					</div>
-					<div id="diag-disconnect" class="diag-box">
-						<div class="diag-box-win">
-							<p>Are you sure you would like to disconnect from this wifi?</p>
-							<div class="buttons">
-								<input id="no-disconnect" type="button" value="No" />
-								<input id="yes-disconnect" type="button" value="Yes" />
-							</div>
-						</div>
-					</div>
-				</div>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <script src="jquery.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ruuvi.css">
+    <link rel="stylesheet" href="assets/css/effects.css">
+    <script src="assets/js/interactions.js"></script>
+    <script src="code.js"></script>
+    <script src="ruuvi.js"></script>
+    
+    <title>Ruuvi Gateway Configuration</title>
+</head>
+
+<body>
+
+
+
+
+<div id="app">
+<div id="app-wrap">
+
+    <header class="top-header">
+    	<div class="logo-wrap">
+    		<img src="assets/images/ruuvi_logo_nega.svg" alt="Ruuvi" class="logo"><span class="tag">GATEWAY</span>
+    	</div>
+    </header>
+            
+
+
+
+	<!-- WELCOME INTO -->
+   <section id="welcome" class="section page-content">
+		<div class="container">
+
+   	
+			<h1>
+				<span lang="en">Ruuvi Gateway configuration wizard</span>
+				<span lang="fi">Ruuvi Gatewayn asennusvelho</span>
+			</h1>
+
+			<div class="" style="padding:50px;color:#999;border:1px dashed #ccc;margin:30px 0 0">An informative and cool looking animation</div>
+			
+
+
+			<div class="ingress ingress-welcome">
+				<p lang="en">Setting up your Ruuvi Gateway is easy. You just need to follow a few simple steps and you are ready to go!</p>
+				<p lang="en">Please note that your internet connection may be turned off for the duration of the wizard.</p>
+				<p lang="en">In-depth documentation is available at <strong>ruuvi.com/manuals</strong>.</p>
+				
+				<p lang="fi">Asennus on helppoa. Sinun tarvitsee ainoastaan seurata ohjeiden askelia ja kaikki on valmiina käyttöön! </p>
+				<p lang="fi">Huomaathan, että internetyhteytesi saattaa olla pois päältä tämän asennuksen ajan.</p>
+				<p lang="fi">Yksityiskohtaiset ohjeet ovat saatavilla osoitteessa <strong>ruuvi.com/manuals</strong>.</p>
 			</div>
+
+			
+			
+			<h2>Select your language</h2>	
+
+			<label class="control control-radio">
+		         English<input id="" class="lang_select" name="lang_select" type="radio"  checked="checked" value="en" /><div class="control_indicator"></div>
+		    </label>
+		    <label class="control control-radio">
+		         Suomi<input class="lang_select" name="lang_select" type="radio" value="fi"  /><div class="control_indicator"></div>
+		    </label>
+							
+			
+			<div class="button-container">
+				<a href="" class="btn btn-navi" data-target="settings" id="get-started">
+					<span lang="en">Let's get started</span>
+					<span lang="fi">Aloita asennus</span>
+				</a>
+			</div>  
+
 		</div>
-		<div id="credits">
-			<header>
-				<h1>About this app...</h1>
-			</header>
-			<h2></h2>
-			<section>
-				<p><strong>esp32-wifi-manager</strong>, &copy; 2017-2019, Tony Pottier<br />Licender under the MIT License.</p>
+	</section>
+	
+
+
+
+	<!-- SERVER SETTINGS -->
+	<section id="settings" class="section page-content hidden">
+		<div class="container">
+
+   	
+			<h1>
+				<span lang="en">Server settings</span>
+				<span lang="fi">Palvelinasetukset</span>
+			</h1>
+
+			<div class="ingress">
+				<p lang="en">By default, you can access all your sensor data through <strong>Ruuvi Network</strong>.</p>
+				<p lang="en">If you're an advanced user, you can adjust the settings manually.</p>
+				<p lang="fi">Oletuksena käytössä on <strong>Ruuvi Network</strong>.</p>
+				<p lang="fi">Jos olet tehokäyttäjä, voit säätää asetukset manuaalisesti.</p>
+			</div>
+
+			<span id="ssid-pwd"></span>
+
+				
+			<div class="" id="conf-ruuvi">
+				<label class="control control-radio ">
+			        <span lang="en">Use Ruuvi Network <small>(an activation code required)</small></span>
+			        <span lang="fi">Käytä Ruuvi Networkia <small>(vaatii aktivointikoodin)</small></span>
+			        <input id="use_ruuvi" value="ruuvi" name="connection_type" type="radio"  class="conf-checkbox" checked="checked"> 
+			            
+			        <div class="control_indicator"></div>
+			    </label>
+			
+				<label class="control control-radio">
+			        <span lang="en">Use Custom Server <small>(for advanced users)</small></span> 
+			        <span lang="fi">Käytä omaa palvelinta <small>(tehokäyttäjille)</small></span> 
+			         <input id="use_custom" value="custom" name="connection_type"  type="radio"  class="conf-checkbox">    
+			        <div class="control_indicator"></div>
+			    </label>
+			</div>
+
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>
+				<a href="" class="btn btn-navi" data-target="settings-custom" id="">
+					<span lang="en">Continue</span>
+					<span lang="fi">Jatka</span>
+
+				</a>
+			</div>  
+
+
+		</div>
+	</section>
+
+
+
+	<!-- CUSTOM SERVER SETTINGS -->
+	<section id="settings-custom" class="section page-content hidden">
+		<div class="container">
+			<h1>
+				<span lang="en">Custom Server Settings</span>
+				<span lang="fi">Manuaaliset palvelinasetukset</span>
+			</h1>
+			<div class="ingress">
+				<p lang="en">Use your own or a third party server.</p>
+				<p lang="fi">Käytä omaasi tai kolmannen osapuolen palvelinta.</p>
+			</div>
+
+
+			<div id="other-server-connections" >
+
+				<div id="conf-http" class="conf-settings"  >
+
+					<label class="control control-radio">
+				        <span lang="en">HTTP connection</span>
+				        <span lang="fi">HTTP-yhteys</span>
+			            <input id="use_http" value="use_http" type="radio" name="custom_connection" class="conf-checkbox">
+				        <div class="control_indicator"></div>
+				    </label>
+					 
+					<div class="hidden conf-settings-http  conf-settings-item ">
+						<p>
+							<label>URL</label> 
+							<input id="http_url" type="text" placeholder="http://example.com:port/path" value="">
+							<br><small>Add help here if needed.</small>
+						</p>
+					</div>
+				
+
+					<label class="control control-radio">
+				        <span lang="en">MQTT connection</span>
+				        <span lang="fi">MQTT-yhteys</span>
+		            	<input id="use_mqtt" value="use_mqtt"  type="radio"  name="custom_connection" class="conf-checkbox">
+				        <div class="control_indicator"></div>
+				    </label>
+				
+
+					<div class="hidden conf-settings-item conf-settings-mqtt">
+						<p>
+							<label>
+								<span lang="en">Server</span>
+								<span lang="fi">Palvelin</span>
+							</label>
+							<input id="mqtt_server" type="text" placeholder="MQTT server" value="">
+							<br><small>Add help here if needed, delete if not</small>
+						</p>
+						<p>
+							<label>
+								<span lang="en">Port</span>
+								<span lang="fi">Portti</span>
+							</label>
+							<input id="mqtt_port" type="text" placeholder="1883" value="">
+							<br><small>Add help here if needed.</small>
+						</p>
+						<p>
+							<label>
+								<span lang="en">Prefix</span>
+								<span lang="fi">Etuliite</span>
+							</label>
+
+							<input id="mqtt_prefix" type="text" placeholder="MQTT prefix" value="">
+							<br><small lang="en">Example "ruuvidongle/"</small>
+							<small lang="fi">Esim. "ruuvidongle/"</small>
+						</p>
+						<p>
+							<label>
+								<span lang="en">User</span>
+								<span lang="fi">Käyttäjä</span>
+							</label>
+	
+							<input id="mqtt_user" type="text" placeholder="User" value="">
+							
+						</p>
+						<p>
+							<label for="mqtt_pass">
+								<span lang="en">Password</span>
+								<span lang="fi">Salasana</span>
+							</label>
+							<input id="mqtt_pass" type="password" placeholder="Password" value="12345678">
+							
+						</p>
+					</div>
+
+				</div>
+
+			</div>
+        
+				
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>
+				<a href="" class="btn btn-navi" data-target="settings-scan" id="">
+					<span lang="en">Continue</span>
+					<span lang="fi">Jatka</span>
+
+				</a>
+			</div>  
+
+		</div>
+	</section>
+
+
+	<!-- DEVICE FILTERING -->
+	<section id="settings-scan" class="section page-content hidden">
+		<div class="container">
+			
+			<h1>
+				<span lang="en">Which devices to scan</span>
+				<span lang="fi">Kuunneltavat laitteet</span>
+			</h1>
+
+			<div class="ingress">
+				<p lang="en">Gateway receives signal from all nearby beacons and can send them all to your selected web server.</p>
+				<p lang="fi">Gateway kuuntelee kaikkia ympäröiviä Bluetooth-majakoita ja lähettää tiedot eteenpäin määritellylle internet-palvelimelle.</p>
+			</div>
+
+			<div id="conf-scan" class="conf-settings"  >
+				<label class="control control-radio" >
+			        <span lang="en">Ruuvi sensors only</span>
+			        <span lang="fi">Vain Ruuvi-antureita</span>
+			            <input type="radio" name="filtering" value="1"  checked="checked" placeholder="Scan only Ruuvitags">
+			        <div class="control_indicator"></div>
+			    </label>
+
+			    <label class="control control-radio" >
+			        <span lang="en">All nearby Bluetooth beacons <small>(for advanced users)</small></span>
+			        <span lang="fi">Kaikkia Bluetooth-majakoita <small>(tehokäyttäjille)</small></span>
+			            <input  type="radio" name="filtering" value="0" placeholder="Scan all beacons">
+			        <div class="control_indicator"></div>
+			    </label>
+			</div>
+
+
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>
+				
+				<a href="" class="btn btn-navi" data-target="wifi" id="ready-to-connect">
+					<span lang="en">Continue</span>
+					<span lang="fi">Jatka</span>
+				</a>
+			</div>  
+
+
+		<div>
+	</section>
+	
+
+
+
+    <!-- CONNECTION TYPE -->        
+    <section id="wifi" class="section hidden">
+    	<div class="container">
+
+            <h1>
+            	<span lang="en">Internet connection</span>
+            	<span lang="fi">Internetyhteys</span>
+            </h1>
+
+            <div class="ingress">
+            	<p lang="en">The Gateway needs an internet connection to send your data to a Cloud service. You can connect either via a Wi-Fi network or using an Ethernet cable (RJ-45).</p>
+				<p lang="fi">Gateway tarvitsee internetyhteyden voidakseen lähettää kuulemansa anturitiedot eteenpäin. Voit yhdistää internetiin joko Wi-Fi-yhteydellä tai Ethernet-kaapelilla (RJ-45).</p>
+            </div>
+
+
+			<div class="control-group">
+				<label class="control control-radio">
+					<span lang="en">Wi-Fi</span>
+					<span lang="fi">Wi-Fi</span>
+			         <input name="network_type" value="wifi" type="radio" checked="checked" />
+			         <div class="control_indicator"></div>
+			    </label>
+
+				<label class="control control-radio">
+					<span lang="en">Ethernet (RJ-45)</span>
+					<span lang="fi">Ethernet (RJ-45)</span>
+			         <input name="network_type" value="cable" type="radio" />
+			         <div class="control_indicator"></div>
+			    </label>			    
+			</div>
+
+            
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>
+				<a href="" class="btn btn-navi" data-target="connect" id="">
+					<span lang="en">Continue</span>
+					<span lang="fi">Jatka</span>
+				</a>
+			</div>  
+
+
+		</div>
+	</section>
+
+
+	<section id="cable-settings" class="section hidden">
+		<div class="container">
+			<h1>
+            	<span lang="en">Ethernet settings</span>
+            	<span lang="fi">Ethernet asetukset</span>
+            </h1>
+
+            <div class="ingress">
+            	<p lang="en">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Repudiandae ratione veritatis quos libero expedita, officiis nesciunt?</p>
+				<p lang="fi">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Repudiandae ratione veritatis quos libero expedita, officiis nesciunt?</p>
+            </div>
+
+			
+
+			<div class="conf-settings-item conf-settings-ethernet">
+
+				<div class="control-group control-sep">
+	           		<label class="control control-checkbox">
+				        <span lang="en">Use DHCP</span>
+				        <span lang="fi">Käytä DHCP:ta</span>
+		            	<input id="eth_dhcp" type="checkbox" >
+				        <div class="control_indicator"></div>
+				    </label>
+				</div>
+
 				<p>
-					This app would not be possible without the following libraries:
+					<label>
+						<span lang="en">Static ip</span>
+						<span lang="fi">Static ip</span>
+					</label>
+					<input id="eth_static_ip" type="text" placeholder="192.168. 1.1" value="">
 				</p>
-				<ul>
-					<li>SpinKit, &copy;  2015, Tobias Ahlin. Licensed under the MIT License.</li>
-					<li>jQuery, The jQuery Foundation. Licensed under the MIT License.</li>
-					<li>cJSON, &copy; 2009-2017, Dave Gamble and cJSON contributors. Licensed under the MIT License.</li>
-				</ul>
-			</section>
-			<div class="buttons">
-				<input id="ok-credits" type="button" value="OK" class="ctr" />
+				<p>
+					<label>
+						<span lang="en">Netmask</span>
+						<span lang="fi">Netmask</span>
+					</label>
+					<input id="eth_netmask" type="text" placeholder="192.168. 1.1" value="">
+				</p>
+				<p>
+					<label>
+						<span lang="en">Gateway</span>
+						<span lang="fi">Gateway</span>
+					</label>
+					<input id="eth_gw" type="text" placeholder="192.168. 1.1" value="">
+				</p>
+				<p>
+					<label>
+						<span lang="en">DNS 1 ip:</span>
+						<span lang="fi">DNS 1 ip:</span>
+					</label>
+					<input id="eth_gw" type="text" placeholder="DNS 1" value="">
+				</p>
+				<p>
+					<label>
+						<span lang="en">DNS 2 ip:</span>
+						<span lang="fi">DNS 2 ip:</span>
+					</label>
+					<input id="eth_dns2" type="text" placeholder="DNS 2" value="">
+				</p>
 			</div>
+
+
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>
+				<a href="" class="btn btn-navi" data-target="confirm" id="">
+					<span lang="en">Continue</span>
+					<span lang="fi">Jatka</span>
+				</a>
+			</div>  
+
 		</div>
-	</body>
+	</section>
+
+	<!-- WIFI LIST -->
+	<section id="wifi-list" class="section hidden">
+		<div class="container">
+            
+            <h1>
+            	<span lang="en">Select a Wi-Fi network</span>
+            	<span lang="fi">Valitse Wi-Fi-verkko</span>
+            </h1>
+
+            <div class="ingress">
+            	<p lang="en">This is the last step. Once the Gateway has successfully connected to your Wi-Fi hotspot, the setup is completed and the Gateway starts to send sensor data to the server we just configured.</p>
+				<p lang="fi">Tämä on viimeinen askel. Kun Gateway on yhdistänyt verkkoon, kaikki on valmiina käyttöön ja Gateway alkaa lähettämään anturitietoja aikaisemmin asetetulle palvelimelle.</p>
+            </div>
+
+	        <ul class="wifi-list" id="ssid-list">
+	        	<li><a href="">Upstairs</a></li>
+	            <li><a href="" class="w1">Beer club</a></li>
+	            <li><a href="" class="w2">FBI network</a></li>
+	            <li><a href="" class="w3">Lounge</a></li>
+	        </ul>
+
+	        <p class="connection-selection">
+	        	<a href="" id="use-manual-wifi" class="grey">
+	        		<span lang="en">Wi-Fi network settings</span>
+	        		<span lang="fi">Wi-Fi-verkon asetukset</span>
+	        	</a>
+	        	<a href="" id="use-wifi-connection" class="hidden">
+	        		<span lang="en">Connect to public Wi-Fi.</span>
+	        		<span lang="fi">Yhdistä julkiseen Wi-Fi-verkkoon.</span>
+	        	</a>
+			</p>
+
+			<div class="button-container">
+				<a href="" class="btn btn-back btn-navi" data-target="back" >
+					<span lang="en">Go Back</span>
+					<span lang="fi">Takaisin</span>
+				</a>				
+			</div>  
+
+
+		</div>
+    </section>
+
+
+
+ 	<!-- CONFIRM / THANK YOU -->        
+    <section id="thankyou" class="section hidden">
+    	<div class="container">
+            
+            <h1>
+            	<span lang="en">All good!</span>
+            	<span lang="fi">Kaikki valmista!</span>
+            </h1>
+
+            <div class="ingress">
+            	<p lang="en">Your Ruuvi Gateway is now connected! If you want to modify the settings, press RESET button on bottom of the Gateway.</p>
+            	<p lang="fi">Ruuvi Gatewaysi on nyt toiminnassa! Jos haluat muuttaa asetuksia, paina Gatewayn pohjasta löytyvää RESET-nappia.</p>
+            </div>
+
+			<p class="connect-wifi-name">
+	            <span lang="en">Connected to </span>
+	            <span lang="fi">Yhdistetty verkkoon </span>
+	             "<span class="wifi-network-name"></span>".
+	        </p>
+	        <p class="connect-cable hidden">
+	            <span lang="en">Connected to internet via Ethernet</span>
+	            <span lang="fi">Yhdistetty internetiin Ethernet-yhteydellä</span>
+	        </p>
+
+		</div>
+	</section>
+
+
+
+
+
+
+	<!-- WIFI WITH NO AUTHORIZATION OVERLAY -->
+	<div class="hidden overlay-container" id="no-auth-overlay" >
+		
+		<div class="overlay" id="no-auth-form">
+			<section class="connect-manual">
+
+			    <div id="connect_no_auth">
+			       
+			        <h2>
+			        	<span lang="en">Connecting to "<span class="wifi-network-name"></span>".. </span>
+			        </h2>
+
+			       <div class="loading"></div>
+			       
+			        
+			        <div class="connect-buttons">
+			           
+			            <button class="btn btn-cancel"  id="manual_cancel"type="button">
+			            	<span lang="en">Cancel</span>
+			            	<span lang="fi">Peruuta</span>
+			            </button>
+			        </div>
+			    </div>
+			 </section>
+		</div>
+	</div>
+
+
+	<!-- PRIVATE WIFI NETWORK OVERLAY -->
+	<div class="hidden overlay-container" id="manual-overlay" >
+		
+		<div class="overlay" id="manual-select-form">
+			<section class="connect-manual">
+
+				    <div id="connect_manual">
+				       
+				        <h2>Manual Connection</h2>
+
+				        <div class="manual-connection-fields">
+				            <input id="manual_ssid" class="connection-field-manual" type="text" placeholder="SSID" value="">
+				            <input id="manual_pwd" class="connection-field-manual"  type="password" placeholder="Password" value="">
+				        </div>
+				        
+				        <div class="connect-buttons">
+				            <button class="btn btn-ok connection-join manual-connection-join" id="manual_join" data-connect="manual"  type="button">
+				            	<span lang="en">Connect</span>
+				            	<span lang="fi">Yhdistä</span>
+				            </button>
+				            <button class="btn btn-cancel"  id="manual_cancel" type="button">
+				            	<span lang="en">Cancel</span>
+				            	<span lang="fi">Peruuta</span>
+				            </button>
+				        </div>
+				    </div>
+
+
+				    <div id="connect-wait">
+				        <h2>
+				        	<span lang="en">Connecting to</span> <span class="wifi-network-name"></span>
+				        	<span lang="fi">Yhdistetään verkkoon</span> <span class="wifi-network-name"></span>
+				        	 <span id="ssid-wait"></span>
+				        </h2>
+
+				        <section>
+				            <div id="loading">
+				                
+				                <p class="">
+				                	<span lang="en">You may lose wifi access while the esp32 recalibrates its radio. Please wait until your device automatically reconnects. This can take up to 30s.</span>
+				                	<span lang="fi">Voivvv...</span>
+				                </p>
+				            </div>
+				            <div id="connect-success">
+				                <h3 class="gr">
+				                	<span lang="en">Success!</span>
+				                	<span lang="fi">Onnistui!</span>
+				                </h3>
+				            </div>
+				            <div id="connect-fail">
+				                <h3 class="rd">
+				                	<span lang="en">Connection failed</span>
+				                	<span lang="fi">Yhteyden luonti epäonnistui</span>
+				                </h3>
+				                <p class="">
+				                	<span lang="en">Please double-check the Wi-Fi password and make sure that the Wi-Fi network signal strength is good.</span>
+				                	<span lang="fi">Varmista, että salasana on oikein. Varmista myös, että Wi-Fi-verkon kuuluvuus on tarpeeksi hyvä.</span>
+				                </p>
+				            </div>
+				        </section>
+				        <div class="buttons">
+				            <input id="ok-connect" type="button" value="OK" class="btn btn-ok" />
+				        </div>
+				    </div>
+
+				    <div id="connect-details">
+				        <div id="connect-details-wrap">
+				           
+				            <section>
+				                <div class="buttons">
+				                    <input id="disconnect" type="button" value="Disconnect" class="btn btn-cancel" />
+				                </div>
+				            </section>
+				            <h2>IP Address</h2>
+				            <section>
+				                <div class="ape brdb">IP Address:<div id="ip" class="fr"></div>
+				                </div>
+				                <div class="ape brdb">Subnet Mask:<div id="netmask" class="fr"></div>
+				                </div>
+				                <div class="ape">Default Gateway:<div id="gw" class="fr"></div>
+				                </div>
+				            </section>
+				            <div class="buttons">
+				                <input id="ok-details" type="button" value="OK" class="ctr" />
+				            </div>
+				        </div>
+				        <div id="diag-disconnect" class="diag-box">
+				            <div class="diag-box-win">
+				                <p>
+				                	<span lang="en">Are you sure you would like to disconnect from this wifi?</span>
+				                </p>
+				                <div class="buttons">
+				                    <input id="no-disconnect" type="button" value="No" />
+				                    <input id="yes-disconnect" type="button" value="Yes" />
+				                </div>
+				            </div>
+				        </div>
+				     </div>
+
+			   </section>
+			   <!-- /manual -->
+
+
+	            <div id="wifi-status">
+	                <h2>
+	                	<span lang="en">Connected to:</span>
+	                	<span lang="fi">Yhdistetty verkkoon:</span>
+	                </h2>
+	                <section id="connected-to">
+	                    <div class="ape">
+	                        <div class="w0">
+	                            <div class="pw"><span></span></div>
+	                        </div>
+	                    </div>
+	                </section>
+	            </div>
+
+		</div>
+	</div>
+
+
+	<!-- CONNECT USING PUBLIC WIFI -->
+	<div class="hidden overlay-container" id="wifi-overlay" >
+		
+		<!-- WIFI PASSWORD -->
+		<div class="overlay overlay-form-wrap" id="wifi-select-form">
+		       
+	        <h2>
+	        	<span lang="en">Wi-Fi network "<span class="wifi-network-name"></span>" requires a password.</span>
+	        	<span lang="fi">Wi-Fi-verkko "<span class="wifi-network-name"></span>" vaatii salasanan.</span>
+	        </h2>
+	        
+	        <input id="pwd" type="password"  class="connection-field" placeholder="Password" value="">
+
+	        <div class="show-password-wrap">
+	        	<label class="control control-checkbox">
+			        <span lang="en">Show password</span>
+			        <span lang="fi">Näytä salasana</span>
+	            	<input type="checkbox" id="show-password">
+			        <div class="control_indicator"></div>
+			    </label>
+	        </div>
+	    
+	        <div class="connect-buttons">
+	            <button class="btn btn-ok connection-join" id="join" type="button">
+	            	<span lang="en">Connect</span>
+	            	<span lang="fi">Yhdistä</span>
+	            </button>
+	            <button class="btn btn-cancel cancel" id="cancel2"  type="button">
+	            	<span lang="en">Cancel</span>
+	            	<span lang="fi">Peruuta</span>
+	            </button>
+	        </div>
+		</div>
+
+
+		<!-- LOADING WIFI CONNECTION -->
+		<div class="overlay overlay-form-wrap hidden" id="wifi-response">
+		    
+		    	<h2>
+		    		<span lang="en">Connecting to "<span class="wifi-network-name"></span>"... </span>
+		    		<span lang="fi">Yhdistetään verkkoon "<span class="wifi-network-name"></span>"... </span>
+		    	</h2>
+		    	<p id="temp">Temp continue</p>
+
+		    	<div class="spinner">
+					<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="margin: auto; display: block;" width="88px" height="88px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+						<path d="M8 50A42 42 0 0 0 92 50A42 48.5 0 0 1 8 50" fill="#59bcb1" stroke="none" transform="rotate(107.349 50 53.25)">
+						  <animateTransform attributeName="transform" type="rotate" dur="0.8620689655172413s" repeatCount="indefinite" keyTimes="0;1" values="0 50 53.25;360 50 53.25"></animateTransform>
+						</path>
+					</svg>
+				</div>
+
+				<div class="connect-buttons">
+		            <button class="btn btn-cancel cancel"   type="button">
+		            	<span lang="en">Cancel</span>
+		            	<span lang="fi">Peruuta</span>
+		            </button>
+		        </div>
+		    
+		</div>
+
+		
+	</div>
+
+
+<!-- /app -->
+</div>
+</div>
+
+
+
+
+   
+</body>
 <html>
