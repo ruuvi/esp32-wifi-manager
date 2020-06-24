@@ -13,7 +13,7 @@ if (!String.prototype.format) {
   };
 }
 
-var ap_obj = {};
+
 var apList = null;
 var selectedSSID = "";
 var refreshAPInterval = null; 

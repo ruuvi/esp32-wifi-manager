@@ -1,5 +1,4 @@
 var mqtt_pass_changed = false;
-var arguments = {};
 
 
 function save_config() 
