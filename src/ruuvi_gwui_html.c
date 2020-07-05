@@ -56,13 +56,6 @@ const uint8_t* embed_files_find(const char* file_path, size_t* pLen, bool* pIsGz
         *pLen = embedded_jquery_3_5_1_js_gz_end - embedded_jquery_3_5_1_js_gz_start;
         return embedded_jquery_3_5_1_js_gz_start;
     }
-    if (0 == strcmp(file_path, "index 2.html"))
-    {
-        extern const uint8_t embedded_index 2_html_start[] asm("_binary_index 2_html_start");
-        extern const uint8_t embedded_index 2_html_end[] asm("_binary_index 2_html_end");
-        *pLen = embedded_index 2_html_end - embedded_index 2_html_start;
-        return embedded_index 2_html_start;
-    }
     if (0 == strcmp(file_path, "ruuvi.js"))
     {
         extern const uint8_t embedded_ruuvi_js_start[] asm("_binary_ruuvi_js_gz_start");

@@ -4,7 +4,6 @@ set(EMBED_FILES
         ruuvi.gwui.html/src/ruuvi.js.gz
         ruuvi.gwui.html/src/code.js.gz
         ruuvi.gwui.html/src/jquery-3.5.1.js.gz
-        ruuvi.gwui.html/src/index 2.html
         ruuvi.gwui.html/src/index.html.gz
         ruuvi.gwui.html/src/css/ruuvi.css.gz
         ruuvi.gwui.html/src/css/style.css.gz
