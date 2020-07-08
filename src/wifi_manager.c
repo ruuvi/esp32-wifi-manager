@@ -659,7 +659,16 @@ void wifi_manager( void * pvParameters ){
 			.beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
 		},
 	};
-	snprintf((char*)&ap_config.ap.ssid[0], sizeof(ap_config.ap.ssid), "%s", wifi_settings.ap_ssid);
+
+	{
+		uint8_t ap_mac[6];
+		memset(ap_mac, 0, sizeof(ap_mac));
+		ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, ap_mac));
+		char tmp_ap_ssid[sizeof(wifi_settings.ap_ssid) - 5];
+		strncpy(tmp_ap_ssid, (const char*)&wifi_settings.ap_ssid[0], sizeof(tmp_ap_ssid));
+		tmp_ap_ssid[sizeof(tmp_ap_ssid) - 1] = '\0';
+		snprintf((char*)&ap_config.ap.ssid[0], sizeof(ap_config.ap.ssid), "%s %02X%02X", tmp_ap_ssid, ap_mac[4], ap_mac[5]);
+	}
 	snprintf((char*)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", wifi_settings.ap_pwd);
 
 	ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP)); 	/* stop AP DHCP server */
