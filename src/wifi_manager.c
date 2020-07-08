@@ -56,6 +56,7 @@ Contains the freeRTOS task and all necessary support
 #include "dns_server.h"
 #include "../../main/includes/ethernet.h"
 
+#undef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 
 /* objects used to manipulate the main queue of events */
