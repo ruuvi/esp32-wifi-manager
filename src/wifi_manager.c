@@ -697,8 +697,8 @@ void wifi_manager( void * pvParameters ){
 			.beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
 		},
 	};
-	memcpy(ap_config.ap.ssid, wifi_settings.ap_ssid , sizeof(wifi_settings.ap_ssid));
-	memcpy(ap_config.ap.password, wifi_settings.ap_pwd, sizeof(wifi_settings.ap_pwd));
+	snprintf((char*)&ap_config.ap.ssid[0], sizeof(ap_config.ap.ssid), "%s", wifi_settings.ap_ssid);
+	snprintf((char*)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", wifi_settings.ap_pwd);
 
 	ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP)); 	/* stop AP DHCP server */
 	inet_pton(AF_INET, DEFAULT_AP_IP, &info.ip); /* access point is on a static IP */
