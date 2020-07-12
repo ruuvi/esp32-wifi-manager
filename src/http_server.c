@@ -413,6 +413,28 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 			ESP_LOGE(TAG, "http_url not found");
 		}
 
+		cJSON* huser = cJSON_GetObjectItem(root, "http_user");
+		if (huser) {
+			char* http_user = cJSON_GetStringValue(huser);
+			if (http_user) {
+				strncpy(c->http_user, http_user, MAX_HTTPUSER_LEN - 1);
+				ESP_LOGD(TAG, "http_user: %s", http_user);
+			}
+		} else {
+			ESP_LOGE(TAG, "http_user not found");
+		}
+
+		cJSON* hpass = cJSON_GetObjectItem(root, "http_pass");
+		if (hpass) {
+			char* http_pass = cJSON_GetStringValue(hpass);
+			if (http_pass) {
+				strncpy(c->http_pass, http_pass, MAX_HTTPPASS_LEN - 1);
+				ESP_LOGD(TAG, "http_pass: %s", http_pass);
+			}
+		} else {
+			ESP_LOGE(TAG, "http_pass not found");
+		}
+
 		cJSON* uf = cJSON_GetObjectItem(root, "use_filtering");
 		if (uf) {
 			bool use_filtering = cJSON_IsTrue(uf);
