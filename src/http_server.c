@@ -355,7 +355,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (mpre) {
 			char* mqtt_prefix = cJSON_GetStringValue(mpre);
 			if (mqtt_prefix) {
-				strncpy(c->mqtt_prefix, mqtt_prefix, MAX_MQTTPREFIX_LEN-1);
+				strncpy(c->mqtt_prefix, mqtt_prefix, MAX_MQTT_PREFIX_LEN -1);
 				ESP_LOGD(TAG, "mqtt_prefix: %s", mqtt_prefix);
 			}
 		}
@@ -375,7 +375,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (mu) {
 			char* mqtt_user = cJSON_GetStringValue(mu);
 			if (mqtt_user) {
-				strncpy(c->mqtt_user, mqtt_user, MAX_MQTTUSER_LEN-1);
+				strncpy(c->mqtt_user, mqtt_user, MAX_MQTT_USER_LEN -1);
 				ESP_LOGD(TAG, "mqtt_user: %s", mqtt_user);
 			}
 		} else {
@@ -386,7 +386,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (mp) {
 			char* mqtt_pass = cJSON_GetStringValue(mp);
 			if (mqtt_pass) {
-				strncpy(c->mqtt_pass, mqtt_pass, MAX_MQTTPASS_LEN-1);
+				strncpy(c->mqtt_pass, mqtt_pass, MAX_MQTT_PASS_LEN -1);
 				ESP_LOGD(TAG, "mqtt_pass: %s", mqtt_pass);
 			}
 		} else {
@@ -406,7 +406,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (hurl) {
 			char* http_url = cJSON_GetStringValue(hurl);
 			if (http_url) {
-				strncpy(c->http_url, http_url, MAX_HTTPURL_LEN-1);
+				strncpy(c->http_url, http_url, MAX_HTTP_URL_LEN -1);
 				ESP_LOGD(TAG, "http_url: %s", http_url);
 			}
 		} else {
@@ -417,7 +417,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (huser) {
 			char* http_user = cJSON_GetStringValue(huser);
 			if (http_user) {
-				strncpy(c->http_user, http_user, MAX_HTTPUSER_LEN - 1);
+				strncpy(c->http_user, http_user, MAX_HTTP_USER_LEN - 1);
 				ESP_LOGD(TAG, "http_user: %s", http_user);
 			}
 		} else {
@@ -428,7 +428,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (hpass) {
 			char* http_pass = cJSON_GetStringValue(hpass);
 			if (http_pass) {
-				strncpy(c->http_pass, http_pass, MAX_HTTPPASS_LEN - 1);
+				strncpy(c->http_pass, http_pass, MAX_HTTP_PASS_LEN - 1);
 				ESP_LOGD(TAG, "http_pass: %s", http_pass);
 			}
 		} else {
