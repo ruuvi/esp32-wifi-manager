@@ -346,7 +346,7 @@ bool parse_ruuvi_config_json(const char* body, struct dongle_config *c)
 		if (ms) {
 			char* mqtt_server = cJSON_GetStringValue(ms);
 			if (mqtt_server) {
-				strncpy(c->mqtt_server, mqtt_server, MAX_MQTTSEVER_LEN-1);
+				strncpy(c->mqtt_server, mqtt_server, MAX_MQTT_SERVER_LEN -1);
 				ESP_LOGD(TAG, "mqtt_server: %s", mqtt_server);
 			}
 		}
