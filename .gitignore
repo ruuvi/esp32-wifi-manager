@@ -63,6 +63,7 @@ wifi_manager/.project
 sdkconfig
 sdkconfig.old
 **/build/
+**/cmake-build-debug/
 #doxygen
 Doxyfile
 wifi_manager/doc/
