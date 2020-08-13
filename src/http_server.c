@@ -59,7 +59,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "http_server.h"
 #include "wifi_manager.h"
 
-#include "../../main/includes/ruuvidongle.h"
+#include "../../main/includes/ruuvi_gateway.h"
 #include "../../main/includes/ethernet.h"
 #include "cJSON.h"
 #include "ruuvi_gwui_html.h"
