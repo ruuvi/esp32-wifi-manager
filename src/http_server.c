@@ -330,7 +330,7 @@ get_http_body(char *msg, int len, int *blen)
 }
 
 bool
-parse_ruuvi_config_json(const char *body, struct dongle_config *c)
+parse_ruuvi_config_json(const char *body, struct ruuvi_gateway_config_t *c)
 {
     // TODO replace this parsing with generic implementation
     bool   ret  = true;
