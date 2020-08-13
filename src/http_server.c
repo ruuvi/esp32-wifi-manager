@@ -840,12 +840,12 @@ http_server_netconn_serve(struct netconn *conn)
                 {
                     ESP_LOGD(TAG, "http_server_netconn_serve: POST /ruuvi.json");
                     char *body = get_http_body(save_ptr, buflen - (save_ptr - buf), 0);
-                    if (parse_ruuvi_config_json(body, &m_dongle_config))
+                    if (parse_ruuvi_config_json(body, &g_gateway_config))
                     {
                         ESP_LOGI(TAG, "settings got from browser:");
-                        settings_print(&m_dongle_config);
-                        settings_save_to_flash(&m_dongle_config);
-                        ruuvi_send_nrf_settings(&m_dongle_config);
+                        settings_print(&g_gateway_config);
+                        settings_save_to_flash(&g_gateway_config);
+                        ruuvi_send_nrf_settings(&g_gateway_config);
                         ethernet_update_ip();
                         http_server_netconn_resp_200_json(conn, "{}");
                     }
