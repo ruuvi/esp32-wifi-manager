@@ -5,7 +5,7 @@ using namespace std;
 
 /*** Google-test class implementation *********************************************************************************/
 
-class TestStub : public ::testing::Test
+class TestJson : public ::testing::Test
 {
 private:
 protected:
@@ -20,23 +20,23 @@ protected:
     }
 
 public:
-    TestStub();
+    TestJson();
 
-    ~TestStub() override;
+    ~TestJson() override;
 };
 
-TestStub::TestStub()
+TestJson::TestJson()
     : Test()
 {
 }
 
-TestStub::~TestStub()
+TestJson::~TestJson()
 {
 }
 
 /*** Unit-Tests *******************************************************************************************************/
 
-TEST_F(TestStub, test_1) // NOLINT
+TEST_F(TestJson, test_1) // NOLINT
 {
     ASSERT_EQ(false, json_print_string(nullptr, nullptr));
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(ruuvi_esp32-wifi-manager-test-stub)
-set(ProjectId ruuvi_esp32-wifi-manager-test-stub)
+project(ruuvi_esp32-wifi-manager-test-json)
+set(ProjectId ruuvi_esp32-wifi-manager-test-json)
 
 add_executable(${ProjectId}
         test_1.cpp
@@ -23,7 +23,7 @@ target_include_directories(${ProjectId} PUBLIC
 )
 
 target_compile_definitions(${ProjectId} PUBLIC
-        RUUVI_TESTS_STUB=1
+        RUUVI_TESTS_JSON=1
 )
 
 target_compile_options(${ProjectId} PUBLIC

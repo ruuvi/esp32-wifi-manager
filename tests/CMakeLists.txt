@@ -8,9 +8,9 @@ add_definitions(
 
 enable_testing()
 add_subdirectory(googletest)
-add_subdirectory(test_stub)
+add_subdirectory(test_json)
 
-add_test(NAME test_stub
-        COMMAND ruuvi_esp32-wifi-manager-test-stub
-            --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-stub>/gtestresults.xml
+add_test(NAME test_json
+        COMMAND ruuvi_esp32-wifi-manager-test-json
+            --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-json>/gtestresults.xml
 )
