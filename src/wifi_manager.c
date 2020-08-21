@@ -160,8 +160,8 @@ wifi_manager_start(const WiFiAntConfig_t *pWiFiAntConfig)
     wifi_manager_queue      = xQueueCreate(3, sizeof(queue_message));
     wifi_manager_json_mutex = xSemaphoreCreateMutex();
     accessp_records         = (wifi_ap_record_t *)malloc(sizeof(wifi_ap_record_t) * MAX_AP_NUM);
-    accessp_json
-        = (char *)malloc(MAX_AP_NUM * JSON_ONE_APP_SIZE + 4); /* 4 bytes for json encapsulation of "[\n" and "]\0" */
+    accessp_json            = (char *)malloc(
+        MAX_AP_NUM * JSON_ONE_APP_SIZE + 4); /* 4 bytes for json encapsulation of "[\n" and "]\0" */
     wifi_manager_clear_access_points_json();
     ip_info_json = (char *)malloc(sizeof(char) * JSON_IP_INFO_SIZE);
     wifi_manager_clear_ip_info_json();
