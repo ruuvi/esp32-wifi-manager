@@ -6,7 +6,11 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/dns_server.c
             src/http_server.c
             src/wifi_manager.c
+            src/wifi_manager.h
+            src/wifi_manager_defs.h
             src/json.c
+            src/json_ip_info.c
+            src/json_ip_info.h
             src/ruuvi_gwui_html.c
             src/ruuvi_gwui_html.h
             ../../main/ethernet.c
