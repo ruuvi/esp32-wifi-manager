@@ -9,8 +9,8 @@ add_executable(${ProjectId}
         ../../src/str_buf.h
         ../../src/json.c
         ../../src/json.h
-        ../../src/json_ip_info.c
-        ../../src/json_ip_info.h
+        ../../src/json_network_info.c
+        ../../src/json_network_info.h
         ../../src/wifi_manager_defs.h
 )
 

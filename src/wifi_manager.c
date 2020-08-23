@@ -54,7 +54,7 @@ Contains the freeRTOS task and all necessary support
 #include "tcpip_adapter.h"
 #include "wifi_manager.h"
 #include "dns_server.h"
-#include "json_ip_info.h"
+#include "json_network_info.h"
 #include "json_access_points.h"
 #include "../../main/includes/ethernet.h"
 
@@ -166,7 +166,7 @@ wifi_manager_start(const WiFiAntConfig_t *pWiFiAntConfig)
 
     ESP_ERROR_CHECK(json_access_points_init());
 
-    json_ip_info_init();
+    json_network_info_init();
 
     wifi_manager_config_sta = (wifi_config_t *)malloc(sizeof(wifi_config_t));
     // TODO: check wifi_manager_config_sta for NULL
@@ -417,7 +417,7 @@ wifi_manager_generate_ip_info_json(update_reason_code_t update_reason_code)
     snprintf(ip_info_str.netmask, sizeof(ip_info_str.netmask), "%s", ip4addr_ntoa(&ip_info.netmask));
     snprintf(ip_info_str.gw, sizeof(ip_info_str.gw), "%s", ip4addr_ntoa(&ip_info.gw));
 
-    json_ip_info_generate(ssid, &ip_info_str, update_reason_code);
+    json_network_info_generate(ssid, &ip_info_str, update_reason_code);
 }
 
 bool
@@ -588,7 +588,7 @@ wifi_manager_connect_async()
      */
     if (wifi_manager_lock_json_buffer(portMAX_DELAY))
     {
-        json_ip_info_clear();
+        json_network_info_clear();
         wifi_manager_unlock_json_buffer();
     }
     wifi_manager_send_message(ORDER_CONNECT_STA, (void *)CONNECTION_REQUEST_USER);
@@ -624,7 +624,7 @@ wifi_manager_destroy()
         free(accessp_records);
         accessp_records = NULL;
         json_access_points_deinit();
-        json_ip_info_deinit();
+        json_network_info_deinit();
         free(wifi_manager_sta_ip);
         wifi_manager_sta_ip = NULL;
         if (wifi_manager_config_sta)

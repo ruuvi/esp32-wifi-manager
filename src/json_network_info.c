@@ -1,36 +1,36 @@
-#include "json_ip_info.h"
+#include "json_network_info.h"
 #include <stddef.h>
 #include "json.h"
 #include "wifi_manager_defs.h"
 
-static char g_json_ip_info_buf[JSON_IP_INFO_SIZE];
+static char g_json_network_info_buf[JSON_IP_INFO_SIZE];
 
 void
-json_ip_info_init(void)
+json_network_info_init(void)
 {
-    json_ip_info_clear();
+    json_network_info_clear();
 }
 
 void
-json_ip_info_deinit(void)
+json_network_info_deinit(void)
 {
 }
 
 const char *
-json_ip_info_get(void)
+json_network_info_get(void)
 {
-    return g_json_ip_info_buf;
+    return g_json_network_info_buf;
 }
 
 void
-json_ip_info_generate(
+json_network_info_generate(
     const char *              ssid,
     const network_info_str_t *p_network_info,
     update_reason_code_t      update_reason_code)
 {
     if (NULL != ssid)
     {
-        str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_ip_info_buf);
+        str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_network_info_buf);
         str_buf_printf(&str_buf, "{\"ssid\":");
         json_print_escaped_string(&str_buf, ssid);
 
@@ -54,13 +54,13 @@ json_ip_info_generate(
     }
     else
     {
-        json_ip_info_clear();
+        json_network_info_clear();
     }
 }
 
 void
-json_ip_info_clear(void)
+json_network_info_clear(void)
 {
-    str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_ip_info_buf);
+    str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_network_info_buf);
     str_buf_printf(&str_buf, "{}\n");
 }

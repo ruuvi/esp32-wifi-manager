@@ -59,7 +59,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "http_server.h"
 #include "wifi_manager.h"
 #include "json_access_points.h"
-#include "json_ip_info.h"
+#include "json_network_info.h"
 
 #include "../../main/includes/ruuvi_gateway.h"
 #include "../../main/includes/ethernet.h"
@@ -748,7 +748,7 @@ http_server_netconn_serve(struct netconn *conn)
                     {
                         if (wifi_manager_lock_json_buffer((TickType_t)10))
                         {
-                            const char *buff = json_ip_info_get();
+                            const char *buff = json_network_info_get();
                             if (buff)
                             {
                                 ESP_LOGI(TAG, "status.json: %s", buff);
