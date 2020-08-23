@@ -87,9 +87,6 @@ filter_unique(wifi_ap_record_t *aplist, uint16_t *ap_num);
 void
 wifi_manager(void *pvParameters);
 
-char *
-wifi_manager_get_ap_list_json();
-
 /**
  * @brief clears the current STA wifi config in flash ram storage.
  */
@@ -165,20 +162,6 @@ wifi_manager_lock_json_buffer(TickType_t xTicksToWait);
  */
 void
 wifi_manager_unlock_json_buffer();
-
-/**
- * @brief Generates the list of access points after a wifi scan.
- * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
- */
-void
-wifi_manager_generate_acess_points_json();
-
-/**
- * @brief Clear the list of access points.
- * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
- */
-void
-wifi_manager_clear_access_points_json();
 
 /**
  * @brief Start the mDNS service

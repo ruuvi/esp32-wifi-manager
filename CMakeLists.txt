@@ -11,6 +11,8 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/json.c
             src/json_ip_info.c
             src/json_ip_info.h
+            src/json_access_points.c
+            src/json_access_points.h
             src/ruuvi_gwui_html.c
             src/ruuvi_gwui_html.h
             ../../main/ethernet.c
