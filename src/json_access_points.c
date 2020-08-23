@@ -6,8 +6,7 @@
 #include "wifi_manager_defs.h"
 #include "json.h"
 
-static char g_json_access_points_buf[MAX_AP_NUM * JSON_ONE_APP_SIZE + 4]; /* 4 bytes for json encapsulation of "[\n" and
-                                                                             "]\0" */
+static char g_json_access_points_buf[JSON_ACCESS_POINT_BUF_SIZE];
 
 esp_err_t
 json_access_points_init(void)

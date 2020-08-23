@@ -358,7 +358,7 @@ TEST_F(TestJsonAccessPoints, test_generate_max_num_access_points) // NOLINT
     }
     json_access_points_generate(access_points, num_access_points);
     const char *json_str = json_access_points_get();
-    ASSERT_EQ((75 + 32) * num_access_points + 1 * (num_access_points - 1) + 3, strlen(json_str));
+    ASSERT_EQ((74 + 32) * num_access_points + 2 * (num_access_points - 1) + 4, strlen(json_str));
     ASSERT_EQ(
         string("["
                "{\"ssid\":\""

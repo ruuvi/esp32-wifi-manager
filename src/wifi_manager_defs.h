@@ -112,13 +112,17 @@ extern "C" {
 /**
  * @brief Defines the maximum length in bytes of a JSON representation of an access point.
  *
- *  maximum ap string length with full 32 char ssid: 75 + \\n + \0 = 77\n
- *  example: {"ssid":"abcdefghijklmnopqrstuvwxyz012345","chan":12,"rssi":-100,"auth":4},\n
- *  BUT: we need to escape JSON. Imagine a ssid full of \" ? so it's 32 more bytes hence 77 + 32 = 109.\n
+ *  maximum ap string length with full 32 char ssid: 74 = 74
+ *  example: {"ssid":"abcdefghijklmnopqrstuvwxyz012345","chan":12,"rssi":-100,"auth":4}
+ *  BUT: we need to escape JSON. Imagine a ssid full of \" ? so it's 32 more bytes hence 74 + 32 = 106.\n
  *  this is an edge case but I don't think we should crash in a catastrophic manner just because
  *  someone decided to have a funny wifi name.
  */
-#define JSON_ONE_APP_SIZE 109
+#define JSON_ACCESS_POINT_ONE_RECORD_SIZE (106)
+
+#define JSON_ACCESS_POINT_BUF_SIZE \
+    (JSON_ACCESS_POINT_ONE_RECORD_SIZE * MAX_AP_NUM + 2 * (MAX_AP_NUM - 1) \
+     + 5) /* 5 bytes for json encapsulation of "[\n" and "]\n\0" */
 
 /**
  * @brief Defines the maximum length in bytes of a JSON representation of the IP information
