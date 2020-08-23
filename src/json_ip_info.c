@@ -4,13 +4,12 @@
 #include "json.h"
 #include "wifi_manager_defs.h"
 
-static char g_ip_info_json[JSON_IP_INFO_SIZE];
+static char g_json_ip_info_buf[JSON_IP_INFO_SIZE];
 
-bool
+void
 json_ip_info_init(void)
 {
     json_ip_info_clear();
-    return true;
 }
 
 void
@@ -21,7 +20,7 @@ json_ip_info_deinit(void)
 const char *
 json_ip_info_get(void)
 {
-    return g_ip_info_json;
+    return g_json_ip_info_buf;
 }
 
 void
@@ -33,8 +32,8 @@ json_ip_info_generate(
     if (NULL != ssid)
     {
         int32_t buf_idx = 0;
-        json_snprintf(&buf_idx, g_ip_info_json, sizeof(g_ip_info_json), "{\"ssid\":");
-        json_print_escaped_string(&buf_idx, g_ip_info_json, sizeof(g_ip_info_json), ssid);
+        json_snprintf(&buf_idx, g_json_ip_info_buf, sizeof(g_json_ip_info_buf), "{\"ssid\":");
+        json_print_escaped_string(&buf_idx, g_json_ip_info_buf, sizeof(g_json_ip_info_buf), ssid);
 
         if (UPDATE_CONNECTION_OK != update_reason_code)
         {
@@ -48,8 +47,8 @@ json_ip_info_generate(
 
         json_snprintf(
             &buf_idx,
-            g_ip_info_json,
-            sizeof(g_ip_info_json),
+            g_json_ip_info_buf,
+            sizeof(g_json_ip_info_buf),
             ",\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"urc\":%d}\n",
             p_network_info->ip,
             p_network_info->netmask,
@@ -65,5 +64,5 @@ json_ip_info_generate(
 void
 json_ip_info_clear(void)
 {
-    snprintf(g_ip_info_json, sizeof(g_ip_info_json), "{}\n");
+    snprintf(g_json_ip_info_buf, sizeof(g_json_ip_info_buf), "{}\n");
 }

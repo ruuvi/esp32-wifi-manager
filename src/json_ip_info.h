@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-bool
+void
 json_ip_info_init(void);
 
 void

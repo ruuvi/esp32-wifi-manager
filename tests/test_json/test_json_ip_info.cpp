@@ -13,7 +13,7 @@ protected:
     void
     SetUp() override
     {
-        assert(json_ip_info_init());
+        json_ip_info_init();
     }
 
     void
