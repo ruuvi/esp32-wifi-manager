@@ -8,6 +8,8 @@ add_executable(${ProjectId}
         include/esp_err.h
         include/esp_wifi_types.h
         include/esp_event_base.h
+        ../../src/str_buf.c
+        ../../src/str_buf.h
         ../../src/json.c
         ../../src/json.h
         ../../src/json_access_points.c

@@ -5,6 +5,8 @@ set(ProjectId ruuvi_esp32-wifi-manager-test-json)
 
 add_executable(${ProjectId}
         test_json.cpp
+        ../../src/str_buf.c
+        ../../src/str_buf.h
         ../../src/json.c
         ../../src/json.h
         ../../src/json_ip_info.c

@@ -1,6 +1,5 @@
 #include "json_ip_info.h"
 #include <stddef.h>
-#include <stdio.h>
 #include "json.h"
 #include "wifi_manager_defs.h"
 
@@ -31,9 +30,9 @@ json_ip_info_generate(
 {
     if (NULL != ssid)
     {
-        int32_t buf_idx = 0;
-        json_snprintf(&buf_idx, g_json_ip_info_buf, sizeof(g_json_ip_info_buf), "{\"ssid\":");
-        json_print_escaped_string(&buf_idx, g_json_ip_info_buf, sizeof(g_json_ip_info_buf), ssid);
+        str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_ip_info_buf);
+        str_buf_printf(&str_buf, "{\"ssid\":");
+        json_print_escaped_string(&str_buf, ssid);
 
         if (UPDATE_CONNECTION_OK != update_reason_code)
         {
@@ -45,10 +44,8 @@ json_ip_info_generate(
             p_network_info = &g_network_info_empty;
         }
 
-        json_snprintf(
-            &buf_idx,
-            g_json_ip_info_buf,
-            sizeof(g_json_ip_info_buf),
+        str_buf_printf(
+            &str_buf,
             ",\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"urc\":%d}\n",
             p_network_info->ip,
             p_network_info->netmask,
@@ -64,5 +61,6 @@ json_ip_info_generate(
 void
 json_ip_info_clear(void)
 {
-    snprintf(g_json_ip_info_buf, sizeof(g_json_ip_info_buf), "{}\n");
+    str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_ip_info_buf);
+    str_buf_printf(&str_buf, "{}\n");
 }

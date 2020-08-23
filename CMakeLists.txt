@@ -5,16 +5,19 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
         SRCS
             src/dns_server.c
             src/http_server.c
+            src/json.c
+            src/json.h
+            src/json_access_points.c
+            src/json_access_points.h
+            src/json_ip_info.c
+            src/json_ip_info.h
+            src/ruuvi_gwui_html.c
+            src/ruuvi_gwui_html.h
+            src/str_buf.c
+            src/str_buf.h
             src/wifi_manager.c
             src/wifi_manager.h
             src/wifi_manager_defs.h
-            src/json.c
-            src/json_ip_info.c
-            src/json_ip_info.h
-            src/json_access_points.c
-            src/json_access_points.h
-            src/ruuvi_gwui_html.c
-            src/ruuvi_gwui_html.h
             ../../main/ethernet.c
             ../../main/settings.c
             ../../main/metrics.c

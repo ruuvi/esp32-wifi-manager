@@ -26,58 +26,31 @@ OTHER DEALINGS IN THE SOFTWARE.
 @see https://github.com/DaveGamble/cJSON
 */
 
+#include "json.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include "json.h"
-
-__attribute__((format(printf, 4, 5))) //
-bool
-json_snprintf(int32_t *pIdx, char *buf, const size_t buf_size, char *fmt, ...)
-{
-    const int32_t idx = *pIdx;
-    if (idx < 0)
-    {
-        return false;
-    }
-    va_list args;
-    va_start(args, fmt);
-    const int len = vsnprintf(&buf[idx], buf_size - idx, fmt, args);
-    va_end(args);
-    if (len < 0)
-    {
-        *pIdx = -1;
-        return false;
-    }
-    *pIdx += len;
-    if (*pIdx >= buf_size)
-    {
-        *pIdx = -1;
-        return false;
-    }
-    return true;
-}
+#include "str_buf.h"
 
 bool
-json_print_escaped_string(int32_t *p_out_buf_idx, char *p_out_buf, const size_t out_buf_size, const char *p_input_str)
+json_print_escaped_string(str_buf_t *p_str_buf, const char *p_input_str)
 {
-    if (NULL == p_out_buf)
+    if (NULL == p_str_buf)
     {
         return false;
     }
-
+    if ((NULL == p_str_buf->buf) || (0 == p_str_buf->size))
+    {
+        return false;
+    }
     if (NULL == p_input_str)
     {
-        if (!json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\"\""))
-        {
-            return false;
-        }
-        return true;
+        return str_buf_printf(p_str_buf, "\"\"");
     }
 
-    json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\"");
+    str_buf_printf(p_str_buf, "\"");
     for (const char *in_ptr = p_input_str; '\0' != *in_ptr; ++in_ptr)
     {
         const char in_chr = *in_ptr;
@@ -85,37 +58,37 @@ json_print_escaped_string(int32_t *p_out_buf_idx, char *p_out_buf, const size_t 
         {
             case '\\':
             case '\"':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\%c", in_chr);
+                str_buf_printf(p_str_buf, "\\%c", in_chr);
                 break;
             case '\b':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\b");
+                str_buf_printf(p_str_buf, "\\b");
                 break;
             case '\f':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\f");
+                str_buf_printf(p_str_buf, "\\f");
                 break;
             case '\n':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\n");
+                str_buf_printf(p_str_buf, "\\n");
                 break;
             case '\r':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\r");
+                str_buf_printf(p_str_buf, "\\r");
                 break;
             case '\t':
-                json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\t");
+                str_buf_printf(p_str_buf, "\\t");
                 break;
             default:
                 if (in_chr >= '\x20')
                 {
                     /* normal character, copy */
-                    json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "%c", in_chr);
+                    str_buf_printf(p_str_buf, "%c", in_chr);
                 }
                 else
                 {
-                    json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\\u%04x", in_chr);
+                    str_buf_printf(p_str_buf, "\\u%04x", in_chr);
                 }
                 break;
         }
     }
-    if (!json_snprintf(p_out_buf_idx, p_out_buf, out_buf_size, "\""))
+    if (!str_buf_printf(p_str_buf, "\""))
     {
         return false;
     }

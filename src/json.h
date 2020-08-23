@@ -32,26 +32,21 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "str_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-__attribute__((format(printf, 4, 5))) //
-bool
-json_snprintf(int32_t *pIdx, char *buf, const size_t buf_size, char *fmt, ...);
-
 /**
  * @brief Render the cstring provided to a JSON escaped version that can be printed.
- * @param p_out_buf_idx - a pointer to a variable that contains the current offset in the output buffer p_out_buf.
- * @param p_out_buf the output buffer to write to.
- * @param out_buf_size the length of the output buffer.
+ * @param p_str_buf - a pointer to @def str_buf_t.
  * @param p_input_str the p_input_str buffer to be escaped.
  * @see cJSON equivalent static cJSON_bool print_string_ptr(const unsigned char * const p_input_str, printbuffer * const
  * output_buffer)
  */
 bool
-json_print_escaped_string(int32_t *p_out_buf_idx, char *p_out_buf, const size_t out_buf_size, const char *p_input_str);
+json_print_escaped_string(str_buf_t *p_str_buf, const char *p_input_str);
 
 #ifdef __cplusplus
 }
