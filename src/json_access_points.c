@@ -32,7 +32,8 @@ json_access_points_generate(const wifi_ap_record_t *p_access_points, const uint3
 {
     int32_t buf_idx = 0;
     json_snprintf(&buf_idx, g_json_access_points_buf, sizeof(g_json_access_points_buf), "[");
-    for (uint32_t i = 0; i < num_access_points; i++)
+    const uint32_t num_ap_checked = (num_access_points <= MAX_AP_NUM) ? num_access_points : MAX_AP_NUM;
+    for (uint32_t i = 0; i < num_ap_checked; i++)
     {
         const wifi_ap_record_t ap = p_access_points[i];
 
@@ -52,7 +53,7 @@ json_access_points_generate(const wifi_ap_record_t *p_access_points, const uint3
             ap.primary,
             ap.rssi,
             ap.authmode,
-            ((i) < (num_access_points - 1)) ? "," : "");
+            ((i) < (num_ap_checked - 1)) ? "," : "");
     }
     json_snprintf(&buf_idx, g_json_access_points_buf, sizeof(g_json_access_points_buf), "]\n");
 }

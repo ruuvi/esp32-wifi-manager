@@ -114,11 +114,11 @@ extern "C" {
  *
  *  maximum ap string length with full 32 char ssid: 75 + \\n + \0 = 77\n
  *  example: {"ssid":"abcdefghijklmnopqrstuvwxyz012345","chan":12,"rssi":-100,"auth":4},\n
- *  BUT: we need to escape JSON. Imagine a ssid full of \" ? so it's 32 more bytes hence 77 + 32 = 99.\n
+ *  BUT: we need to escape JSON. Imagine a ssid full of \" ? so it's 32 more bytes hence 77 + 32 = 109.\n
  *  this is an edge case but I don't think we should crash in a catastrophic manner just because
  *  someone decided to have a funny wifi name.
  */
-#define JSON_ONE_APP_SIZE 99
+#define JSON_ONE_APP_SIZE 109
 
 /**
  * @brief Defines the maximum length in bytes of a JSON representation of the IP information
