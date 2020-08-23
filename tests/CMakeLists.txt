@@ -10,6 +10,7 @@ enable_testing()
 add_subdirectory(googletest)
 add_subdirectory(test_str_buf)
 add_subdirectory(test_json)
+add_subdirectory(test_json_ip_info)
 add_subdirectory(test_json_access_points)
 
 add_test(NAME test_str_buf
@@ -20,6 +21,11 @@ add_test(NAME test_str_buf
 add_test(NAME test_json
         COMMAND ruuvi_esp32-wifi-manager-test-json
             --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-json>/gtestresults.xml
+)
+
+add_test(NAME test_json_ip_info
+        COMMAND ruuvi_esp32-wifi-manager-test-json_ip_info
+            --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-json_ip_info>/gtestresults.xml
 )
 
 add_test(NAME test_json_access_points

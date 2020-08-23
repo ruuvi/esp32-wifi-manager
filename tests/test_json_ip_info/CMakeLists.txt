@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(ruuvi_esp32-wifi-manager-test-json)
-set(ProjectId ruuvi_esp32-wifi-manager-test-json)
+project(ruuvi_esp32-wifi-manager-test-json_ip_info)
+set(ProjectId ruuvi_esp32-wifi-manager-test-json_ip_info)
 
 add_executable(${ProjectId}
-        test_json.cpp
+        test_json_ip_info.cpp
+        ../../src/str_buf.c
+        ../../src/str_buf.h
         ../../src/json.c
         ../../src/json.h
         ../../src/json_ip_info.c
@@ -26,7 +28,7 @@ target_include_directories(${ProjectId} PUBLIC
 )
 
 target_compile_definitions(${ProjectId} PUBLIC
-        RUUVI_TESTS_JSON=1
+        RUUVI_TESTS_JSON_IP_INFO=1
 )
 
 target_compile_options(${ProjectId} PUBLIC
