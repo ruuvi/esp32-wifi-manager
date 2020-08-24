@@ -1,5 +1,5 @@
-#ifndef ESP32_WIFI_MANAGER_JSON_IP_INFO_H
-#define ESP32_WIFI_MANAGER_JSON_IP_INFO_H
+#ifndef ESP32_WIFI_MANAGER_JSON_NETWORK_INFO_H
+#define ESP32_WIFI_MANAGER_JSON_NETWORK_INFO_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -39,4 +39,4 @@ json_network_info_clear(void);
 }
 #endif
 
-#endif // ESP32_WIFI_MANAGER_JSON_IP_INFO_H
+#endif // ESP32_WIFI_MANAGER_JSON_NETWORK_INFO_H

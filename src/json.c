@@ -27,11 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "json.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
-#include <stdarg.h>
 #include "str_buf.h"
 
 bool
