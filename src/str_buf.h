@@ -1,3 +1,10 @@
+/**
+ * @file str_buf.h
+ * @author TheSomeMan
+ * @date 2020-08-23
+ * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
+ */
+
 #ifndef STR_BUF_H
 #define STR_BUF_H
 
