@@ -177,8 +177,8 @@ wifi_manager_unlock_sta_ip_string();
 /**
  * @brief gets the string representation of the STA IP address, e.g.: "192.168.1.69"
  */
-char *
-wifi_manager_get_sta_ip_string();
+const char *
+wifi_manager_get_sta_ip_string(void);
 
 /**
  * @brief thread safe char representation of the STA IP update

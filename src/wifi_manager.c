@@ -57,6 +57,7 @@ Contains the freeRTOS task and all necessary support
 #include "json_network_info.h"
 #include "json_access_points.h"
 #include "../../main/includes/ethernet.h"
+#include "sta_ip_unsafe.h"
 
 #undef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
@@ -66,7 +67,6 @@ QueueHandle_t wifi_manager_queue;
 
 SemaphoreHandle_t wifi_manager_json_mutex   = NULL;
 SemaphoreHandle_t wifi_manager_sta_ip_mutex = NULL;
-char              wifi_manager_sta_ip[IP4ADDR_STRLEN_MAX + 1];
 
 uint16_t          ap_num = MAX_AP_NUM;
 wifi_ap_record_t *accessp_records;
@@ -180,6 +180,7 @@ wifi_manager_start(const WiFiAntConfig_t *pWiFiAntConfig)
     {
         cb_ptr_arr[i] = NULL;
     }
+    sta_ip_unsafe_init();
     wifi_manager_sta_ip_mutex = xSemaphoreCreateMutex();
     wifi_manager_safe_update_sta_ip_string((uint32_t)0);
     wifi_manager_event_group = xEventGroupCreate();
@@ -454,19 +455,16 @@ wifi_manager_safe_update_sta_ip_string(uint32_t ip)
 {
     if (wifi_manager_lock_sta_ip_string(portMAX_DELAY))
     {
-        const struct ip4_addr ip4 = {
-            .addr = ip,
-        };
-        inet_ntop(AF_INET, &ip4, wifi_manager_sta_ip, sizeof(wifi_manager_sta_ip));
-        ESP_LOGI(TAG, "Set STA IP String to: %s", wifi_manager_sta_ip);
+        sta_ip_unsafe_set(ip);
+        ESP_LOGI(TAG, "Set STA IP String to: %s", sta_ip_unsafe_get_str());
         wifi_manager_unlock_sta_ip_string();
     }
 }
 
-char *
-wifi_manager_get_sta_ip_string()
+const char *
+wifi_manager_get_sta_ip_string(void)
 {
-    return wifi_manager_sta_ip;
+    return sta_ip_unsafe_get_str();
 }
 
 bool
@@ -626,7 +624,7 @@ wifi_manager_destroy()
         accessp_records = NULL;
         json_access_points_deinit();
         json_network_info_deinit();
-        memset(wifi_manager_sta_ip, 0, sizeof(wifi_manager_sta_ip));
+        sta_ip_unsafe_deinit();
         if (wifi_manager_config_sta)
         {
             free(wifi_manager_config_sta);
@@ -1113,7 +1111,7 @@ wifi_manager(void *pvParameters)
                     xEventGroupClearBits(wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
 
                     /* save IP as a string for the HTTP server host */
-                    wifi_manager_safe_update_sta_ip_string((uint32_t)msg.param);
+                    wifi_manager_safe_update_sta_ip_string((uint32_t)(uintptr_t)msg.param);
 
                     /* save wifi config in NVS if it wasn't a restored of a connection */
                     if (uxBits & WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)
