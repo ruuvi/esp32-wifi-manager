@@ -779,15 +779,15 @@ wifi_manager(void *pvParameters)
     tcpip_adapter_ip_info_t info;
     memset(&info, 0x00, sizeof(info));
     wifi_config_t ap_config = {
-		.ap = {
-			.ssid_len = 0,
-			.channel = wifi_settings.ap_channel,
-			.authmode = WIFI_AUTH_WPA2_PSK,
-			.ssid_hidden = wifi_settings.ap_ssid_hidden,
-			.max_connection = DEFAULT_AP_MAX_CONNECTIONS,
-			.beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
-		},
-	};
+        .ap = {
+            .ssid_len        = 0,
+            .channel         = wifi_settings.ap_channel,
+            .authmode        = WIFI_AUTH_WPA2_PSK,
+            .ssid_hidden     = wifi_settings.ap_ssid_hidden,
+            .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
+            .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
+        },
+    };
 
     {
         uint8_t ap_mac[6];
