@@ -7,3 +7,6 @@
 [submodule "tests/lwip/lwip"]
 	path = tests/lwip/lwip
 	url = https://git.savannah.gnu.org/git/lwip.git
+[submodule "tests/posix_gcc_simulator"]
+	path = tests/posix_gcc_simulator
+	url = https://github.com/ruuvi/Posix_GCC_Simulator.git
