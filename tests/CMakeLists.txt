@@ -6,8 +6,38 @@ add_definitions(
         -DRUUVI_TESTS=1
 )
 
+include_directories(
+        esp_simul
+)
+
 enable_testing()
 add_subdirectory(googletest)
+add_subdirectory(posix_gcc_simulator)
+
+include_directories(
+        "posix_gcc_simulator/FreeRTOS_Posix"
+        "posix_gcc_simulator/FreeRTOS_Posix/FreeRTOS_Kernel/include"
+        "posix_gcc_simulator/FreeRTOS_Posix/FreeRTOS_Kernel/include/freertos"
+        "posix_gcc_simulator/FreeRTOS_Posix/FreeRTOS_Kernel/portable/GCC/Posix"
+)
+
+add_subdirectory(lwip)
+
+include_directories(
+        "lwip/lwip/src/include"
+        "lwip/extra"
+        "lwip/lwip/contrib/ports/freertos/include"
+        "lwip/lwip/contrib/ports/unix/port/include"
+)
+
+#include_directories(
+#        "$ENV{IDF_PATH}/components/log/include/"
+#        "$ENV{IDF_PATH}/components/esp_common/include/"
+#        "$ENV{IDF_PATH}/components/esp_event/include/"
+#        "$ENV{IDF_PATH}/components/"
+#        "${CMAKE_BINARY_DIR}/../../../config/"
+#)
+
 add_subdirectory(test_str_buf)
 add_subdirectory(test_json)
 add_subdirectory(test_json_network_info)
