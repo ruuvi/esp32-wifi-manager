@@ -66,8 +66,9 @@ QueueHandle_t wifi_manager_queue;
 
 SemaphoreHandle_t wifi_manager_json_mutex   = NULL;
 SemaphoreHandle_t wifi_manager_sta_ip_mutex = NULL;
-char *            wifi_manager_sta_ip       = NULL;
-uint16_t          ap_num                    = MAX_AP_NUM;
+char              wifi_manager_sta_ip[IP4ADDR_STRLEN_MAX + 1];
+
+uint16_t          ap_num = MAX_AP_NUM;
 wifi_ap_record_t *accessp_records;
 
 wifi_config_t *wifi_manager_config_sta = NULL;
@@ -180,7 +181,6 @@ wifi_manager_start(const WiFiAntConfig_t *pWiFiAntConfig)
         cb_ptr_arr[i] = NULL;
     }
     wifi_manager_sta_ip_mutex = xSemaphoreCreateMutex();
-    wifi_manager_sta_ip       = (char *)malloc(sizeof(char) * IP4ADDR_STRLEN_MAX);
     wifi_manager_safe_update_sta_ip_string((uint32_t)0);
     wifi_manager_event_group = xEventGroupCreate();
 
@@ -454,9 +454,10 @@ wifi_manager_safe_update_sta_ip_string(uint32_t ip)
 {
     if (wifi_manager_lock_sta_ip_string(portMAX_DELAY))
     {
-        struct ip4_addr ip4;
-        ip4.addr = ip;
-        strcpy(wifi_manager_sta_ip, ip4addr_ntoa(&ip4));
+        const struct ip4_addr ip4 = {
+            .addr = ip,
+        };
+        inet_ntop(AF_INET, &ip4, wifi_manager_sta_ip, sizeof(wifi_manager_sta_ip));
         ESP_LOGI(TAG, "Set STA IP String to: %s", wifi_manager_sta_ip);
         wifi_manager_unlock_sta_ip_string();
     }
@@ -625,8 +626,7 @@ wifi_manager_destroy()
         accessp_records = NULL;
         json_access_points_deinit();
         json_network_info_deinit();
-        free(wifi_manager_sta_ip);
-        wifi_manager_sta_ip = NULL;
+        memset(wifi_manager_sta_ip, 0, sizeof(wifi_manager_sta_ip));
         if (wifi_manager_config_sta)
         {
             free(wifi_manager_config_sta);
