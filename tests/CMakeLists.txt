@@ -65,6 +65,6 @@ add_test(NAME test_json_access_points
 )
 
 add_test(NAME test_sta_ip_unsafe
-        COMMAND ruuvi_esp32-wifi-manager-test-sta_ip
-        --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-sta_ip>/gtestresults.xml
+        COMMAND ruuvi_esp32-wifi-manager-test-sta_ip_unsafe
+        --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-sta_ip_unsafe>/gtestresults.xml
 )

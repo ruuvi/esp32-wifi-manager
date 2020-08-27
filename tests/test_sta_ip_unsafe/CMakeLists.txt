@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ruuvi_esp32-wifi-manager-test-sta_ip)
-set(ProjectId ruuvi_esp32-wifi-manager-test-sta_ip)
+project(ruuvi_esp32-wifi-manager-test-sta_ip_unsafe)
+set(ProjectId ruuvi_esp32-wifi-manager-test-sta_ip_unsafe)
 
 add_executable(
         ${ProjectId}
@@ -25,7 +25,7 @@ target_include_directories(${ProjectId} PUBLIC
 )
 
 target_compile_definitions(${ProjectId} PUBLIC
-        RUUVI_TESTS_STA_IP=1
+        RUUVI_TESTS_STA_IP_UNSAFE=1
 )
 
 target_compile_options(${ProjectId} PUBLIC

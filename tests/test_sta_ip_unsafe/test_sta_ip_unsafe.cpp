@@ -1,3 +1,10 @@
+/**
+ * @file test_sta_ip_unsafe.cpp
+ * @author TheSomeMan
+ * @date 2020-08-26
+ * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
+ */
+
 #include "gtest/gtest.h"
 #include <string>
 #include "sta_ip_unsafe.h"
@@ -31,9 +38,7 @@ TestStaIpUnsafe::TestStaIpUnsafe()
 {
 }
 
-TestStaIpUnsafe::~TestStaIpUnsafe()
-{
-}
+TestStaIpUnsafe::~TestStaIpUnsafe() = default;
 
 /*** Unit-Tests *******************************************************************************************************/
 
