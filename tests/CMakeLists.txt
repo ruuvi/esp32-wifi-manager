@@ -43,6 +43,7 @@ add_subdirectory(test_json)
 add_subdirectory(test_json_network_info)
 add_subdirectory(test_json_access_points)
 add_subdirectory(test_sta_ip_unsafe)
+add_subdirectory(test_sta_ip_safe)
 
 add_test(NAME test_str_buf
         COMMAND ruuvi_esp32-wifi-manager-test-str_buf
@@ -67,4 +68,9 @@ add_test(NAME test_json_access_points
 add_test(NAME test_sta_ip_unsafe
         COMMAND ruuvi_esp32-wifi-manager-test-sta_ip_unsafe
         --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-sta_ip_unsafe>/gtestresults.xml
+)
+
+add_test(NAME test_sta_ip_safe
+        COMMAND ruuvi_esp32-wifi-manager-test-sta_ip_safe
+        --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-sta_ip_safe>/gtestresults.xml
 )
