@@ -13,6 +13,9 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/json_network_info.h
             src/ruuvi_gwui_html.c
             src/ruuvi_gwui_html.h
+            src/sta_ip.h
+            src/sta_ip_safe.c
+            src/sta_ip_safe.h
             src/sta_ip_unsafe.c
             src/sta_ip_unsafe.h
             src/str_buf.c
