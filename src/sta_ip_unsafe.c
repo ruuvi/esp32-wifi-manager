@@ -11,6 +11,10 @@
 
 static char g_sta_ip_str_buf[IP4ADDR_STRLEN_MAX + 1];
 
+_Static_assert(
+    sizeof(sta_ip_string_t) >= sizeof(g_sta_ip_str_buf),
+    "size of sta_ip_string_t less than IP4ADDR_STRLEN_MAX+1");
+
 static void
 sta_ip_unsafe_clear(void)
 {
@@ -35,8 +39,16 @@ sta_ip_unsafe_get_str(void)
     return g_sta_ip_str_buf;
 }
 
+sta_ip_string_t
+sta_ip_unsafe_get_copy(void)
+{
+    sta_ip_string_t ipv4_str = { 0 };
+    snprintf(ipv4_str.buf, sizeof(ipv4_str.buf), "%s", g_sta_ip_str_buf);
+    return ipv4_str;
+}
+
 void
-sta_ip_unsafe_set(const uint32_t ip)
+sta_ip_unsafe_set(const sta_ip_address_t ip)
 {
     const ip4_addr_t addr_ip4 = {
         .addr = ip,

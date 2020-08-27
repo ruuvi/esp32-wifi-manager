@@ -9,6 +9,7 @@
 #define RUUVI_ESP32_WIFI_MANAGER_STA_IP_UNSAFE_H
 
 #include <stdint.h>
+#include "sta_ip.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +22,7 @@ void
 sta_ip_unsafe_deinit(void);
 
 void
-sta_ip_unsafe_set(const uint32_t ip);
+sta_ip_unsafe_set(const sta_ip_address_t ip);
 
 void
 sta_ip_unsafe_reset(void);
@@ -29,7 +30,10 @@ sta_ip_unsafe_reset(void);
 const char *
 sta_ip_unsafe_get_str(void);
 
-uint32_t
+sta_ip_string_t
+sta_ip_unsafe_get_copy(void);
+
+sta_ip_address_t
 sta_ip_unsafe_conv_str_to_ip(const char *p_ip_addr_str);
 
 #ifdef __cplusplus
