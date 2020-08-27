@@ -3,6 +3,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/embed_files.txt)
 if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
     idf_component_register(
         SRCS
+            src/ap_mac.h
+            src/ap_ssid.c
+            src/ap_ssid.h
             src/dns_server.c
             src/http_server.c
             src/json.c

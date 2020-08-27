@@ -39,6 +39,7 @@ include_directories(
 #)
 
 add_subdirectory(test_str_buf)
+add_subdirectory(test_ap_ssid)
 add_subdirectory(test_json)
 add_subdirectory(test_json_network_info)
 add_subdirectory(test_json_access_points)
@@ -48,6 +49,11 @@ add_subdirectory(test_sta_ip_safe)
 add_test(NAME test_str_buf
         COMMAND ruuvi_esp32-wifi-manager-test-str_buf
             --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-str_buf>/gtestresults.xml
+)
+
+add_test(NAME test_ap_ssid
+        COMMAND ruuvi_esp32-wifi-manager-test-ap_ssid
+        --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-ap_ssid>/gtestresults.xml
 )
 
 add_test(NAME test_json

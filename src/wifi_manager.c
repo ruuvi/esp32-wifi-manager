@@ -58,6 +58,7 @@ Contains the freeRTOS task and all necessary support
 #include "json_access_points.h"
 #include "../../main/includes/ethernet.h"
 #include "sta_ip_safe.h"
+#include "ap_ssid.h"
 
 #undef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
@@ -702,7 +703,12 @@ wifi_manager(void *pvParameters)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
 
     /* wifi scanner config */
-    wifi_scan_config_t scan_config = { .ssid = 0, .bssid = 0, .channel = 0, .show_hidden = true };
+    wifi_scan_config_t scan_config = {
+        .ssid        = 0,
+        .bssid       = 0,
+        .channel     = 0,
+        .show_hidden = true,
+    };
 
     /* default wifi config */
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -737,19 +743,13 @@ wifi_manager(void *pvParameters)
     };
 
     {
-        uint8_t ap_mac[6];
-        memset(ap_mac, 0, sizeof(ap_mac));
-        ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, ap_mac));
-        char tmp_ap_ssid[sizeof(wifi_settings.ap_ssid) - 5];
-        strncpy(tmp_ap_ssid, (const char *)&wifi_settings.ap_ssid[0], sizeof(tmp_ap_ssid));
-        tmp_ap_ssid[sizeof(tmp_ap_ssid) - 1] = '\0';
-        snprintf(
+        ap_mac_t ap_mac = { 0 };
+        ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, &ap_mac.mac[0]));
+        ap_ssid_generate(
             (char *)&ap_config.ap.ssid[0],
             sizeof(ap_config.ap.ssid),
-            "%s %02X%02X",
-            tmp_ap_ssid,
-            ap_mac[4],
-            ap_mac[5]);
+            (const char *)&wifi_settings.ap_ssid[0],
+            &ap_mac);
     }
     snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", wifi_settings.ap_pwd);
 
