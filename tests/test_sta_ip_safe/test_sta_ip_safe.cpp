@@ -41,11 +41,13 @@ protected:
         while (0 != sem_wait(&semaFreeRTOS))
         {
         }
+        esp_log_wrapper_init();
     }
 
     void
     TearDown() override
     {
+        esp_log_wrapper_deinit();
         cmdQueue.push_and_wait(MainTaskCmd_Exit);
         vTaskEndScheduler();
         void *ret_code = nullptr;
