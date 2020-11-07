@@ -900,7 +900,7 @@ wifi_manager(void *pvParameters)
                     /* if a scan is already in progress this message is simply ignored thanks to the
                      * WIFI_MANAGER_SCAN_BIT uxBit */
                     uxBits = xEventGroupGetBits(wifi_manager_event_group);
-                    if (!(uxBits & WIFI_MANAGER_SCAN_BIT))
+                    if (0 == (uxBits & (uint32_t)WIFI_MANAGER_SCAN_BIT))
                     {
                         xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
                         esp_err_t ret = esp_wifi_scan_start(&scan_config, false);
