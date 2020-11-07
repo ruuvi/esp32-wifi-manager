@@ -726,6 +726,20 @@ wifi_manager_set_callback(message_code_t message_code, void (*func_ptr)(void *))
     }
 }
 
+static connection_request_made_by_code_t
+wifiman_conv_param_to_conn_req(const void *p_param)
+{
+    const connection_request_made_by_code_t conn_req = (connection_request_made_by_code_t)(uintptr_t)p_param;
+    return conn_req;
+}
+
+static sta_ip_address_t
+wifiman_conv_param_to_ip_addr(const void *p_param)
+{
+    const sta_ip_address_t ip_addr = (sta_ip_address_t)(uintptr_t)p_param;
+    return ip_addr;
+}
+
 void
 wifi_manager(void *pvParameters)
 {
@@ -926,17 +940,19 @@ wifi_manager(void *pvParameters)
                     break;
 
                 case ORDER_CONNECT_STA:
+                {
                     ESP_LOGI(TAG, "MESSAGE: ORDER_CONNECT_STA");
 
                     /* very important: precise that this connection attempt is specifically requested.
                      * Param in that case is a boolean indicating if the request was made automatically
                      * by the wifi_manager.
                      * */
-                    if ((BaseType_t)msg.param == CONNECTION_REQUEST_USER)
+                    const connection_request_made_by_code_t conn_req = wifiman_conv_param_to_conn_req(msg.param);
+                    if (conn_req == CONNECTION_REQUEST_USER)
                     {
                         xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
                     }
-                    else if ((BaseType_t)msg.param == CONNECTION_REQUEST_RESTORE_CONNECTION)
+                    else if (conn_req == CONNECTION_REQUEST_RESTORE_CONNECTION)
                     {
                         xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
                     }
@@ -959,6 +975,7 @@ wifi_manager(void *pvParameters)
                         (*cb_ptr_arr[msg.code])(NULL);
 
                     break;
+                }
 
                 case EVENT_STA_DISCONNECTED:
                     ESP_LOGI(TAG, "MESSAGE: EVENT_STA_DISCONNECTED with Reason code: %d", (uint32_t)msg.param);
@@ -1095,6 +1112,7 @@ wifi_manager(void *pvParameters)
                     break;
 
                 case EVENT_STA_GOT_IP:
+                {
                     ESP_LOGI(TAG, "MESSAGE: EVENT_STA_GOT_IP");
 
                     uxBits = xEventGroupGetBits(wifi_manager_event_group);
@@ -1103,7 +1121,8 @@ wifi_manager(void *pvParameters)
                     xEventGroupClearBits(wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
 
                     /* save IP as a string for the HTTP server host */
-                    sta_ip_safe_set((uint32_t)(uintptr_t)msg.param, portMAX_DELAY);
+                    const sta_ip_address_t ip_addr = wifiman_conv_param_to_ip_addr(msg.param);
+                    sta_ip_safe_set(ip_addr, portMAX_DELAY);
 
                     /* save wifi config in NVS if it wasn't a restored of a connection */
                     if (uxBits & WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)
@@ -1136,6 +1155,7 @@ wifi_manager(void *pvParameters)
                         (*cb_ptr_arr[msg.code])(NULL);
 
                     break;
+                }
 
                 case ORDER_DISCONNECT_STA:
                     ESP_LOGI(TAG, "MESSAGE: ORDER_DISCONNECT_STA");
