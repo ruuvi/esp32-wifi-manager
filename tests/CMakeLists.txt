@@ -14,7 +14,7 @@ enable_testing()
 add_subdirectory(googletest)
 add_subdirectory(posix_gcc_simulator)
 
-set(RUUVI_ESP_WRAPPERS ${CMAKE_CURRENT_SOURCE_DIR}/../../ruuvi.esp_wrappers.c)
+set(RUUVI_ESP_WRAPPERS ${CMAKE_CURRENT_SOURCE_DIR}/ruuvi.esp_wrappers.c)
 set(RUUVI_ESP_WRAPPERS_INC ${RUUVI_ESP_WRAPPERS}/include)
 
 set(RUUVI_ESP_WRAPPERS_TESTS_COMMON ${RUUVI_ESP_WRAPPERS}/tests/common)
