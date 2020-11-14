@@ -563,6 +563,10 @@ wifi_manager_event_handler(void *ctx, esp_event_base_t event_base, int32_t event
                 break;
         }
     }
+    else
+    {
+        // MISRA C:2012, 15.7 - All if...else if constructs shall be terminated with an else statement
+    }
 }
 
 wifi_config_t *
