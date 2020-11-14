@@ -42,26 +42,33 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include <esp_log.h>
 #include <esp_err.h>
 #include <nvs_flash.h>
-
 #include <lwip/err.h>
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
 #include <lwip/dns.h>
-
 #include <byteswap.h>
-
 #include "wifi_manager.h"
 #include "dns_server.h"
+#include "attribs.h"
+#include "os_task.h"
+#include "log.h"
 
 static const char   TAG[]           = "dns_server";
 static TaskHandle_t task_dns_server = NULL;
 int                 socket_fd;
 
+ATTR_NORETURN
+void
+dns_server(ATTR_UNUSED void *p_params);
+
 void
 dns_server_start(void)
 {
-    xTaskCreate(&dns_server, "dns_server", 3072, NULL, WIFI_MANAGER_TASK_PRIORITY - 1, &task_dns_server);
+    if (!os_task_create(&dns_server, "dns_server", 3072, NULL, WIFI_MANAGER_TASK_PRIORITY - 1, &task_dns_server))
+    {
+        LOG_ERR("Can't create thread");
+    }
 }
 
 void
@@ -75,10 +82,10 @@ dns_server_stop(void)
     }
 }
 
+ATTR_NORETURN
 void
-dns_server(void *pvParameters)
+dns_server(ATTR_UNUSED void *p_params)
 {
-
     struct sockaddr_in sa, ra;
 
     /* Set redirection DNS hijack to the access point IP */
