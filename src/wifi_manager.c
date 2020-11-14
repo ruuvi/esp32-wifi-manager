@@ -140,13 +140,13 @@ const int WIFI_MANAGER_SCAN_BIT = BIT7;
 const int WIFI_MANAGER_REQUEST_DISCONNECT_BIT = BIT8;
 
 void
-wifi_manager_scan_async()
+wifi_manager_scan_async(void)
 {
     wifiman_msg_send_cmd_start_wifi_scan();
 }
 
 void
-wifi_manager_disconnect_async()
+wifi_manager_disconnect_async(void)
 {
     wifiman_msg_send_cmd_disconnect_sta();
 }
@@ -262,7 +262,7 @@ wifi_manager_clear_sta_config(void)
 }
 
 esp_err_t
-wifi_manager_save_sta_config()
+wifi_manager_save_sta_config(void)
 {
     nvs_handle handle;
     esp_err_t  esp_err;
@@ -368,7 +368,7 @@ wifiman_read_wifi_sta_config(nvs_handle handle)
 }
 
 bool
-wifi_manager_fetch_wifi_sta_config()
+wifi_manager_fetch_wifi_sta_config(void)
 {
     nvs_handle handle = 0;
     if (nvs_open(wifi_manager_nvs_namespace, NVS_READONLY, &handle) == ESP_OK)
@@ -470,7 +470,7 @@ wifi_manager_lock_json_buffer(TickType_t xTicksToWait)
 }
 
 void
-wifi_manager_unlock_json_buffer()
+wifi_manager_unlock_json_buffer(void)
 {
     xSemaphoreGive(wifi_manager_json_mutex);
 }
@@ -547,7 +547,7 @@ wifi_manager_event_handler(void *ctx, esp_event_base_t event_base, int32_t event
 }
 
 wifi_config_t *
-wifi_manager_get_wifi_sta_config()
+wifi_manager_get_wifi_sta_config(void)
 {
     return &wifi_manager_config_sta;
 }
@@ -561,7 +561,7 @@ wifi_manager_get_wifi_sta_ssid(void)
 }
 
 void
-wifi_manager_connect_async()
+wifi_manager_connect_async(void)
 {
     /* in order to avoid a false positive on the front end app we need to quickly flush the ip json
      * There'se a risk the front end sees an IP or a password error when in fact
@@ -576,7 +576,7 @@ wifi_manager_connect_async()
 }
 
 void
-wifi_manager_stop()
+wifi_manager_stop(void)
 {
     ESP_LOGI(TAG, "%s", __func__);
     esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler);
@@ -593,7 +593,7 @@ wifi_manager_stop()
 }
 
 void
-wifi_manager_destroy()
+wifi_manager_destroy(void)
 {
     ESP_LOGI(TAG, "%s", __func__);
     if (task_wifi_manager)
