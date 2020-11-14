@@ -100,13 +100,13 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 {
     struct sockaddr_in client     = { 0 };
     socklen_t          client_len = sizeof(client);
-    uint8_t            data[DNS_QUERY_MAX_SIZE];      /* dns query buffer */
+    uint8_t            data[DNS_QUERY_MAX_SIZE + 1];  /* dns query buffer */
     uint8_t            response[DNS_ANSWER_MAX_SIZE]; /* dns response buffer */
     char ip_address[INET_ADDRSTRLEN]; /* buffer to store IPs as text. This is only used for debug and serves no other
                                          purpose */
 
     memset(data, 0x00, sizeof(data));
-    const int length = recvfrom(socket_fd, data, sizeof(data), 0, (struct sockaddr *)&client, &client_len);
+    const int length = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
 
     /*if the query is bigger than the buffer size we simply ignore it. This case should only happen in case of
      * multiple queries within the same DNS packet and is not supported by this simple DNS hijack. */
