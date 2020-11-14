@@ -50,6 +50,10 @@ json_access_points_init(void)
 void
 json_access_points_deinit(void)
 {
+    /* This is a public API of json_access_points.c
+     * It's empty because internal buffer g_json_access_points_buf is statically allocated
+     * and it does not require deinit actions.
+     * */
 }
 
 void
