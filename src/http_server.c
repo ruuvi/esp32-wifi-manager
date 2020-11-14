@@ -196,7 +196,7 @@ write_content_from_static_mem(struct netconn *conn, const http_server_resp_t *p_
 }
 
 static void
-write_content_from_heap(struct netconn *conn, const http_server_resp_t *p_resp)
+write_content_from_heap(struct netconn *conn, http_server_resp_t *p_resp)
 {
     const err_t err = netconn_write(conn, p_resp->select_location.memory.p_buf, p_resp->content_len, NETCONN_COPY);
     if (ERR_OK != err)
@@ -246,7 +246,7 @@ write_content_from_fatfs(struct netconn *conn, const http_server_resp_t *p_resp)
 }
 
 static void
-http_server_netconn_resp_200(struct netconn *conn, const http_server_resp_t *p_resp)
+http_server_netconn_resp_200(struct netconn *conn, http_server_resp_t *p_resp)
 {
     const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
                                               && ('\0' != p_resp->p_content_type_param[0]);
@@ -707,7 +707,7 @@ http_server_netconn_serve(struct netconn *conn)
         }
         else
         {
-            const http_server_resp_t resp = http_server_handle_req(line, save_ptr);
+            http_server_resp_t resp = http_server_handle_req(line, save_ptr);
             switch (resp.http_resp_code)
             {
                 case HTTP_RESP_CODE_200:
