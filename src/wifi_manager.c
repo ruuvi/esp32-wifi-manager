@@ -60,6 +60,7 @@ Contains the freeRTOS task and all necessary support
 #include "sta_ip_safe.h"
 #include "ap_ssid.h"
 #include "wifiman_msg.h"
+#include "access_points_list.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
@@ -639,75 +640,6 @@ wifi_manager_destroy(void)
 }
 
 void
-wifi_manager_filter_unique(wifi_ap_record_t *aplist, uint16_t *aps)
-{
-    int               total_unique;
-    wifi_ap_record_t *first_free;
-    total_unique = *aps;
-
-    first_free = NULL;
-
-    for (int i = 0; i < *aps - 1; i++)
-    {
-        wifi_ap_record_t *ap = &aplist[i];
-
-        /* skip the previously removed APs */
-        if (ap->ssid[0] == 0)
-        {
-            continue;
-        }
-
-        /* remove the identical SSID+authmodes */
-        for (int j = i + 1; j < *aps; j++)
-        {
-            wifi_ap_record_t *ap1 = &aplist[j];
-            if ((strcmp((const char *)ap->ssid, (const char *)ap1->ssid) == 0) && (ap->authmode == ap1->authmode))
-            { /* same SSID, different auth mode is skipped */
-                /* save the rssi for the display */
-                if ((ap1->rssi) > (ap->rssi))
-                {
-                    ap->rssi = ap1->rssi;
-                }
-                /* clearing the record */
-                memset(ap1, 0, sizeof(wifi_ap_record_t));
-            }
-        }
-    }
-    /* reorder the list so APs follow each other in the list */
-    for (int i = 0; i < *aps; i++)
-    {
-        wifi_ap_record_t *ap = &aplist[i];
-        /* skipping all that has no name */
-        if (ap->ssid[0] == 0)
-        {
-            /* mark the first free slot */
-            if (first_free == NULL)
-            {
-                first_free = ap;
-            }
-            total_unique--;
-            continue;
-        }
-        if (first_free != NULL)
-        {
-            memcpy(first_free, ap, sizeof(wifi_ap_record_t));
-            memset(ap, 0, sizeof(wifi_ap_record_t));
-            /* find the next free slot */
-            for (int j = 0; j < *aps; j++)
-            {
-                if (aplist[j].ssid[0] == 0)
-                {
-                    first_free = &aplist[j];
-                    break;
-                }
-            }
-        }
-    }
-    /* update the length of the list */
-    *aps = total_unique;
-}
-
-void
 wifi_manager_set_callback(message_code_t message_code, wifi_manager_cb_ptr func_ptr)
 {
     if (message_code < MESSAGE_CODE_COUNT)
@@ -851,7 +783,7 @@ wifi_manager(void *pvParameters)
                 if (wifi_manager_lock_json_buffer(pdMS_TO_TICKS(1000)))
                 {
                     /* Will remove the duplicate SSIDs from the list and update ap_num */
-                    wifi_manager_filter_unique(accessp_records, &ap_num);
+                    ap_num = ap_list_filter_unique(accessp_records, ap_num);
                     json_access_points_generate(accessp_records, ap_num);
                     wifi_manager_unlock_json_buffer();
                 }
