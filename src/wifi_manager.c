@@ -61,7 +61,6 @@ Contains the freeRTOS task and all necessary support
 #include "ap_ssid.h"
 #include "wifiman_msg.h"
 
-#undef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
 
