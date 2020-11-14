@@ -115,6 +115,11 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
         LOG_ERR("recvfrom got length less than 0");
         return;
     }
+    if ((size_t)length < sizeof(dns_header_t))
+    {
+        LOG_ERR("recvfrom got length less than dsn_header (%u bytes)", (uint32_t)sizeof(dns_header_t));
+        return;
+    }
     const size_t max_allowed_len = DNS_ANSWER_MAX_SIZE - sizeof(dns_answer_t);
     if ((size_t)length > max_allowed_len)
     {
