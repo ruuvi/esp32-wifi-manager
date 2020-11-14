@@ -239,23 +239,33 @@ wifi_manager_clear_sta_config(void)
 
     esp_err = nvs_open(wifi_manager_nvs_namespace, NVS_READWRITE, &handle);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "ssid", "", 32);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "password", "", 64);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "settings", &wifi_default_settings, sizeof(wifi_default_settings));
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_commit(handle);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     nvs_close(handle);
     return ESP_OK;
@@ -270,23 +280,33 @@ wifi_manager_save_sta_config(void)
 
     esp_err = nvs_open(wifi_manager_nvs_namespace, NVS_READWRITE, &handle);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "ssid", wifi_manager_config_sta.sta.ssid, 32);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "password", wifi_manager_config_sta.sta.password, 64);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_set_blob(handle, "settings", &wifi_settings, sizeof(wifi_settings));
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     esp_err = nvs_commit(handle);
     if (esp_err != ESP_OK)
+    {
         return esp_err;
+    }
 
     nvs_close(handle);
 
@@ -630,7 +650,9 @@ wifi_manager_filter_unique(wifi_ap_record_t *aplist, uint16_t *aps)
 
         /* skip the previously removed APs */
         if (ap->ssid[0] == 0)
+        {
             continue;
+        }
 
         /* remove the identical SSID+authmodes */
         for (int j = i + 1; j < *aps; j++)
@@ -640,7 +662,9 @@ wifi_manager_filter_unique(wifi_ap_record_t *aplist, uint16_t *aps)
             { /* same SSID, different auth mode is skipped */
                 /* save the rssi for the display */
                 if ((ap1->rssi) > (ap->rssi))
+                {
                     ap->rssi = ap1->rssi;
+                }
                 /* clearing the record */
                 memset(ap1, 0, sizeof(wifi_ap_record_t));
             }
@@ -655,7 +679,9 @@ wifi_manager_filter_unique(wifi_ap_record_t *aplist, uint16_t *aps)
         {
             /* mark the first free slot */
             if (first_free == NULL)
+            {
                 first_free = ap;
+            }
             total_unique--;
             continue;
         }
@@ -836,7 +862,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
 
@@ -862,8 +890,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
-
+                }
                 break;
 
             case ORDER_LOAD_AND_RESTORE_STA:
@@ -882,7 +911,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
 
@@ -919,7 +950,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
             }
@@ -1040,7 +1073,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
             }
@@ -1054,7 +1089,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
 
@@ -1099,7 +1136,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
             }
@@ -1115,7 +1154,9 @@ wifi_manager(void *pvParameters)
 
                 /* callback */
                 if (cb_ptr_arr[msg.code])
+                {
                     (*cb_ptr_arr[msg.code])(NULL);
+                }
 
                 break;
 
