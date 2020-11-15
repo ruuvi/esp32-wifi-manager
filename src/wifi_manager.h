@@ -89,12 +89,6 @@ void
 filter_unique(wifi_ap_record_t *aplist, uint16_t *ap_num);
 
 /**
- * Main task for the wifi_manager
- */
-void
-wifi_manager(void *pvParameters);
-
-/**
  * @brief clears the current STA wifi config in flash ram storage.
  */
 esp_err_t

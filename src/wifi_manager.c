@@ -139,6 +139,10 @@ const int WIFI_MANAGER_SCAN_BIT = BIT7;
 /* @brief When set, means user requested for a disconnect */
 const int WIFI_MANAGER_REQUEST_DISCONNECT_BIT = BIT8;
 
+ATTR_NORETURN
+static void
+wifi_manager(const void *p_params);
+
 void
 wifi_manager_scan_async(void)
 {
@@ -191,13 +195,17 @@ wifi_manager_start(
     wifi_manager_event_group = xEventGroupCreate();
 
     /* start wifi manager task */
-    xTaskCreate(
-        &wifi_manager,
-        "wifi_manager",
-        4096,
-        (void *)pWiFiAntConfig,
-        WIFI_MANAGER_TASK_PRIORITY,
-        &task_wifi_manager);
+    const char *task_name = "wifi_manager";
+    if (!os_task_create_with_const_param(
+            &wifi_manager,
+            task_name,
+            4096,
+            (const void *)pWiFiAntConfig,
+            WIFI_MANAGER_TASK_PRIORITY,
+            &task_wifi_manager))
+    {
+        LOG_ERR("Can't create thread: %s", task_name);
+    }
 }
 
 http_server_resp_t
@@ -985,10 +993,11 @@ wifi_manager_main_loop(void)
     }
 }
 
-void
-wifi_manager(void *pvParameters)
+ATTR_NORETURN
+static void
+wifi_manager(const void *p_params)
 {
-    const WiFiAntConfig_t *pWiFiAntConfig = pvParameters;
+    const WiFiAntConfig_t *pWiFiAntConfig = p_params;
 
     /* initialize the tcp stack */
     tcpip_adapter_init();
