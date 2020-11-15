@@ -509,7 +509,7 @@ wifi_manager_unlock_json_buffer(void)
 }
 
 void
-wifi_manager_event_handler(void *ctx, esp_event_base_t event_base, int32_t event_id, void *event_data)
+wifi_manager_event_handler(ATTR_UNUSED void *p_ctx, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_EVENT)
     {

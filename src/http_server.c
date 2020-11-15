@@ -81,7 +81,7 @@ typedef int file_read_result_t;
  * @see void http_server_start()
  */
 static _Noreturn void
-http_server_task(void *pvParameters);
+http_server_task(void *p_param);
 
 //#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 /* @brief tag used for ESP serial console messages */
@@ -384,7 +384,7 @@ http_server_stop(void)
 }
 
 static _Noreturn void
-http_server_task(void *pvParameters)
+http_server_task(ATTR_UNUSED void *p_param)
 {
     struct netconn *conn, *newconn;
     err_t           err;
