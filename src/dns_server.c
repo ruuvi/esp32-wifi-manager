@@ -65,7 +65,8 @@ dns_server(ATTR_UNUSED void *p_params);
 void
 dns_server_start(void)
 {
-    if (!os_task_create(&dns_server, "dns_server", 3072, NULL, WIFI_MANAGER_TASK_PRIORITY - 1, &task_dns_server))
+    const uint32_t stack_depth = 3072U;
+    if (!os_task_create(&dns_server, "dns_server", stack_depth, NULL, WIFI_MANAGER_TASK_PRIORITY - 1, &task_dns_server))
     {
         LOG_ERR("Can't create thread");
     }

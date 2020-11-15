@@ -195,11 +195,12 @@ wifi_manager_start(
     wifi_manager_event_group = xEventGroupCreate();
 
     /* start wifi manager task */
-    const char *task_name = "wifi_manager";
+    const char *   task_name   = "wifi_manager";
+    const uint32_t stack_depth = 4096U;
     if (!os_task_create_with_const_param(
             &wifi_manager,
             task_name,
-            4096,
+            stack_depth,
             (const void *)pWiFiAntConfig,
             WIFI_MANAGER_TASK_PRIORITY,
             &task_wifi_manager))
@@ -251,13 +252,13 @@ wifi_manager_clear_sta_config(void)
         return esp_err;
     }
 
-    esp_err = nvs_set_blob(handle, "ssid", "", 32);
+    esp_err = nvs_set_blob(handle, "ssid", "", sizeof(wifi_manager_config_sta.sta.ssid));
     if (esp_err != ESP_OK)
     {
         return esp_err;
     }
 
-    esp_err = nvs_set_blob(handle, "password", "", 64);
+    esp_err = nvs_set_blob(handle, "password", "", sizeof(wifi_manager_config_sta.sta.password));
     if (esp_err != ESP_OK)
     {
         return esp_err;
@@ -292,13 +293,17 @@ wifi_manager_save_sta_config(void)
         return esp_err;
     }
 
-    esp_err = nvs_set_blob(handle, "ssid", wifi_manager_config_sta.sta.ssid, 32);
+    esp_err = nvs_set_blob(handle, "ssid", wifi_manager_config_sta.sta.ssid, sizeof(wifi_manager_config_sta.sta.ssid));
     if (esp_err != ESP_OK)
     {
         return esp_err;
     }
 
-    esp_err = nvs_set_blob(handle, "password", wifi_manager_config_sta.sta.password, 64);
+    esp_err = nvs_set_blob(
+        handle,
+        "password",
+        wifi_manager_config_sta.sta.password,
+        sizeof(wifi_manager_config_sta.sta.password));
     if (esp_err != ESP_OK)
     {
         return esp_err;

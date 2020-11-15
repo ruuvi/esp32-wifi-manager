@@ -355,10 +355,11 @@ http_server_start(void)
     if (task_http_server == NULL)
     {
         ESP_LOGI(TAG, "Run http_server");
+        const uint32_t stack_depth = 20U * 1024U;
         if (!os_task_create(
                 &http_server_task,
                 "http_server",
-                20 * 1024,
+                stack_depth,
                 NULL,
                 WIFI_MANAGER_TASK_PRIORITY - 1,
                 &task_http_server))
@@ -387,8 +388,9 @@ http_server_task(void *pvParameters)
 {
     struct netconn *conn, *newconn;
     err_t           err;
-    conn = netconn_new(NETCONN_TCP);
-    netconn_bind(conn, IP_ADDR_ANY, 80);
+    conn                  = netconn_new(NETCONN_TCP);
+    const u16_t http_port = 80U;
+    netconn_bind(conn, IP_ADDR_ANY, http_port);
     netconn_listen(conn);
     ESP_LOGI(TAG, "HTTP Server listening on 80/tcp");
     for (;;)
@@ -476,7 +478,8 @@ http_server_handle_req_get(const char *p_file_name)
         if (0 == strcmp(p_file_name, "ap.json"))
         {
             /* if we can get the mutex, write the last version of the AP list */
-            if (!wifi_manager_lock_json_buffer((TickType_t)10))
+            const TickType_t ticks_to_wait = 10U;
+            if (!wifi_manager_lock_json_buffer(ticks_to_wait))
             {
                 ESP_LOGD(TAG, "http_server_netconn_serve: GET /ap.json failed to obtain mutex");
                 ESP_LOGI(TAG, "ap.json: 503");
@@ -495,7 +498,8 @@ http_server_handle_req_get(const char *p_file_name)
         }
         else if (0 == strcmp(p_file_name, "status.json"))
         {
-            if (!wifi_manager_lock_json_buffer((TickType_t)10))
+            const TickType_t ticks_to_wait = 10U;
+            if (!wifi_manager_lock_json_buffer(ticks_to_wait))
             {
                 ESP_LOGD(TAG, "http_server_netconn_serve: GET /status failed to obtain mutex");
                 ESP_LOGI(TAG, "status.json: 503");
