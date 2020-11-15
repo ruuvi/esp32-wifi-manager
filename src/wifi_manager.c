@@ -585,6 +585,8 @@ wifi_manager_event_handler(ATTR_UNUSED void *p_ctx, esp_event_base_t event_base,
                 ip_event_got_ip_t *ipevent = (ip_event_got_ip_t *)event_data;
                 wifiman_msg_send_ev_got_ip(ipevent->ip_info.ip.addr);
                 break;
+            default:
+                break;
         }
     }
     else
