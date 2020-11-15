@@ -90,8 +90,9 @@ replace_non_ascii_with_dots(char *p_domain)
     {
         if ((*p_ch < ' ') || (*p_ch > 'z'))
         {
-            *p_ch = '.'; /* technically we should test if the first two bits are 00 (e.g. if( (*c & 0xC0) == 0x00)
-                          *c = '.') but this makes the code a lot more readable */
+            /* Technically we should test if the first two bits are 00 (e.g. '0x00 == (*p_ch & 0xC0)')
+             * but this makes the code a lot more readable */
+            *p_ch = '.';
         }
     }
 }

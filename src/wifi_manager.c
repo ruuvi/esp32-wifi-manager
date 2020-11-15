@@ -172,12 +172,6 @@ wifi_manager_start(
     wifi_manager_http_cb_on_post_t cb_on_http_post,
     wifi_manager_http_callback_t   cb_on_http_delete)
 {
-    /* disable the default wifi logging */
-    // esp_log_level_set(TAG, ESP_LOG_DEBUG);
-
-    /* initialize flash memory */
-    // nvs_flash_init();
-
     g_wifi_cb_on_http_get    = cb_on_http_get;
     g_wifi_cb_on_http_post   = cb_on_http_post;
     g_wifi_cb_on_http_delete = cb_on_http_delete;
@@ -912,9 +906,6 @@ wifi_handle_cmd_start_ip(void)
 {
     ESP_LOGI(TAG, "MESSAGE: ORDER_START_AP");
     esp_wifi_set_mode(WIFI_MODE_APSTA);
-
-    // http_server_start();
-    // dns_server_start();
 }
 
 static void
@@ -954,7 +945,6 @@ wifi_handle_ev_got_ip(const wifiman_msg_param_t *p_param)
     }
 
     /* bring down DNS hijack */
-    // http_server_stop();
     dns_server_stop();
 }
 
