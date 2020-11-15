@@ -434,7 +434,7 @@ http_server_get_header(char *request, char *header_name, int *len)
     {
         ret = ptr + strlen(header_name);
         ptr = ret;
-        while (*ptr != '\0' && *ptr != '\n' && *ptr != '\r')
+        while ((*ptr != '\0') && (*ptr != '\n') && (*ptr != '\r'))
         {
             (*len)++;
             ptr++;
