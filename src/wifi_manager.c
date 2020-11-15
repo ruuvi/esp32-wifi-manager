@@ -85,28 +85,38 @@ static const char TAG[] = "wifi_manager";
 static TaskHandle_t task_wifi_manager = NULL;
 
 static const struct wifi_settings_t wifi_default_settings = {
-    .ap_ssid        = DEFAULT_AP_SSID,
-    .ap_pwd         = DEFAULT_AP_PASSWORD,
-    .ap_channel     = DEFAULT_AP_CHANNEL,
-    .ap_ssid_hidden = DEFAULT_AP_SSID_HIDDEN,
-    .ap_bandwidth   = DEFAULT_AP_BANDWIDTH,
-    .sta_only       = DEFAULT_STA_ONLY,
-    .sta_power_save = DEFAULT_STA_POWER_SAVE,
-    .sta_static_ip  = 0,
+    .ap_ssid              = DEFAULT_AP_SSID,
+    .ap_pwd               = DEFAULT_AP_PASSWORD,
+    .ap_channel           = DEFAULT_AP_CHANNEL,
+    .ap_ssid_hidden       = DEFAULT_AP_SSID_HIDDEN,
+    .ap_bandwidth         = DEFAULT_AP_BANDWIDTH,
+    .sta_only             = DEFAULT_STA_ONLY,
+    .sta_power_save       = DEFAULT_STA_POWER_SAVE,
+    .sta_static_ip        = 0,
+    .sta_static_ip_config = {
+        .ip               = { 0 },
+        .netmask          = { 0 },
+        .gw               = { 0 },
+    },
 };
 
 /**
  * The actual WiFi settings in use
  */
 struct wifi_settings_t wifi_settings = {
-    .ap_ssid        = DEFAULT_AP_SSID,
-    .ap_pwd         = DEFAULT_AP_PASSWORD,
-    .ap_channel     = DEFAULT_AP_CHANNEL,
-    .ap_ssid_hidden = DEFAULT_AP_SSID_HIDDEN,
-    .ap_bandwidth   = DEFAULT_AP_BANDWIDTH,
-    .sta_only       = DEFAULT_STA_ONLY,
-    .sta_power_save = DEFAULT_STA_POWER_SAVE,
-    .sta_static_ip  = 0,
+    .ap_ssid              = DEFAULT_AP_SSID,
+    .ap_pwd               = DEFAULT_AP_PASSWORD,
+    .ap_channel           = DEFAULT_AP_CHANNEL,
+    .ap_ssid_hidden       = DEFAULT_AP_SSID_HIDDEN,
+    .ap_bandwidth         = DEFAULT_AP_BANDWIDTH,
+    .sta_only             = DEFAULT_STA_ONLY,
+    .sta_power_save       = DEFAULT_STA_POWER_SAVE,
+    .sta_static_ip        = 0,
+    .sta_static_ip_config = {
+        .ip               = { 0 },
+        .netmask          = { 0 },
+        .gw               = { 0 },
+    },
 };
 
 const char wifi_manager_nvs_namespace[] = "espwifimgr";
@@ -700,10 +710,17 @@ wifi_handle_cmd_start_wifi_scan(void)
         xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
         /* wifi scanner config */
         const wifi_scan_config_t scan_config = {
-            .ssid        = 0,
-            .bssid       = 0,
+            .ssid        = NULL,
+            .bssid       = NULL,
             .channel     = 0,
             .show_hidden = true,
+            .scan_type   = WIFI_SCAN_TYPE_ACTIVE,
+            .scan_time   = {
+                .active  = {
+                    .min = 0,
+                    .max = 0,
+                },
+            },
         };
 
         const esp_err_t ret = esp_wifi_scan_start(&scan_config, false);
@@ -1044,6 +1061,16 @@ wifi_manager(const void *p_params)
     memset(&info, 0x00, sizeof(info));
     wifi_config_t ap_config = {
         .ap = {
+            .ssid            = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            },
+            .password        = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            },
             .ssid_len        = 0,
             .channel         = wifi_settings.ap_channel,
             .authmode        = WIFI_AUTH_WPA2_PSK,
