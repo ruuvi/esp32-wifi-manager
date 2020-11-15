@@ -153,13 +153,13 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 
     /* create DNS answer at the end of the query*/
     dns_answer_t *dns_answer = (dns_answer_t *)&response[length];
-    dns_answer->NAME         = __bswap_16(
+    dns_answer->NAME         = htons(
         0xC00C); /* This is a pointer to the beginning of the question.
                           * As per DNS standard, first two bits must be set to 11 for some odd reason hence 0xC0 */
-    dns_answer->TYPE     = __bswap_16(DNS_ANSWER_TYPE_A);
-    dns_answer->CLASS    = __bswap_16(DNS_ANSWER_CLASS_IN);
+    dns_answer->TYPE     = htons(DNS_ANSWER_TYPE_A);
+    dns_answer->CLASS    = htons(DNS_ANSWER_CLASS_IN);
     dns_answer->TTL      = (uint32_t)0x00000000; /* no caching. Avoids DNS poisoning since this is a DNS hijack */
-    dns_answer->RDLENGTH = __bswap_16(0x0004);   /* 4 byte => size of an ipv4 address */
+    dns_answer->RDLENGTH = htons(0x0004);        /* 4 byte => size of an ipv4 address */
     dns_answer->RDATA    = p_ip_resolved->addr;
 
     int err = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);

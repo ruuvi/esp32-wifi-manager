@@ -444,26 +444,21 @@ http_server_get_header(char *request, char *header_name, int *len)
     return NULL;
 }
 
-char *
-get_http_body(char *msg, int len, int *blen)
+static char *
+get_http_body(char *msg, uint32_t len, uint32_t *p_body_len)
 {
     char *newlines = "\r\n\r\n";
     char *p        = strstr(msg, newlines);
-    if (p)
-    {
-        p += strlen(newlines);
-    }
-    else
+    if (NULL == p)
     {
         ESP_LOGD(TAG, "http body not found: %s", msg);
         return 0;
     }
-
-    if (blen)
+    p += strlen(newlines);
+    if (NULL != p_body_len)
     {
-        *blen = len - (p - msg);
+        *p_body_len = len - (uint32_t)(ptrdiff_t)(p - msg);
     }
-
     return p;
 }
 
@@ -573,7 +568,7 @@ http_server_handle_req(char *line, char *save_ptr)
         return http_server_resp_400();
     }
     const char * http_cmd     = line;
-    const size_t http_cmd_len = p - line;
+    const size_t http_cmd_len = (size_t)(ptrdiff_t)(p - line);
     char *       path         = p + 1;
     if ('/' == path[0])
     {
@@ -638,7 +633,7 @@ http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p
     if (NULL != p_content_len_str)
     {
         const int   content_len = atoi(p_content_len_str);
-        int         body_len    = 0;
+        uint32_t    body_len    = 0;
         const char *p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
         if (NULL != p_body)
         {
