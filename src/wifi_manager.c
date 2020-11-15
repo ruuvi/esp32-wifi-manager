@@ -785,67 +785,71 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *p_param)
     }
 }
 
+/**
+ * @brief Handle event EVENT_STA_DISCONNECTED
+ * @note this even can be posted in numerous different conditions
+ *
+ * 1. SSID password is wrong
+ * 2. Manual disconnection ordered
+ * 3. Connection lost
+ *
+ * Having clear understand as to WHY the event was posted is key to having an efficient wifi manager
+ *
+ * With wifi_manager, we determine:
+ *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT is set, We consider it's a client that requested the
+ *connection. When WIFI_EVENT_STA_DISCONNECTED is posted, it's probably a password/something went
+ *wrong with the handshake.
+ *
+ *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT is set, it's a disconnection that was ASKED by the
+ *client (clicking disconnect in the app) When WIFI_EVENT_STA_DISCONNECTED is posted, saved wifi is
+ *erased from the NVS memory.
+ *
+ *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT and WIFI_MANAGER_REQUEST_STA_CONNECT_BIT are NOT set,
+ *it's a lost connection
+ *
+ *  In this version of the software, reason codes are not used. They are indicated here for
+ *potential future usage.
+ *
+ *  REASON CODE:
+ *  1       UNSPECIFIED
+ *  2       AUTH_EXPIRE auth no longer valid, this smells like someone changed a password on the AP
+ *  3       AUTH_LEAVE
+ *  4       ASSOC_EXPIRE
+ *  5       ASSOC_TOOMANY too many devices already connected to the AP => AP fails to respond
+ *  6       NOT_AUTHED
+ *  7       NOT_ASSOCED
+ *  8       ASSOC_LEAVE
+ *  9       ASSOC_NOT_AUTHED
+ *  10      DISASSOC_PWRCAP_BAD
+ *  11      DISASSOC_SUPCHAN_BAD
+ *  12      <n/a>
+ *  13      IE_INVALID
+ *  14      MIC_FAILURE
+ *  15      4WAY_HANDSHAKE_TIMEOUT wrong password! This was personnaly tested on my home wifi
+ *          with a wrong password.
+ *  16      GROUP_KEY_UPDATE_TIMEOUT
+ *  17      IE_IN_4WAY_DIFFERS
+ *  18      GROUP_CIPHER_INVALID
+ *  19      PAIRWISE_CIPHER_INVALID
+ *  20      AKMP_INVALID
+ *  21      UNSUPP_RSN_IE_VERSION
+ *  22      INVALID_RSN_IE_CAP
+ *  23      802_1X_AUTH_FAILED  wrong password?
+ *  24      CIPHER_SUITE_REJECTED
+ *  200     BEACON_TIMEOUT
+ *  201     NO_AP_FOUND
+ *  202     AUTH_FAIL
+ *  203     ASSOC_FAIL
+ *  204     HANDSHAKE_TIMEOUT
+ *
+ *
+ * @param p_param - pointer to wifiman_msg_param_t
+ */
 static void
 wifi_handle_ev_disconnected(const wifiman_msg_param_t *p_param)
 {
     const wifiman_disconnection_reason_t reason = wifiman_conv_param_to_reason(p_param);
     ESP_LOGI(TAG, "MESSAGE: EVENT_STA_DISCONNECTED with Reason code: %d", reason);
-
-    /* this even can be posted in numerous different conditions
-     *
-     * 1. SSID password is wrong
-     * 2. Manual disconnection ordered
-     * 3. Connection lost
-     *
-     * Having clear understand as to WHY the event was posted is key to having an efficient wifi manager
-     *
-     * With wifi_manager, we determine:
-     *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT is set, We consider it's a client that requested the
-     *connection. When WIFI_EVENT_STA_DISCONNECTED is posted, it's probably a password/something went
-     *wrong with the handshake.
-     *
-     *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT is set, it's a disconnection that was ASKED by the
-     *client (clicking disconnect in the app) When WIFI_EVENT_STA_DISCONNECTED is posted, saved wifi is
-     *erased from the NVS memory.
-     *
-     *  If WIFI_MANAGER_REQUEST_STA_CONNECT_BIT and WIFI_MANAGER_REQUEST_STA_CONNECT_BIT are NOT set,
-     *it's a lost connection
-     *
-     *  In this version of the software, reason codes are not used. They are indicated here for
-     *potential future usage.
-     *
-     *  REASON CODE:
-     *  1       UNSPECIFIED
-     *  2       AUTH_EXPIRE auth no longer valid, this smells like someone changed a password on the AP
-     *  3       AUTH_LEAVE
-     *  4       ASSOC_EXPIRE
-     *  5       ASSOC_TOOMANY too many devices already connected to the AP => AP fails to respond
-     *  6       NOT_AUTHED
-     *  7       NOT_ASSOCED
-     *  8       ASSOC_LEAVE
-     *  9       ASSOC_NOT_AUTHED
-     *  10      DISASSOC_PWRCAP_BAD
-     *  11      DISASSOC_SUPCHAN_BAD
-     *  12      <n/a>
-     *  13      IE_INVALID
-     *  14      MIC_FAILURE
-     *  15      4WAY_HANDSHAKE_TIMEOUT wrong password! This was personnaly tested on my home wifi
-     *          with a wrong password.
-     *  16      GROUP_KEY_UPDATE_TIMEOUT
-     *  17      IE_IN_4WAY_DIFFERS
-     *  18      GROUP_CIPHER_INVALID
-     *  19      PAIRWISE_CIPHER_INVALID
-     *  20      AKMP_INVALID
-     *  21      UNSUPP_RSN_IE_VERSION
-     *  22      INVALID_RSN_IE_CAP
-     *  23      802_1X_AUTH_FAILED  wrong password?
-     *  24      CIPHER_SUITE_REJECTED
-     *  200     BEACON_TIMEOUT
-     *  201     NO_AP_FOUND
-     *  202     AUTH_FAIL
-     *  203     ASSOC_FAIL
-     *  204     HANDSHAKE_TIMEOUT
-     * */
 
     /* reset saved sta IP */
     sta_ip_safe_reset(portMAX_DELAY);
@@ -1014,11 +1018,119 @@ wifi_manager_main_loop(void)
     }
 }
 
+static void
+wifi_manager_set_ant_config(const WiFiAntConfig_t *p_wifi_ant_config)
+{
+    if (NULL == p_wifi_ant_config)
+    {
+        return;
+    }
+    esp_err_t err = esp_wifi_set_ant_gpio(&p_wifi_ant_config->wifiAntGpioConfig);
+    if (ESP_OK != err)
+    {
+        ESP_LOGE(TAG, "esp_wifi_set_ant_gpio failed, res=%d", err);
+    }
+    err = esp_wifi_set_ant(&p_wifi_ant_config->wifiAntConfig);
+    if (ESP_OK != err)
+    {
+        ESP_LOGE(TAG, "esp_wifi_set_ant failed, res=%d", err);
+    }
+}
+
+static wifi_config_t
+wifi_manager_generate_ap_config(const struct wifi_settings_t *p_wifi_settings)
+{
+    wifi_config_t ap_config = {
+        .ap = {
+            .ssid            = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            },
+            .password        = {
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            },
+            .ssid_len        = 0,
+            .channel         = p_wifi_settings->ap_channel,
+            .authmode        = WIFI_AUTH_WPA2_PSK,
+            .ssid_hidden     = p_wifi_settings->ap_ssid_hidden,
+            .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
+            .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
+        },
+    };
+
+    {
+        ap_mac_t ap_mac = { 0 };
+        ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, &ap_mac.mac[0]));
+        ap_ssid_generate(
+            (char *)&ap_config.ap.ssid[0],
+            sizeof(ap_config.ap.ssid),
+            (const char *)&p_wifi_settings->ap_ssid[0],
+            &ap_mac);
+    }
+    snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", p_wifi_settings->ap_pwd);
+    return ap_config;
+}
+
+static void
+wifi_manager_esp_wifi_configure(const struct wifi_settings_t *p_wifi_settings)
+{
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    wifi_config_t ap_config = wifi_manager_generate_ap_config(p_wifi_settings);
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+    ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, p_wifi_settings->ap_bandwidth));
+    ESP_ERROR_CHECK(esp_wifi_set_ps(p_wifi_settings->sta_power_save));
+}
+
+static void
+wifi_manager_tcpip_adapter_set_default_ip(void)
+{
+    tcpip_adapter_ip_info_t info = { 0 };
+    inet_pton(AF_INET, DEFAULT_AP_IP, &info.ip); /* access point is on a static IP */
+    inet_pton(AF_INET, DEFAULT_AP_GATEWAY, &info.gw);
+    inet_pton(AF_INET, DEFAULT_AP_NETMASK, &info.netmask);
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP)); /* stop AP DHCP server */
+    ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info));
+    ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP)); /* start AP DHCP server */
+}
+
+static void
+wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *p_wifi_settings)
+{
+    if (p_wifi_settings->sta_static_ip)
+    {
+        ESP_LOGI(
+            TAG,
+            "Assigning static ip to STA interface. IP: %s , GW: %s , Mask: %s",
+            ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.ip),
+            ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.gw),
+            ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.netmask));
+
+        /* stop DHCP client*/
+        ESP_ERROR_CHECK(tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA));
+        /* assign a static IP to the STA network interface */
+        ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &p_wifi_settings->sta_static_ip_config));
+    }
+    else
+    {
+        /* start DHCP client if not started*/
+        ESP_LOGI(TAG, "wifi_manager: Start DHCP client for STA interface. If not already running");
+        tcpip_adapter_dhcp_status_t status = 0;
+        ESP_ERROR_CHECK(tcpip_adapter_dhcpc_get_status(TCPIP_ADAPTER_IF_STA, &status));
+        if (status != TCPIP_ADAPTER_DHCP_STARTED)
+        {
+            ESP_ERROR_CHECK(tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA));
+        }
+    }
+}
+
 ATTR_NORETURN
 static void
 wifi_manager(const void *p_params)
 {
-    const WiFiAntConfig_t *pWiFiAntConfig = p_params;
+    const WiFiAntConfig_t *p_wifi_ant_config = p_params;
 
     /* initialize the tcp stack */
     tcpip_adapter_init();
@@ -1035,90 +1147,13 @@ wifi_manager(const void *p_params)
     ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
-    if (NULL != pWiFiAntConfig)
-    {
-        esp_err_t err = esp_wifi_set_ant_gpio(&pWiFiAntConfig->wifiAntGpioConfig);
-        if (ESP_OK != err)
-        {
-            ESP_LOGE(TAG, "esp_wifi_set_ant_gpio failed, res=%d", err);
-        }
-        err = esp_wifi_set_ant(&pWiFiAntConfig->wifiAntConfig);
-        if (ESP_OK != err)
-        {
-            ESP_LOGE(TAG, "esp_wifi_set_ant failed, res=%d", err);
-        }
-    }
+    wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wifi Access Point configuration setup */
-    tcpip_adapter_ip_info_t info;
-    memset(&info, 0x00, sizeof(info));
-    wifi_config_t ap_config = {
-        .ap = {
-            .ssid            = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            },
-            .password        = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            },
-            .ssid_len        = 0,
-            .channel         = wifi_settings.ap_channel,
-            .authmode        = WIFI_AUTH_WPA2_PSK,
-            .ssid_hidden     = wifi_settings.ap_ssid_hidden,
-            .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
-            .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
-        },
-    };
-
-    {
-        ap_mac_t ap_mac = { 0 };
-        ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, &ap_mac.mac[0]));
-        ap_ssid_generate(
-            (char *)&ap_config.ap.ssid[0],
-            sizeof(ap_config.ap.ssid),
-            (const char *)&wifi_settings.ap_ssid[0],
-            &ap_mac);
-    }
-    snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", wifi_settings.ap_pwd);
-
-    ESP_ERROR_CHECK(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP)); /* stop AP DHCP server */
-    inet_pton(AF_INET, DEFAULT_AP_IP, &info.ip);                    /* access point is on a static IP */
-    inet_pton(AF_INET, DEFAULT_AP_GATEWAY, &info.gw);
-    inet_pton(AF_INET, DEFAULT_AP_NETMASK, &info.netmask);
-    ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info));
-    ESP_ERROR_CHECK(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP)); /* start AP DHCP server */
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
-    ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_settings.ap_bandwidth));
-    ESP_ERROR_CHECK(esp_wifi_set_ps(wifi_settings.sta_power_save));
+    wifi_manager_tcpip_adapter_set_default_ip();
+    wifi_manager_esp_wifi_configure(&wifi_settings);
 
     /* STA - Wifi Station configuration setup */
-    tcpip_adapter_dhcp_status_t status;
-    if (wifi_settings.sta_static_ip)
-    {
-        ESP_LOGI(
-            TAG,
-            "Assigning static ip to STA interface. IP: %s , GW: %s , Mask: %s",
-            ip4addr_ntoa(&wifi_settings.sta_static_ip_config.ip),
-            ip4addr_ntoa(&wifi_settings.sta_static_ip_config.gw),
-            ip4addr_ntoa(&wifi_settings.sta_static_ip_config.netmask));
-
-        /* stop DHCP client*/
-        ESP_ERROR_CHECK(tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA));
-        /* assign a static IP to the STA network interface */
-        ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &wifi_settings.sta_static_ip_config));
-    }
-    else
-    {
-        /* start DHCP client if not started*/
-        ESP_LOGI(TAG, "wifi_manager: Start DHCP client for STA interface. If not already running");
-        ESP_ERROR_CHECK(tcpip_adapter_dhcpc_get_status(TCPIP_ADAPTER_IF_STA, &status));
-        if (status != TCPIP_ADAPTER_DHCP_STARTED)
-            ESP_ERROR_CHECK(tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA));
-    }
+    wifi_manager_tcpip_adapter_configure(&wifi_settings);
 
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
