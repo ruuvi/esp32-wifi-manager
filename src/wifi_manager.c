@@ -955,6 +955,13 @@ wifi_manager_main_loop(void)
         queue_message msg = { 0 };
         if (!wifiman_msg_recv(&msg))
         {
+            LOG_ERR("%s failed", "wifiman_msg_recv");
+            /**
+             * wifiman_msg_recv calls xQueueReceive with infinite timeout,
+             * so it should never return false and we should never get here,
+             * but as a safety precaution to prevent 100% CPU usage we can sleep for a while to give time other threads.
+             */
+            vTaskDelay(100 / portTICK_PERIOD_MS);
             continue;
         }
         switch (msg.code)
