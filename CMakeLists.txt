@@ -24,6 +24,8 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/wifi_manager.c
             src/wifi_manager.h
             src/wifi_manager_defs.h
+            src/wifi_sta_config.c
+            src/wifi_sta_config.h
             src/wifiman_msg.c
             src/wifiman_msg.h
         REQUIRES

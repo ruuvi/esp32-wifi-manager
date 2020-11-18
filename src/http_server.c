@@ -66,6 +66,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "os_task.h"
 #include "app_malloc.h"
 #include "str_buf.h"
+#include "wifi_sta_config.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
@@ -542,10 +543,8 @@ http_server_handle_req_post(const char *p_file_name, char *save_ptr)
         char *password = http_server_get_header(save_ptr, "X-Custom-pwd: ", &lenP);
         if ((NULL != ssid) && (lenS <= MAX_SSID_SIZE) && (NULL != password) && (lenP <= MAX_PASSWORD_SIZE))
         {
-            wifi_config_t *config = wifi_manager_get_wifi_sta_config();
-            memset(config, 0x00, sizeof(wifi_config_t));
-            memcpy(config->sta.ssid, ssid, lenS);
-            memcpy(config->sta.password, password, lenP);
+            wifi_sta_config_set_ssid_and_password(ssid, lenS, password, lenP);
+
             ESP_LOGD(TAG, "http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_connect_async();
             return http_server_resp_200_json("{}");
