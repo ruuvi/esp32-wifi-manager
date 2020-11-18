@@ -709,7 +709,8 @@ wifi_manager_main_loop(void)
              * so it should never return false and we should never get here,
              * but as a safety precaution to prevent 100% CPU usage we can sleep for a while to give time other threads.
              */
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            const uint32_t delay_ms = 100U;
+            vTaskDelay(delay_ms / portTICK_PERIOD_MS);
             continue;
         }
         switch (msg.code)
