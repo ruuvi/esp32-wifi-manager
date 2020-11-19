@@ -59,7 +59,7 @@ wifiman_conv_param_to_conn_req(const wifiman_msg_param_t *p_param)
 sta_ip_address_t
 wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t *p_param)
 {
-    const sta_ip_address_t ip_addr = (sta_ip_address_t)p_param->val;
+    const sta_ip_address_t ip_addr = p_param->val;
     return ip_addr;
 }
 

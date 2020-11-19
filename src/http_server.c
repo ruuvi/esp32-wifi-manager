@@ -75,7 +75,8 @@ function to process requests, decode URLs, serve files, etc. etc.
 
 #define FULLBUF_SIZE (4U * 1024U)
 
-typedef int file_read_result_t;
+typedef int           file_read_result_t;
+typedef unsigned long ulong_t;
 
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.
@@ -257,14 +258,14 @@ http_server_netconn_resp_200(struct netconn *conn, http_server_resp_t *p_resp)
         true,
         "HTTP/1.1 200 OK\n"
         "Content-type: %s; charset=utf-8%s%s\n"
-        "Content-Length: %u\n"
+        "Content-Length: %lu\n"
         "%s"
         "%s"
         "\n",
         http_get_content_type_str(p_resp->content_type),
         use_extra_content_type_param ? "; " : "",
         use_extra_content_type_param ? p_resp->p_content_type_param : "",
-        (uint32_t)p_resp->content_len,
+        (ulong_t)p_resp->content_len,
         http_get_content_encoding_str(p_resp),
         http_get_cache_control_str(p_resp));
 
