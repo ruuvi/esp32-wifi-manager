@@ -377,7 +377,7 @@ http_server_start(void)
 void
 http_server_stop(void)
 {
-    if (task_http_server)
+    if (NULL != task_http_server)
     {
         vTaskDelete(task_http_server);
         task_http_server = NULL;
@@ -426,15 +426,13 @@ http_server_task(ATTR_UNUSED void *p_param)
 char *
 http_server_get_header(char *request, char *header_name, int *len)
 {
-    *len      = 0;
-    char *ret = NULL;
-    char *ptr = NULL;
+    *len = 0;
 
-    ptr = strstr(request, header_name);
-    if (ptr)
+    char *ptr = strstr(request, header_name);
+    if (NULL != ptr)
     {
-        ret = ptr + strlen(header_name);
-        ptr = ret;
+        char *ret = ptr + strlen(header_name);
+        ptr       = ret;
         while ((*ptr != '\0') && (*ptr != '\n') && (*ptr != '\r'))
         {
             (*len)++;

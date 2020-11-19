@@ -232,7 +232,7 @@ wifi_manager_generate_ip_info_json(update_reason_code_t update_reason_code)
 bool
 wifi_manager_lock_json_buffer(TickType_t xTicksToWait)
 {
-    if (wifi_manager_json_mutex)
+    if (NULL != wifi_manager_json_mutex)
     {
         if (xSemaphoreTake(wifi_manager_json_mutex, xTicksToWait) == pdTRUE)
         {
@@ -354,7 +354,7 @@ static void
 wifi_manager_destroy(void)
 {
     ESP_LOGI(TAG, "%s", __func__);
-    if (task_wifi_manager)
+    if (NULL != task_wifi_manager)
     {
         vTaskDelete(task_wifi_manager);
         task_wifi_manager = NULL;
@@ -742,7 +742,7 @@ wifi_manager_main_loop(void)
             default:
                 break;
         }
-        if (cb_ptr_arr[msg.code])
+        if (NULL != cb_ptr_arr[msg.code])
         {
             (*cb_ptr_arr[msg.code])(NULL);
         }

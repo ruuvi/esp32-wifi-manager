@@ -75,7 +75,7 @@ dns_server_start(void)
 void
 dns_server_stop(void)
 {
-    if (task_dns_server)
+    if (NULL != task_dns_server)
     {
         vTaskDelete(task_dns_server);
         close(socket_fd);
