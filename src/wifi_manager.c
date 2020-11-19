@@ -298,9 +298,9 @@ wifi_manager_event_handler(ATTR_UNUSED void *p_ctx, esp_event_base_t event_base,
                 /* if a DISCONNECT message is posted while a scan is in progress this scan will NEVER end, causing scan
                  * to never work again. For this reason SCAN_BIT is cleared too */
                 xEventGroupClearBits(wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT | WIFI_MANAGER_SCAN_BIT);
-                wifi_event_sta_disconnected_t *disconnected = (wifi_event_sta_disconnected_t *)event_data;
+                const wifi_event_sta_disconnected_t *p_disconnected = (const wifi_event_sta_disconnected_t *)event_data;
                 /* post disconnect event with reason code */
-                wifiman_msg_send_ev_disconnected(disconnected->reason);
+                wifiman_msg_send_ev_disconnected(p_disconnected->reason);
                 break;
             default:
                 break;
@@ -313,8 +313,8 @@ wifi_manager_event_handler(ATTR_UNUSED void *p_ctx, esp_event_base_t event_base,
             case IP_EVENT_STA_GOT_IP:
                 ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
                 xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT);
-                ip_event_got_ip_t *ipevent = (ip_event_got_ip_t *)event_data;
-                wifiman_msg_send_ev_got_ip(ipevent->ip_info.ip.addr);
+                const ip_event_got_ip_t *p_ip_event = (const ip_event_got_ip_t *)event_data;
+                wifiman_msg_send_ev_got_ip(p_ip_event->ip_info.ip.addr);
                 break;
             default:
                 break;

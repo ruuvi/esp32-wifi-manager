@@ -424,8 +424,19 @@ http_server_task(ATTR_UNUSED void *p_param)
     vTaskDelete(NULL);
 }
 
-char *
-http_server_get_header(char *request, char *header_name, uint32_t *len)
+/**
+ * @brief gets a char* pointer to the first occurrence of header_name withing the complete http request request.
+ *
+ * For optimization purposes, no local copy is made. memcpy can then be used in coordination with len to extract the
+ * data.
+ *
+ * @param request the full HTTP raw request.
+ * @param header_name the header that is being searched.
+ * @param len the size of the header value if found.
+ * @return pointer to the beginning of the header value.
+ */
+static const char *
+http_server_get_header(const char *request, const char *header_name, uint32_t *len)
 {
     *len = 0;
 
@@ -444,22 +455,22 @@ http_server_get_header(char *request, char *header_name, uint32_t *len)
     return NULL;
 }
 
-static char *
-get_http_body(char *msg, uint32_t len, uint32_t *p_body_len)
+static const char *
+get_http_body(const char *msg, uint32_t len, uint32_t *p_body_len)
 {
-    char *newlines = "\r\n\r\n";
-    char *p        = strstr(msg, newlines);
-    if (NULL == p)
+    static const char newlines[] = "\r\n\r\n";
+    const char *      p_body     = strstr(msg, newlines);
+    if (NULL == p_body)
     {
         ESP_LOGD(TAG, "http body not found: %s", msg);
         return 0;
     }
-    p += strlen(newlines);
+    p_body += strlen(newlines);
     if (NULL != p_body_len)
     {
-        *p_body_len = len - (uint32_t)(ptrdiff_t)(p - msg);
+        *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - msg);
     }
-    return p;
+    return p_body;
 }
 
 static http_server_resp_t
@@ -467,7 +478,7 @@ http_server_handle_req_get(const char *p_file_name)
 {
     ESP_LOGI(TAG, "GET /%s", p_file_name);
 
-    char *file_ext = strrchr(p_file_name, '.');
+    const char *file_ext = strrchr(p_file_name, '.');
     if ((NULL != file_ext) && (0 == strcmp(file_ext, ".json")))
     {
         if (0 == strcmp(p_file_name, "ap.json"))
@@ -537,13 +548,14 @@ http_server_handle_req_post(const char *p_file_name, char *save_ptr)
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         ESP_LOGD(TAG, "http_server_netconn_serve: POST /connect.json");
-        uint32_t len_ssid     = 0;
-        uint32_t len_password = 0;
-        char *   ssid         = http_server_get_header(save_ptr, "X-Custom-ssid: ", &len_ssid);
-        char *   password     = http_server_get_header(save_ptr, "X-Custom-pwd: ", &len_password);
-        if ((NULL != ssid) && (len_ssid <= MAX_SSID_SIZE) && (NULL != password) && (len_password <= MAX_PASSWORD_SIZE))
+        uint32_t    len_ssid     = 0;
+        uint32_t    len_password = 0;
+        const char *p_ssid       = http_server_get_header(save_ptr, "X-Custom-ssid: ", &len_ssid);
+        const char *p_password   = http_server_get_header(save_ptr, "X-Custom-pwd: ", &len_password);
+        if ((NULL != p_ssid) && (len_ssid <= MAX_SSID_SIZE) && (NULL != p_password)
+            && (len_password <= MAX_PASSWORD_SIZE))
         {
-            wifi_sta_config_set_ssid_and_password(ssid, len_ssid, password, len_password);
+            wifi_sta_config_set_ssid_and_password(p_ssid, len_ssid, p_password, len_password);
 
             ESP_LOGD(TAG, "http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_connect_async();
@@ -559,7 +571,7 @@ http_server_handle_req_post(const char *p_file_name, char *save_ptr)
 }
 
 static http_server_resp_t
-http_server_handle_req(char *line, char *save_ptr)
+http_server_handle_req(const char *line, char *save_ptr)
 {
     char *p = strchr(line, ' ');
     if (NULL == p)
@@ -568,7 +580,7 @@ http_server_handle_req(char *line, char *save_ptr)
     }
     const char * http_cmd     = line;
     const size_t http_cmd_len = (size_t)(ptrdiff_t)(p - line);
-    char *       path         = p + 1;
+    const char * path         = p + 1;
     if ('/' == path[0])
     {
         path += 1;
@@ -694,8 +706,8 @@ http_server_netconn_serve(struct netconn *conn)
     }
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP OR the
      * STA IP */
-    uint32_t host_len = 0;
-    char *   p_host   = http_server_get_header(save_ptr, "Host: ", &host_len);
+    uint32_t    host_len = 0;
+    const char *p_host   = http_server_get_header(save_ptr, "Host: ", &host_len);
     /* determine if Host is from the STA IP address */
 
     const sta_ip_string_t ip_str  = sta_ip_safe_get(portMAX_DELAY);
