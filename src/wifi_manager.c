@@ -152,7 +152,7 @@ wifi_manager_start(
 
     wifi_sta_config_init();
 
-    for (message_code_t i = 0; i < MESSAGE_CODE_COUNT; ++i)
+    for (message_code_e i = 0; i < MESSAGE_CODE_COUNT; ++i)
     {
         cb_ptr_arr[i] = NULL;
     }
@@ -215,7 +215,7 @@ wifi_manager_clear_sta_config(void)
  * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
  */
 void
-wifi_manager_generate_ip_info_json(update_reason_code_t update_reason_code)
+wifi_manager_generate_ip_info_json(update_reason_code_e update_reason_code)
 {
     tcpip_adapter_ip_info_t ip_info = { 0 };
     ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info));
@@ -385,7 +385,7 @@ wifi_manager_stop(void)
 }
 
 void
-wifi_manager_set_callback(message_code_t message_code, wifi_manager_cb_ptr func_ptr)
+wifi_manager_set_callback(message_code_e message_code, wifi_manager_cb_ptr func_ptr)
 {
     if (message_code < MESSAGE_CODE_COUNT)
     {
@@ -483,7 +483,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *p_param)
      * Param in that case is a boolean indicating if the request was made automatically
      * by the wifi_manager.
      * */
-    const connection_request_made_by_code_t conn_req = wifiman_conv_param_to_conn_req(p_param);
+    const connection_request_made_by_code_e conn_req = wifiman_conv_param_to_conn_req(p_param);
     if (CONNECTION_REQUEST_USER == conn_req)
     {
         xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);

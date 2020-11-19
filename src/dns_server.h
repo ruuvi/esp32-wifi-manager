@@ -47,7 +47,7 @@ extern "C" {
 /**
  * @brief RCODE values used in a DNS header message
  */
-typedef enum dns_reply_code_t
+typedef enum dns_reply_code_e
 {
     DNS_REPLY_CODE_NO_ERROR            = 0,
     DNS_REPLY_CODE_FORM_ERROR          = 1,
@@ -58,17 +58,17 @@ typedef enum dns_reply_code_t
     DNS_REPLY_CODE_YXDOMAIN            = 6,
     DNS_REPLY_CODE_YXRRSET             = 7,
     DNS_REPLY_CODE_NXRRSET             = 8
-} dns_reply_code_t;
+} dns_reply_code_e;
 
 /**
  * @brief OPCODE values used in a DNS header message
  */
-typedef enum dns_opcode_code_t
+typedef enum dns_opcode_code_e
 {
     DNS_OPCODE_QUERY  = 0,
     DNS_OPCODE_IQUERY = 1,
     DNS_OPCODE_STATUS = 2
-} dns_opcode_code_t;
+} dns_opcode_code_e;
 
 /**
  * @brief Represents a 12 byte DNS header.
@@ -91,7 +91,7 @@ typedef struct __attribute__((__packed__)) dns_header_t
     uint16_t ARCount;    // number of resource entries
 } dns_header_t;
 
-typedef enum dns_answer_type_t
+typedef enum dns_answer_type_e
 {
     DNS_ANSWER_TYPE_A     = 1,
     DNS_ANSWER_TYPE_NS    = 2,
@@ -102,12 +102,12 @@ typedef enum dns_answer_type_t
     DNS_ANSWER_TYPE_MX    = 15,
     DNS_ANSWER_TYPE_SRV   = 33,
     DNS_ANSWER_TYPE_AAAA  = 28
-} dns_answer_type_t;
+} dns_answer_type_e;
 
-typedef enum dns_answer_class_t
+typedef enum dns_answer_class_e
 {
     DNS_ANSWER_CLASS_IN = 1
-} dns_answer_class_t;
+} dns_answer_class_e;
 
 typedef struct __attribute__((__packed__)) dns_answer_t
 {

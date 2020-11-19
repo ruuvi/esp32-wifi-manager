@@ -187,7 +187,7 @@ typedef struct wifi_password_t
  *
  * @see wifi_manager_set_callback
  */
-typedef enum message_code_t
+typedef enum message_code_e
 {
     NONE                       = 0,
     ORDER_START_HTTP_SERVER    = 1,
@@ -205,30 +205,29 @@ typedef enum message_code_t
     EVENT_SCAN_DONE            = 13,
     EVENT_STA_GOT_IP           = 14,
     MESSAGE_CODE_COUNT         = 15 /* important for the callback array */
-
-} message_code_t;
+} message_code_e;
 
 /**
  * @brief simplified reason codes for a lost connection.
  *
  * esp-idf maintains a big list of reason codes which in practice are useless for most typical application.
  */
-typedef enum update_reason_code_t
+typedef enum update_reason_code_e
 {
     UPDATE_CONNECTION_OK   = 0,
     UPDATE_FAILED_ATTEMPT  = 1,
     UPDATE_USER_DISCONNECT = 2,
     UPDATE_LOST_CONNECTION = 3
-} update_reason_code_t;
+} update_reason_code_e;
 
-typedef enum connection_request_made_by_code_t
+typedef enum connection_request_made_by_code_e
 {
     CONNECTION_REQUEST_NONE               = 0,
     CONNECTION_REQUEST_USER               = 1,
     CONNECTION_REQUEST_AUTO_RECONNECT     = 2,
     CONNECTION_REQUEST_RESTORE_CONNECTION = 3,
     CONNECTION_REQUEST_MAX                = 0x7fffffff /*force the creation of this enum as a 32 bit int */
-} connection_request_made_by_code_t;
+} connection_request_made_by_code_e;
 
 typedef union wifiman_msg_param_t
 {
@@ -241,7 +240,7 @@ typedef union wifiman_msg_param_t
  */
 typedef struct
 {
-    message_code_t      code;
+    message_code_e      code;
     wifiman_msg_param_t msg_param;
 } queue_message;
 
