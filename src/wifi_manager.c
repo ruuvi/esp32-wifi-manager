@@ -232,21 +232,15 @@ wifi_manager_generate_ip_info_json(update_reason_code_t update_reason_code)
 bool
 wifi_manager_lock_json_buffer(TickType_t xTicksToWait)
 {
-    if (NULL != wifi_manager_json_mutex)
-    {
-        if (xSemaphoreTake(wifi_manager_json_mutex, xTicksToWait) == pdTRUE)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
+    if (NULL == wifi_manager_json_mutex)
     {
         return false;
     }
+    if (pdTRUE != xSemaphoreTake(wifi_manager_json_mutex, xTicksToWait))
+    {
+        return false;
+    }
+    return true;
 }
 
 void

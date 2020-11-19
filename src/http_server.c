@@ -353,7 +353,7 @@ void
 http_server_start(void)
 {
     esp_log_level_set(TAG, ESP_LOG_DEBUG);
-    if (task_http_server == NULL)
+    if (NULL == task_http_server)
     {
         ESP_LOGI(TAG, "Run http_server");
         const uint32_t stack_depth = 20U * 1024U;

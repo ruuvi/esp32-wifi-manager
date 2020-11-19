@@ -32,14 +32,11 @@ sta_ip_safe_lock(const TickType_t ticks_to_wait)
         ESP_LOGE(TAG, "%s: Mutex is not initialized", __func__);
         return false;
     }
-    if (xSemaphoreTake(mutex, ticks_to_wait) == pdTRUE)
-    {
-        return true;
-    }
-    else
+    if (pdTRUE != xSemaphoreTake(mutex, ticks_to_wait))
     {
         return false;
     }
+    return true;
 }
 
 STA_IP_SAFE_STATIC

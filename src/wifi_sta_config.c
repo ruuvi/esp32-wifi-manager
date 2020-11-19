@@ -55,10 +55,10 @@ static wifi_settings_t g_wifi_settings = {
 static wifi_config_t g_wifi_config_sta;
 
 _Static_assert(
-    sizeof(g_wifi_config_sta.sta.ssid) == MAX_SSID_SIZE,
+    MAX_SSID_SIZE == sizeof(g_wifi_config_sta.sta.ssid),
     "sizeof(g_wifi_config_sta.sta.ssid) == MAX_SSID_SIZE");
 _Static_assert(
-    sizeof(g_wifi_config_sta.sta.password) == MAX_PASSWORD_SIZE,
+    MAX_PASSWORD_SIZE == sizeof(g_wifi_config_sta.sta.password),
     "sizeof(g_wifi_config_sta.sta.password) == MAX_PASSWORD_SIZE");
 
 void
