@@ -152,7 +152,7 @@ wifi_manager_start(
 
     wifi_sta_config_init();
 
-    for (int i = 0; i < MESSAGE_CODE_COUNT; ++i)
+    for (message_code_t i = 0; i < MESSAGE_CODE_COUNT; ++i)
     {
         cb_ptr_arr[i] = NULL;
     }

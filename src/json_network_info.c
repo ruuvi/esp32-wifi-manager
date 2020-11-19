@@ -35,6 +35,8 @@ Contains the freeRTOS task and all necessary support
 #include "json.h"
 #include "wifi_manager_defs.h"
 
+typedef int printf_int_t;
+
 static char g_json_network_info_buf[JSON_IP_INFO_SIZE];
 
 void
@@ -60,9 +62,9 @@ json_network_info_get(void)
 
 void
 json_network_info_generate(
-    const wifi_ssid_t *       p_ssid,
-    const network_info_str_t *p_network_info,
-    update_reason_code_t      update_reason_code)
+    const wifi_ssid_t *        p_ssid,
+    const network_info_str_t * p_network_info,
+    const update_reason_code_t update_reason_code)
 {
     if (NULL == p_ssid)
     {
@@ -94,7 +96,7 @@ json_network_info_generate(
         p_network_info->ip,
         p_network_info->netmask,
         p_network_info->gw,
-        (int)update_reason_code);
+        (printf_int_t)update_reason_code);
 }
 
 void

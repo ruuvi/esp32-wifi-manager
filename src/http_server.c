@@ -76,7 +76,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #define FULLBUF_SIZE (4U * 1024U)
 
 typedef int           file_read_result_t;
-typedef unsigned long ulong_t;
+typedef unsigned long printf_ulong_t;
 
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.
@@ -265,7 +265,7 @@ http_server_netconn_resp_200(struct netconn *conn, http_server_resp_t *p_resp)
         http_get_content_type_str(p_resp->content_type),
         use_extra_content_type_param ? "; " : "",
         use_extra_content_type_param ? p_resp->p_content_type_param : "",
-        (ulong_t)p_resp->content_len,
+        (printf_ulong_t)p_resp->content_len,
         http_get_content_encoding_str(p_resp),
         http_get_cache_control_str(p_resp));
 
@@ -425,7 +425,7 @@ http_server_task(ATTR_UNUSED void *p_param)
 }
 
 char *
-http_server_get_header(char *request, char *header_name, int *len)
+http_server_get_header(char *request, char *header_name, uint32_t *len)
 {
     *len = 0;
 
@@ -537,9 +537,9 @@ http_server_handle_req_post(const char *p_file_name, char *save_ptr)
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         ESP_LOGD(TAG, "http_server_netconn_serve: POST /connect.json");
-        int   lenS = 0, lenP = 0;
-        char *ssid     = http_server_get_header(save_ptr, "X-Custom-ssid: ", &lenS);
-        char *password = http_server_get_header(save_ptr, "X-Custom-pwd: ", &lenP);
+        uint32_t lenS = 0, lenP = 0;
+        char *   ssid     = http_server_get_header(save_ptr, "X-Custom-ssid: ", &lenS);
+        char *   password = http_server_get_header(save_ptr, "X-Custom-pwd: ", &lenP);
         if ((NULL != ssid) && (lenS <= MAX_SSID_SIZE) && (NULL != password) && (lenP <= MAX_PASSWORD_SIZE))
         {
             wifi_sta_config_set_ssid_and_password(ssid, lenS, password, lenP);
@@ -626,13 +626,13 @@ http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p
     netbuf_delete(p_netbuf_in);
 
     // check if there should be more data coming from conn
-    int         field_len         = 0;
+    uint32_t    field_len         = 0;
     const char *p_content_len_str = http_server_get_header(p_req_buf, "Content-Length: ", &field_len);
     if (NULL != p_content_len_str)
     {
-        const int   content_len = atoi(p_content_len_str);
-        uint32_t    body_len    = 0;
-        const char *p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
+        const uint32_t content_len = strtoul(p_content_len_str, NULL, 10);
+        uint32_t       body_len    = 0;
+        const char *   p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
         if (NULL != p_body)
         {
             ESP_LOGD(TAG, "Header Content-Length: %d, HTTP body length: %d", content_len, body_len);
@@ -693,8 +693,8 @@ http_server_netconn_serve(struct netconn *conn)
     }
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP OR the
      * STA IP */
-    int   host_len = 0;
-    char *p_host   = http_server_get_header(save_ptr, "Host: ", &host_len);
+    uint32_t host_len = 0;
+    char *   p_host   = http_server_get_header(save_ptr, "Host: ", &host_len);
     /* determine if Host is from the STA IP address */
 
     const sta_ip_string_t ip_str  = sta_ip_safe_get(portMAX_DELAY);

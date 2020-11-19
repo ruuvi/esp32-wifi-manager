@@ -65,7 +65,7 @@ http_server_start(void);
  * @return pointer to the beginning of the header value.
  */
 char *
-http_server_get_header(char *request, char *header_name, int *len);
+http_server_get_header(char *request, char *header_name, uint32_t *len);
 
 #ifdef __cplusplus
 }

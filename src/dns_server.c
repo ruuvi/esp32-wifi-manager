@@ -54,9 +54,13 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include "os_task.h"
 #include "log.h"
 
+typedef int socket_t;
+typedef int socket_recv_result_t;
+typedef int socket_send_result_t;
+
 static const char   TAG[]           = "dns_server";
 static TaskHandle_t task_dns_server = NULL;
-int                 socket_fd;
+socket_t            socket_fd;
 
 ATTR_NORETURN
 void
@@ -108,7 +112,8 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
                                          purpose */
 
     memset(data, 0x00, sizeof(data));
-    const int length = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
+    const socket_recv_result_t length
+        = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
 
     /*if the query is bigger than the buffer size we simply ignore it. This case should only happen in case of
      * multiple queries within the same DNS packet and is not supported by this simple DNS hijack. */
@@ -163,7 +168,8 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
     dns_answer->RDLENGTH = htons(0x0004);        /* 4 byte => size of an ipv4 address */
     dns_answer->RDATA    = p_ip_resolved->addr;
 
-    int err = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
+    const socket_send_result_t err
+        = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
     if (err < 0)
     {
         LOG_ERR("UDP sendto failed: %d", err);

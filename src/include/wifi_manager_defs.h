@@ -40,6 +40,8 @@ Contains the freeRTOS task and all necessary support
 extern "C" {
 #endif
 
+typedef int socket_t;
+
 /**
  * @brief Defines the maximum size of a SSID name. 32 is IEEE standard.
  * @warning limit is also hard coded in wifi_config_t. Never extend this value.
@@ -309,7 +311,7 @@ typedef struct http_server_resp_t
         } memory;
         struct
         {
-            int fd;
+            socket_t fd;
         } fatfs;
     } select_location;
 } http_server_resp_t;
