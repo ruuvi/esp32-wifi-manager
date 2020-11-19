@@ -44,8 +44,8 @@ typedef void (*wifi_manager_cb_ptr)(void *);
 
 typedef struct
 {
-    wifi_ant_gpio_config_t wifiAntGpioConfig;
-    wifi_ant_config_t      wifiAntConfig;
+    wifi_ant_gpio_config_t wifi_ant_gpio_config;
+    wifi_ant_config_t      wifi_ant_config;
 } WiFiAntConfig_t;
 
 /**

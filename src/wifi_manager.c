@@ -750,12 +750,12 @@ wifi_manager_set_ant_config(const WiFiAntConfig_t *p_wifi_ant_config)
     {
         return;
     }
-    esp_err_t err = esp_wifi_set_ant_gpio(&p_wifi_ant_config->wifiAntGpioConfig);
+    esp_err_t err = esp_wifi_set_ant_gpio(&p_wifi_ant_config->wifi_ant_gpio_config);
     if (ESP_OK != err)
     {
         ESP_LOGE(TAG, "esp_wifi_set_ant_gpio failed, res=%d", err);
     }
-    err = esp_wifi_set_ant(&p_wifi_ant_config->wifiAntConfig);
+    err = esp_wifi_set_ant(&p_wifi_ant_config->wifi_ant_config);
     if (ESP_OK != err)
     {
         ESP_LOGE(TAG, "esp_wifi_set_ant failed, res=%d", err);

@@ -137,16 +137,16 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 
     /* Generate header message */
     memcpy(response, data, sizeof(dns_header_t));
-    dns_header_t *dns_header = (dns_header_t *)response;
-    dns_header->QR           = 1;                       /*response bit */
-    dns_header->OPCode       = DNS_OPCODE_QUERY;        /* no support for other type of response */
-    dns_header->AA           = 1;                       /*authoritative answer */
-    dns_header->RCode        = DNS_REPLY_CODE_NO_ERROR; /* no error */
-    dns_header->TC           = 0;                       /*no truncation */
-    dns_header->RD           = 0;                       /*no recursion */
-    dns_header->ANCount      = dns_header->QDCount;     /* set answer count = question count -- duhh! */
-    dns_header->NSCount      = 0x0000;                  /* name server resource records = 0 */
-    dns_header->ARCount      = 0x0000;                  /* resource records = 0 */
+    dns_header_t *dns_header              = (dns_header_t *)response;
+    dns_header->flag_query_response       = 1;                          /*response bit */
+    dns_header->operation_code            = DNS_OPCODE_QUERY;           /* no support for other type of response */
+    dns_header->flag_authoritative_answer = 1;                          /*authoritative answer */
+    dns_header->response_ode              = DNS_REPLY_CODE_NO_ERROR;    /* no error */
+    dns_header->flag_truncation           = 0;                          /*no truncation */
+    dns_header->flag_recursion_desired    = 0;                          /*no recursion */
+    dns_header->answer_record_count       = dns_header->question_count; /* set answer count = question count -- duhh! */
+    dns_header->authority_record_count    = 0x0000;                     /* name server resource records = 0 */
+    dns_header->additional_record_count   = 0x0000;                     /* resource records = 0 */
 
     /* copy the rest of the query in the response */
     memcpy(response + sizeof(dns_header_t), data + sizeof(dns_header_t), length - sizeof(dns_header_t));
@@ -159,14 +159,15 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 
     /* create DNS answer at the end of the query*/
     dns_answer_t *dns_answer = (dns_answer_t *)&response[length];
-    dns_answer->NAME         = htons(
+    dns_answer->domain_name  = htons(
         0xC00C); /* This is a pointer to the beginning of the question.
-                          * As per DNS standard, first two bits must be set to 11 for some odd reason hence 0xC0 */
-    dns_answer->TYPE     = htons(DNS_ANSWER_TYPE_A);
-    dns_answer->CLASS    = htons(DNS_ANSWER_CLASS_IN);
-    dns_answer->TTL      = (uint32_t)0x00000000; /* no caching. Avoids DNS poisoning since this is a DNS hijack */
-    dns_answer->RDLENGTH = htons(0x0004);        /* 4 byte => size of an ipv4 address */
-    dns_answer->RDATA    = p_ip_resolved->addr;
+                   * As per DNS standard, first two bits must be set to 11 for some odd reason hence 0xC0 */
+    dns_answer->dns_response_type  = htons(DNS_ANSWER_TYPE_A);
+    dns_answer->dns_response_class = htons(DNS_ANSWER_CLASS_IN);
+    dns_answer->time_to_live_seconds
+        = (uint32_t)0x00000000; /* no caching. Avoids DNS poisoning since this is a DNS hijack */
+    dns_answer->dns_response_data_length = htons(0x0004); /* 4 byte => size of an ipv4 address */
+    dns_answer->dns_response_data        = p_ip_resolved->addr;
 
     const socket_send_result_t err
         = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
