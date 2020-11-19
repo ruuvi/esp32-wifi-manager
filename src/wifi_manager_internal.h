@@ -26,11 +26,11 @@ extern "C" {
  *
  * This is a simple wrapper around freeRTOS function xSemaphoreTake.
  *
- * @param xTicksToWait The time in ticks to wait for the semaphore to become available.
+ * @param ticks_to_wait The time in ticks to wait for the semaphore to become available.
  * @return true in success, false otherwise.
  */
 bool
-wifi_manager_lock_json_buffer(TickType_t xTicksToWait);
+wifi_manager_lock_json_buffer(TickType_t ticks_to_wait);
 
 /**
  * @brief Releases the json buffer mutex.

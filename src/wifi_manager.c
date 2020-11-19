@@ -129,7 +129,7 @@ wifi_manager_disconnect_async(void)
 
 void
 wifi_manager_start(
-    const WiFiAntConfig_t *        pWiFiAntConfig,
+    const WiFiAntConfig_t *        p_wifi_ant_config,
     wifi_manager_http_callback_t   cb_on_http_get,
     wifi_manager_http_cb_on_post_t cb_on_http_post,
     wifi_manager_http_callback_t   cb_on_http_delete)
@@ -166,7 +166,7 @@ wifi_manager_start(
             &wifi_manager,
             task_name,
             stack_depth,
-            (const void *)pWiFiAntConfig,
+            (const void *)p_wifi_ant_config,
             WIFI_MANAGER_TASK_PRIORITY,
             &task_wifi_manager))
     {
@@ -230,13 +230,13 @@ wifi_manager_generate_ip_info_json(update_reason_code_e update_reason_code)
 }
 
 bool
-wifi_manager_lock_json_buffer(TickType_t xTicksToWait)
+wifi_manager_lock_json_buffer(TickType_t ticks_to_wait)
 {
     if (NULL == wifi_manager_json_mutex)
     {
         return false;
     }
-    if (pdTRUE != xSemaphoreTake(wifi_manager_json_mutex, xTicksToWait))
+    if (pdTRUE != xSemaphoreTake(wifi_manager_json_mutex, ticks_to_wait))
     {
         return false;
     }

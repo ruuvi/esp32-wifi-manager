@@ -537,12 +537,13 @@ http_server_handle_req_post(const char *p_file_name, char *save_ptr)
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         ESP_LOGD(TAG, "http_server_netconn_serve: POST /connect.json");
-        uint32_t lenS = 0, lenP = 0;
-        char *   ssid     = http_server_get_header(save_ptr, "X-Custom-ssid: ", &lenS);
-        char *   password = http_server_get_header(save_ptr, "X-Custom-pwd: ", &lenP);
-        if ((NULL != ssid) && (lenS <= MAX_SSID_SIZE) && (NULL != password) && (lenP <= MAX_PASSWORD_SIZE))
+        uint32_t len_ssid     = 0;
+        uint32_t len_password = 0;
+        char *   ssid         = http_server_get_header(save_ptr, "X-Custom-ssid: ", &len_ssid);
+        char *   password     = http_server_get_header(save_ptr, "X-Custom-pwd: ", &len_password);
+        if ((NULL != ssid) && (len_ssid <= MAX_SSID_SIZE) && (NULL != password) && (len_password <= MAX_PASSWORD_SIZE))
         {
-            wifi_sta_config_set_ssid_and_password(ssid, lenS, password, lenP);
+            wifi_sta_config_set_ssid_and_password(ssid, len_ssid, password, len_password);
 
             ESP_LOGD(TAG, "http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_connect_async();
