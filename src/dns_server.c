@@ -86,7 +86,7 @@ dns_server_stop(void)
 static void
 replace_non_ascii_with_dots(char *p_domain)
 {
-    for (char *p_ch = p_domain; *p_ch != '\0'; p_ch++)
+    for (char *p_ch = p_domain; *p_ch != '\0'; ++p_ch)
     {
         if ((*p_ch < ' ') || (*p_ch > 'z'))
         {
