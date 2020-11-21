@@ -92,7 +92,7 @@ wifi_manager_disconnect_async(void);
  * @brief Register a callback to a custom function when specific event message_code happens.
  */
 void
-wifi_manager_set_callback(message_code_e message_code, wifi_manager_cb_ptr func_ptr);
+wifi_manager_set_callback(const message_code_e message_code, wifi_manager_cb_ptr func_ptr);
 
 #ifdef __cplusplus
 }

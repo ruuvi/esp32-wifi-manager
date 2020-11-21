@@ -43,7 +43,7 @@ extern "C" {
 
 /* @brief helper function that processes one HTTP request at a time */
 void
-http_server_netconn_serve(struct netconn *conn);
+http_server_netconn_serve(struct netconn *p_conn);
 
 /* @brief stop the http server task */
 void

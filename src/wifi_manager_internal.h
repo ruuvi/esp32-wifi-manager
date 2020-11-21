@@ -31,7 +31,7 @@ extern "C" {
  * @return true in success, false otherwise.
  */
 bool
-wifi_manager_lock_json_buffer(TickType_t ticks_to_wait);
+wifi_manager_lock_json_buffer(const TickType_t ticks_to_wait);
 
 /**
  * @brief Releases the json buffer mutex.
@@ -40,13 +40,13 @@ void
 wifi_manager_unlock_json_buffer(void);
 
 http_server_resp_t
-wifi_manager_cb_on_http_get(const char *path);
+wifi_manager_cb_on_http_get(const char *p_path);
 
 http_server_resp_t
-wifi_manager_cb_on_http_post(const char *path, const http_req_body_t http_body);
+wifi_manager_cb_on_http_post(const char *p_path, const http_req_body_t http_body);
 
 http_server_resp_t
-wifi_manager_cb_on_http_delete(const char *path);
+wifi_manager_cb_on_http_delete(const char *p_path);
 
 #ifdef __cplusplus
 }
