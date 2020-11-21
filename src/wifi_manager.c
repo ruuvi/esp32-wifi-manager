@@ -678,7 +678,7 @@ wifi_handle_ev_got_ip(const wifiman_msg_param_t *p_param)
     }
     else
     {
-        abort();
+        ESP_ERROR_CHECK(ESP_FAIL);
     }
 
     /* bring down DNS hijack */

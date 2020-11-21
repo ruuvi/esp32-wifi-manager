@@ -61,20 +61,51 @@ typedef int socket_send_result_t;
 static const char TAG[] = "dns_server";
 
 static TaskHandle_t gh_dns_task;
-static socket_t     g_dns_socket_fd;
+static socket_t     g_dns_socket_fd = -1;
 
 ATTR_NORETURN
 void
-dns_server(ATTR_UNUSED void *p_params);
+dns_server_task(ATTR_UNUSED void *p_params);
 
-void
+bool
 dns_server_start(void)
 {
+    /* Create UDP socket */
+    socket_t socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_fd < 0)
+    {
+        LOG_ERR("Failed to create socket 53/udp");
+        return false;
+    }
+    struct sockaddr_in ra = { 0 };
+    /* Bind to port 53 (typical DNS Server port) */
+    tcpip_adapter_ip_info_t ip = { 0 };
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+    ra.sin_family      = AF_INET;
+    ra.sin_addr.s_addr = ip.ip.addr;
+    ra.sin_port        = htons(53);
+    if (-1 == bind(socket_fd, (struct sockaddr *)&ra, sizeof(struct sockaddr_in)))
+    {
+        LOG_ERR("Failed to bind to 53/udp");
+        close(socket_fd);
+        return false;
+    }
+
+    g_dns_socket_fd = socket_fd;
+
     const uint32_t stack_depth = 3072U;
-    if (!os_task_create(&dns_server, "dns_server", stack_depth, NULL, WIFI_MANAGER_TASK_PRIORITY - 1, &gh_dns_task))
+    if (!os_task_create(
+            &dns_server_task,
+            "dns_server",
+            stack_depth,
+            NULL,
+            WIFI_MANAGER_TASK_PRIORITY - 1,
+            &gh_dns_task))
     {
         LOG_ERR("Can't create thread");
+        return false;
     }
+    return true;
 }
 
 void
@@ -84,7 +115,8 @@ dns_server_stop(void)
     {
         vTaskDelete(gh_dns_task);
         close(g_dns_socket_fd);
-        gh_dns_task = NULL;
+        g_dns_socket_fd = -1;
+        gh_dns_task     = NULL;
     }
 }
 
@@ -103,7 +135,7 @@ replace_non_ascii_with_dots(char *p_domain)
 }
 
 static void
-dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
+dns_server_handle_req(socket_t socket_fd, const ip4_addr_t *p_ip_resolved)
 {
     struct sockaddr_in client     = { 0 };
     socklen_t          client_len = sizeof(client);
@@ -114,7 +146,7 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 
     memset(data, 0x00, sizeof(data));
     const socket_recv_result_t length
-        = recvfrom(g_dns_socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
+        = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
 
     /*if the query is bigger than the buffer size we simply ignore it. This case should only happen in case of
      * multiple queries within the same DNS packet and is not supported by this simple DNS hijack. */
@@ -156,7 +188,7 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
     inet_ntop(AF_INET, &(client.sin_addr), ip_address, INET_ADDRSTRLEN);
     char *p_domain = (char *)&data[sizeof(dns_header_t) + 1];
     replace_non_ascii_with_dots(p_domain);
-    ESP_LOGI(TAG, "Replying to DNS request for %s from %s", p_domain, ip_address);
+    LOG_INFO("Replying to DNS request for %s from %s", p_domain, ip_address);
 
     /* create DNS answer at the end of the query*/
     dns_answer_t *p_dns_answer = (dns_answer_t *)&response[length];
@@ -171,7 +203,7 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
     p_dns_answer->dns_response_data        = p_ip_resolved->addr;
 
     const socket_send_result_t err
-        = sendto(g_dns_socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
+        = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
     if (err < 0)
     {
         LOG_ERR("UDP sendto failed: %d", err);
@@ -180,44 +212,26 @@ dns_server_handle_req(const ip4_addr_t *p_ip_resolved)
 
 ATTR_NORETURN
 void
-dns_server(ATTR_UNUSED void *p_params)
+dns_server_task(ATTR_UNUSED void *p_params)
 {
+    const socket_t socket_fd = g_dns_socket_fd;
+
     /* Set redirection DNS hijack to the access point IP */
     ip4_addr_t ip_resolved = { 0 };
     inet_pton(AF_INET, DEFAULT_AP_IP, &ip_resolved);
 
-    /* Create UDP socket */
-    g_dns_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (g_dns_socket_fd < 0)
-    {
-        ESP_LOGE(TAG, "Failed to create socket");
-        exit(0);
-    }
-    struct sockaddr_in ra = { 0 };
-    /* Bind to port 53 (typical DNS Server port) */
-    tcpip_adapter_ip_info_t ip = { 0 };
-    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
-    ra.sin_family      = AF_INET;
-    ra.sin_addr.s_addr = ip.ip.addr;
-    ra.sin_port        = htons(53);
-    if (-1 == bind(g_dns_socket_fd, (struct sockaddr *)&ra, sizeof(struct sockaddr_in)))
-    {
-        ESP_LOGE(TAG, "Failed to bind to 53/udp");
-        close(g_dns_socket_fd);
-        exit(1);
-    }
-
-    ESP_LOGI(TAG, "DNS Server listening on 53/udp");
+    LOG_INFO("DNS Server listening on 53/udp");
 
     /* Start loop to process DNS requests */
     for (;;)
     {
-        dns_server_handle_req(&ip_resolved);
+        dns_server_handle_req(socket_fd, &ip_resolved);
 
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. DNS daemon should not be taxing on the
                         system */
     }
     close(g_dns_socket_fd);
+    g_dns_socket_fd = -1;
 
     vTaskDelete(NULL);
 }
