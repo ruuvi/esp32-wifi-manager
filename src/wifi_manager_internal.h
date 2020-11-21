@@ -9,6 +9,7 @@
 #define RUUVI_WIFI_MANAGER_INTERNAL_H
 
 #include "wifi_manager_defs.h"
+#include "http_req.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +43,7 @@ http_server_resp_t
 wifi_manager_cb_on_http_get(const char *path);
 
 http_server_resp_t
-wifi_manager_cb_on_http_post(const char *path, const char *body);
+wifi_manager_cb_on_http_post(const char *path, const http_req_body_t http_body);
 
 http_server_resp_t
 wifi_manager_cb_on_http_delete(const char *path);

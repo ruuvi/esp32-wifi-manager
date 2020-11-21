@@ -62,6 +62,7 @@ Contains the freeRTOS task and all necessary support
 #include "wifiman_msg.h"
 #include "access_points_list.h"
 #include "wifi_sta_config.h"
+#include "http_req.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
@@ -185,13 +186,13 @@ wifi_manager_cb_on_http_get(const char *path)
 }
 
 http_server_resp_t
-wifi_manager_cb_on_http_post(const char *path, const char *body)
+wifi_manager_cb_on_http_post(const char *path, const http_req_body_t http_body)
 {
     if (NULL == g_wifi_cb_on_http_post)
     {
         return http_server_resp_404();
     }
-    return g_wifi_cb_on_http_post(path, body);
+    return g_wifi_cb_on_http_post(path, http_body.ptr);
 }
 
 http_server_resp_t

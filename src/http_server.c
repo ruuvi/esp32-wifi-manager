@@ -67,6 +67,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "app_malloc.h"
 #include "str_buf.h"
 #include "wifi_sta_config.h"
+#include "http_req.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
@@ -424,48 +425,18 @@ http_server_task(ATTR_UNUSED void *p_param)
     vTaskDelete(NULL);
 }
 
-/**
- * @brief gets a char* pointer to the first occurrence of header_name withing the complete http request request.
- *
- * For optimization purposes, no local copy is made. memcpy can then be used in coordination with len to extract the
- * data.
- *
- * @param request the full HTTP raw request.
- * @param header_name the header that is being searched.
- * @param len the size of the header value if found.
- * @return pointer to the beginning of the header value.
- */
-static const char *
-http_server_get_header(const char *request, const char *header_name, uint32_t *len)
-{
-    *len = 0;
-
-    char *ptr = strstr(request, header_name);
-    if (NULL != ptr)
-    {
-        char *ret = ptr + strlen(header_name);
-        ptr       = ret;
-        while ((*ptr != '\0') && (*ptr != '\n') && (*ptr != '\r'))
-        {
-            *len += 1;
-            ptr += 1;
-        }
-        return ret;
-    }
-    return NULL;
-}
-
 static const char *
 get_http_body(const char *msg, uint32_t len, uint32_t *p_body_len)
 {
-    static const char newlines[] = "\r\n\r\n";
-    const char *      p_body     = strstr(msg, newlines);
+    static const char g_newlines[] = "\r\n\r\n";
+
+    const char *p_body = strstr(msg, g_newlines);
     if (NULL == p_body)
     {
         ESP_LOGD(TAG, "http body not found: %s", msg);
         return 0;
     }
-    p_body += strlen(newlines);
+    p_body += strlen(g_newlines);
     if (NULL != p_body_len)
     {
         *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - msg);
@@ -541,68 +512,62 @@ http_server_handle_req_delete(const char *p_file_name)
 }
 
 static http_server_resp_t
-http_server_handle_req_post(const char *p_file_name, char *save_ptr)
+http_server_handle_req_post_connect_json(const http_req_header_t http_header)
 {
-    ESP_LOGI(TAG, "POST /%s", p_file_name);
-    const char *body = strstr(save_ptr, "\r\n\r\n");
-    if (0 == strcmp(p_file_name, "connect.json"))
+    ESP_LOGD(TAG, "http_server_netconn_serve: POST /connect.json");
+    uint32_t    len_ssid     = 0;
+    uint32_t    len_password = 0;
+    const char *p_ssid       = http_req_header_get_field(http_header, "X-Custom-ssid:", &len_ssid);
+    const char *p_password   = http_req_header_get_field(http_header, "X-Custom-pwd:", &len_password);
+    if ((NULL != p_ssid) && (len_ssid <= MAX_SSID_SIZE) && (NULL != p_password) && (len_password <= MAX_PASSWORD_SIZE))
     {
-        ESP_LOGD(TAG, "http_server_netconn_serve: POST /connect.json");
-        uint32_t    len_ssid     = 0;
-        uint32_t    len_password = 0;
-        const char *p_ssid       = http_server_get_header(save_ptr, "X-Custom-ssid: ", &len_ssid);
-        const char *p_password   = http_server_get_header(save_ptr, "X-Custom-pwd: ", &len_password);
-        if ((NULL != p_ssid) && (len_ssid <= MAX_SSID_SIZE) && (NULL != p_password)
-            && (len_password <= MAX_PASSWORD_SIZE))
-        {
-            wifi_sta_config_set_ssid_and_password(p_ssid, len_ssid, p_password, len_password);
+        wifi_sta_config_set_ssid_and_password(p_ssid, len_ssid, p_password, len_password);
 
-            ESP_LOGD(TAG, "http_server_netconn_serve: wifi_manager_connect_async() call");
-            wifi_manager_connect_async();
-            return http_server_resp_200_json("{}");
-        }
-        else
-        {
-            /* bad request the authentification header is not complete/not the correct format */
-            return http_server_resp_400();
-        }
+        ESP_LOGD(TAG, "http_server_netconn_serve: wifi_manager_connect_async() call");
+        wifi_manager_connect_async();
+        return http_server_resp_200_json("{}");
     }
-    return wifi_manager_cb_on_http_post(p_file_name, body);
+    else
+    {
+        /* bad request the authentification header is not complete/not the correct format */
+        return http_server_resp_400();
+    }
 }
 
 static http_server_resp_t
-http_server_handle_req(const char *line, char *save_ptr)
+http_server_handle_req_post(
+    const char *            p_file_name,
+    const http_req_header_t http_header,
+    const http_req_body_t   http_body)
 {
-    char *p = strchr(line, ' ');
-    if (NULL == p)
+    ESP_LOGI(TAG, "POST /%s", p_file_name);
+    if (0 == strcmp(p_file_name, "connect.json"))
     {
-        return http_server_resp_400();
+        return http_server_handle_req_post_connect_json(http_header);
     }
-    const char * http_cmd     = line;
-    const size_t http_cmd_len = (size_t)(ptrdiff_t)(p - line);
-    const char * path         = p + 1;
+    return wifi_manager_cb_on_http_post(p_file_name, http_body);
+}
+
+static http_server_resp_t
+http_server_handle_req(const http_req_info_t *p_req_info)
+{
+    const char *path = p_req_info->http_uri.ptr;
     if ('/' == path[0])
     {
         path += 1;
     }
-    p = strchr(path, ' ');
-    if (NULL == p)
-    {
-        return http_server_resp_400();
-    }
-    *p = '\0';
 
-    if (0 == strncmp("GET", http_cmd, http_cmd_len))
+    if (0 == strcmp("GET", p_req_info->http_cmd.ptr))
     {
         return http_server_handle_req_get(path);
     }
-    else if (0 == strncmp("DELETE", http_cmd, http_cmd_len))
+    else if (0 == strcmp("DELETE", p_req_info->http_cmd.ptr))
     {
         return http_server_handle_req_delete(path);
     }
-    else if (0 == strncmp("POST", http_cmd, http_cmd_len))
+    else if (0 == strcmp("POST", p_req_info->http_cmd.ptr))
     {
-        return http_server_handle_req_post(path, save_ptr);
+        return http_server_handle_req_post(path, p_req_info->http_header, p_req_info->http_body);
     }
     else
     {
@@ -639,11 +604,14 @@ http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p
     netbuf_delete(p_netbuf_in);
 
     // check if there should be more data coming from conn
-    uint32_t    field_len         = 0;
-    const char *p_content_len_str = http_server_get_header(p_req_buf, "Content-Length: ", &field_len);
+    uint32_t                field_len  = 0;
+    const http_req_header_t req_header = {
+        .ptr = p_req_buf,
+    };
+    const char *p_content_len_str = http_req_header_get_field(req_header, "Content-Length:", &field_len);
     if (NULL != p_content_len_str)
     {
-        const uint32_t content_len = strtoul(p_content_len_str, NULL, 10);
+        const uint32_t content_len = (uint32_t)strtoul(p_content_len_str, NULL, 10);
         uint32_t       body_len    = 0;
         const char *   p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
         if (NULL != p_body)
@@ -675,8 +643,6 @@ http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p
 void
 http_server_netconn_serve(struct netconn *conn)
 {
-    static const char new_line[] = { "\n" };
-
     char     req_buf[FULLBUF_SIZE + 1];
     uint32_t req_size  = 0;
     bool     req_ready = false;
@@ -696,18 +662,23 @@ http_server_netconn_serve(struct netconn *conn)
     }
     ESP_LOGD(TAG, "req: %s", req_buf);
 
-    char *save_ptr = req_buf;
-    char *p_line   = strtok_r(save_ptr, new_line, &save_ptr);
+    const http_req_info_t req_info = http_req_parse(req_buf);
 
-    if (NULL == p_line)
+    ESP_LOGD(TAG, "p_http_cmd: %s", req_info.http_cmd.ptr);
+    ESP_LOGD(TAG, "p_http_uri: %s", req_info.http_uri.ptr);
+    ESP_LOGD(TAG, "p_http_ver: %s", req_info.http_ver.ptr);
+    ESP_LOGD(TAG, "p_http_header: %s", req_info.http_header.ptr);
+    ESP_LOGD(TAG, "p_http_body: %s", req_info.http_body.ptr);
+
+    if (!req_info.is_success)
     {
-        http_server_netconn_resp_404(conn);
+        http_server_netconn_resp_400(conn);
         return;
     }
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP OR the
      * STA IP */
     uint32_t    host_len = 0;
-    const char *p_host   = http_server_get_header(save_ptr, "Host: ", &host_len);
+    const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
     /* determine if Host is from the STA IP address */
 
     const sta_ip_string_t ip_str  = sta_ip_safe_get(portMAX_DELAY);
@@ -720,7 +691,7 @@ http_server_netconn_serve(struct netconn *conn)
         http_server_netconn_resp_302(conn);
         return;
     }
-    http_server_resp_t resp = http_server_handle_req(p_line, save_ptr);
+    http_server_resp_t resp = http_server_handle_req(&req_info);
     switch (resp.http_resp_code)
     {
         case HTTP_RESP_CODE_200:
