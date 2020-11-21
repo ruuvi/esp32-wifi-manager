@@ -315,16 +315,12 @@ wifi_manager_event_handler(ATTR_UNUSED void *p_ctx, esp_event_base_t event_base,
     }
     else if (event_base == IP_EVENT)
     {
-        switch (event_id)
+        if (IP_EVENT_STA_GOT_IP == event_id)
         {
-            case IP_EVENT_STA_GOT_IP:
-                ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
-                xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT);
-                const ip_event_got_ip_t *p_ip_event = (const ip_event_got_ip_t *)event_data;
-                wifiman_msg_send_ev_got_ip(p_ip_event->ip_info.ip.addr);
-                break;
-            default:
-                break;
+            ESP_LOGI(TAG, "IP_EVENT_STA_GOT_IP");
+            xEventGroupSetBits(wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT);
+            const ip_event_got_ip_t *p_ip_event = (const ip_event_got_ip_t *)event_data;
+            wifiman_msg_send_ev_got_ip(p_ip_event->ip_info.ip.addr);
         }
     }
     else
