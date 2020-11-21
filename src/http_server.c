@@ -389,27 +389,26 @@ http_server_stop(void)
 static _Noreturn void
 http_server_task(ATTR_UNUSED void *p_param)
 {
-    struct netconn *conn, *newconn;
-    err_t           err;
-    conn                  = netconn_new(NETCONN_TCP);
-    const u16_t http_port = 80U;
-    netconn_bind(conn, IP_ADDR_ANY, http_port);
-    netconn_listen(conn);
+    struct netconn *p_conn    = netconn_new(NETCONN_TCP);
+    const u16_t     http_port = 80U;
+    netconn_bind(p_conn, IP_ADDR_ANY, http_port);
+    netconn_listen(p_conn);
     ESP_LOGI(TAG, "HTTP Server listening on 80/tcp");
     for (;;)
     {
-        err = netconn_accept(conn, &newconn);
-        if (err == ERR_OK)
+        struct netconn *p_new_conn = NULL;
+        const err_t     err        = netconn_accept(p_conn, &p_new_conn);
+        if (ERR_OK == err)
         {
-            http_server_netconn_serve(newconn);
-            netconn_close(newconn);
-            netconn_delete(newconn);
+            http_server_netconn_serve(p_new_conn);
+            netconn_close(p_new_conn);
+            netconn_delete(p_new_conn);
         }
-        else if (err == ERR_TIMEOUT)
+        else if (ERR_TIMEOUT == err)
         {
             ESP_LOGE(TAG, "http_server: netconn_accept ERR_TIMEOUT");
         }
-        else if (err == ERR_ABRT)
+        else if (ERR_ABRT == err)
         {
             ESP_LOGE(TAG, "http_server: netconn_accept ERR_ABRT");
         }
@@ -419,8 +418,8 @@ http_server_task(ATTR_UNUSED void *p_param)
         }
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. */
     }
-    netconn_close(conn);
-    netconn_delete(conn);
+    netconn_close(p_conn);
+    netconn_delete(p_conn);
 
     vTaskDelete(NULL);
 }
