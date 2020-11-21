@@ -765,6 +765,17 @@ wifi_manager_set_ant_config(const WiFiAntConfig_t *p_wifi_ant_config)
     }
 }
 
+static void
+wifi_manager_generate_ssid_from_orig_and_mac(
+    char *       p_ssid_str_buf,
+    const size_t ssid_max_len,
+    const char * p_orig_ap_ssid)
+{
+    ap_mac_t ap_mac = { 0 };
+    ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, &ap_mac.mac[0]));
+    ap_ssid_generate(p_ssid_str_buf, ssid_max_len, p_orig_ap_ssid, &ap_mac);
+}
+
 static wifi_config_t
 wifi_manager_generate_ap_config(const struct wifi_settings_t *p_wifi_settings)
 {
@@ -789,15 +800,10 @@ wifi_manager_generate_ap_config(const struct wifi_settings_t *p_wifi_settings)
         },
     };
 
-    {
-        ap_mac_t ap_mac = { 0 };
-        ESP_ERROR_CHECK(esp_wifi_get_mac(ESP_IF_WIFI_AP, &ap_mac.mac[0]));
-        ap_ssid_generate(
-            (char *)&ap_config.ap.ssid[0],
-            sizeof(ap_config.ap.ssid),
-            (const char *)&p_wifi_settings->ap_ssid[0],
-            &ap_mac);
-    }
+    wifi_manager_generate_ssid_from_orig_and_mac(
+        (char *)&ap_config.ap.ssid[0],
+        sizeof(ap_config.ap.ssid),
+        (const char *)&p_wifi_settings->ap_ssid[0]);
     snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", p_wifi_settings->ap_pwd);
     return ap_config;
 }
