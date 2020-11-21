@@ -80,16 +80,6 @@ json_network_info_generate(
     str_buf_printf(&str_buf, "{\"ssid\":");
     json_print_escaped_string(&str_buf, p_ssid->ssid_buf);
 
-    if (UPDATE_CONNECTION_OK != update_reason_code)
-    {
-        static const network_info_str_t g_network_info_empty = {
-            .ip      = { "0" },
-            .gw      = { "0" },
-            .netmask = { "0" },
-        };
-        p_network_info = &g_network_info_empty;
-    }
-
     str_buf_printf(
         &str_buf,
         ",\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"urc\":%d}\n",

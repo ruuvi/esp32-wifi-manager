@@ -222,11 +222,17 @@ wifi_manager_generate_ip_info_json(update_reason_code_e update_reason_code)
     ESP_ERROR_CHECK(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info));
     const wifi_ssid_t ssid = wifi_sta_config_get_ssid();
 
-    network_info_str_t ip_info_str = { 0 };
-    snprintf(ip_info_str.ip, sizeof(ip_info_str.ip), "%s", ip4addr_ntoa(&ip_info.ip));
-    snprintf(ip_info_str.netmask, sizeof(ip_info_str.netmask), "%s", ip4addr_ntoa(&ip_info.netmask));
-    snprintf(ip_info_str.gw, sizeof(ip_info_str.gw), "%s", ip4addr_ntoa(&ip_info.gw));
-
+    network_info_str_t ip_info_str = {
+        .ip      = { "0" },
+        .gw      = { "0" },
+        .netmask = { "0" },
+    };
+    if (UPDATE_CONNECTION_OK == update_reason_code)
+    {
+        snprintf(ip_info_str.ip, sizeof(ip_info_str.ip), "%s", ip4addr_ntoa(&ip_info.ip));
+        snprintf(ip_info_str.netmask, sizeof(ip_info_str.netmask), "%s", ip4addr_ntoa(&ip_info.netmask));
+        snprintf(ip_info_str.gw, sizeof(ip_info_str.gw), "%s", ip4addr_ntoa(&ip_info.gw));
+    }
     json_network_info_generate(&ssid, &ip_info_str, update_reason_code);
 }
 
