@@ -144,6 +144,16 @@ TEST_F(TestStaIpSafe, test_all) // NOLINT
         ASSERT_TRUE(esp_log_wrapper_is_empty());
     }
 
+    // Test lock/unlock without init
+    {
+        ASSERT_TRUE(nullptr == sta_ip_safe_mutex_get());
+        ASSERT_FALSE(sta_ip_safe_lock((TickType_t)0));
+        sta_ip_safe_unlock();
+        TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "sta_ip_safe_lock: Mutex is not initialized");
+        TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "sta_ip_safe_unlock: Mutex is not initialized");
+        ASSERT_TRUE(esp_log_wrapper_is_empty());
+    }
+
     // Test sta_ip_safe_init / sta_ip_safe_deinit twice
     {
         ASSERT_TRUE(nullptr == sta_ip_safe_mutex_get());
@@ -181,6 +191,24 @@ TEST_F(TestStaIpSafe, test_all) // NOLINT
         ASSERT_EQ(string("192.168.1.10"), string(ip_str.buf));
         sta_ip_safe_deinit();
         ASSERT_TRUE(nullptr == sta_ip_safe_mutex_get());
+        ASSERT_TRUE(esp_log_wrapper_is_empty());
+    }
+
+    // Test sta_ip_safe_set / sta_ip_safe_get without init
+    {
+        ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+        const sta_ip_address_t ip_address = sta_ip_safe_conv_str_to_ip("192.168.1.10");
+        ASSERT_FALSE(sta_ip_safe_set(ip_address, (TickType_t)0));
+        TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "sta_ip_safe_lock: Mutex is not initialized");
+        TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "sta_ip_safe_set: Timeout waiting mutex");
+        ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+        const sta_ip_string_t ip_str = sta_ip_safe_get((TickType_t)0);
+        ASSERT_EQ(string(""), string(ip_str.buf));
+        ASSERT_TRUE(nullptr == sta_ip_safe_mutex_get());
+        TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "sta_ip_safe_lock: Mutex is not initialized");
+        TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "sta_ip_safe_get: Timeout waiting mutex");
         ASSERT_TRUE(esp_log_wrapper_is_empty());
     }
 
