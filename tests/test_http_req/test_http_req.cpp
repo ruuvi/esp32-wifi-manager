@@ -278,6 +278,15 @@ TEST_F(TestHttpReq, test_lf_http_req_header_get_field) // NOLINT
         ASSERT_EQ(exp_host, string(buf));
         ASSERT_EQ(exp_host.length(), user_agent_len);
     }
+    {
+        uint32_t    none_field_len = 1;
+        const char *p_none_field   = http_req_header_get_field(
+            req_info.http_header,
+            "Non-existent-field:",
+            &none_field_len);
+        ASSERT_EQ(nullptr, p_none_field);
+        ASSERT_EQ(0, none_field_len);
+    }
 }
 
 TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
@@ -336,5 +345,14 @@ TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
         string exp_host = string("Mozilla/5.0");
         ASSERT_EQ(exp_host, string(buf));
         ASSERT_EQ(exp_host.length(), user_agent_len);
+    }
+    {
+        uint32_t    none_field_len = 1;
+        const char *p_none_field   = http_req_header_get_field(
+            req_info.http_header,
+            "Non-existent-field:",
+            &none_field_len);
+        ASSERT_EQ(nullptr, p_none_field);
+        ASSERT_EQ(0, none_field_len);
     }
 }
