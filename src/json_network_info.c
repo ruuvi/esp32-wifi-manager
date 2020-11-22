@@ -34,8 +34,7 @@ Contains the freeRTOS task and all necessary support
 #include <stddef.h>
 #include "json.h"
 #include "wifi_manager_defs.h"
-
-typedef int printf_int_t;
+#include "esp_type_wrapper.h"
 
 static char g_json_network_info_buf[JSON_IP_INFO_SIZE];
 

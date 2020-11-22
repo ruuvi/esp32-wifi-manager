@@ -68,14 +68,12 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "str_buf.h"
 #include "wifi_sta_config.h"
 #include "http_req.h"
+#include "esp_type_wrapper.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
 #include "log.h"
 
 #define FULLBUF_SIZE (4U * 1024U)
-
-typedef int           file_read_result_t;
-typedef unsigned long printf_ulong_t;
 
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.

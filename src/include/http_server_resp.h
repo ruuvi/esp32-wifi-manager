@@ -9,8 +9,7 @@
 #define WIFI_MANAGER_HTTP_SERVER_RESP_H
 
 #include "wifi_manager_defs.h"
-
-typedef int socket_t;
+#include "esp_type_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {

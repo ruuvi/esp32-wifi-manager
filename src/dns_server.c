@@ -53,10 +53,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include "attribs.h"
 #include "os_task.h"
 #include "log.h"
-
-typedef int socket_t;
-typedef int socket_recv_result_t;
-typedef int socket_send_result_t;
+#include "esp_type_wrapper.h"
 
 static const char TAG[] = "dns_server";
 

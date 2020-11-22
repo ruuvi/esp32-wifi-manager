@@ -35,12 +35,11 @@ Contains the freeRTOS task and all necessary support
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "esp_type_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef int socket_t;
 
 /**
  * @brief Defines the maximum size of a SSID name. 32 is IEEE standard.
