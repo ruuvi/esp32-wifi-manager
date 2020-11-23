@@ -66,6 +66,19 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_null) // NOLINT
     ASSERT_EQ(string("{}\n"), string(json_str));
 }
 
+TEST_F(TestJsonNetworkInfo, test_generate_ssid_empty) // NOLINT
+{
+    const network_info_str_t network_info = {
+        { "192.168.0.50" },
+        { "192.168.0.1" },
+        { "255.255.255.0" },
+    };
+    const wifi_ssid_t ssid = { "" };
+    json_network_info_generate(&ssid, &network_info, UPDATE_CONNECTION_OK);
+    const char *json_str = json_network_info_get();
+    ASSERT_EQ(string("{}\n"), string(json_str));
+}
+
 TEST_F(TestJsonNetworkInfo, test_generate_connection_ok) // NOLINT
 {
     const network_info_str_t network_info = {
