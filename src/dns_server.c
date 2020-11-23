@@ -58,7 +58,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 static const char TAG[] = "dns_server";
 
 static TaskHandle_t gh_dns_task;
-static socket_t     g_dns_socket_fd = -1;
+static socket_t     g_dns_socket_fd = SOCKET_INVALID;
 
 ATTR_NORETURN
 void
@@ -69,7 +69,7 @@ dns_server_start(void)
 {
     /* Create UDP socket */
     socket_t socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (socket_fd < 0)
+    if (SOCKET_INVALID == socket_fd)
     {
         LOG_ERR("Failed to create socket 53/udp");
         return false;
@@ -81,7 +81,7 @@ dns_server_start(void)
     ra.sin_family      = AF_INET;
     ra.sin_addr.s_addr = ip.ip.addr;
     ra.sin_port        = htons(53);
-    if (-1 == bind(socket_fd, (struct sockaddr *)&ra, sizeof(struct sockaddr_in)))
+    if (SOCKET_BIND_ERROR == bind(socket_fd, (struct sockaddr *)&ra, sizeof(struct sockaddr_in)))
     {
         LOG_ERR("Failed to bind to 53/udp");
         close(socket_fd);
@@ -112,7 +112,7 @@ dns_server_stop(void)
     {
         vTaskDelete(gh_dns_task);
         close(g_dns_socket_fd);
-        g_dns_socket_fd = -1;
+        g_dns_socket_fd = SOCKET_INVALID;
         gh_dns_task     = NULL;
     }
 }
@@ -228,7 +228,7 @@ dns_server_task(ATTR_UNUSED void *p_params)
                         system */
     }
     close(g_dns_socket_fd);
-    g_dns_socket_fd = -1;
+    g_dns_socket_fd = SOCKET_INVALID;
 
     vTaskDelete(NULL);
 }
