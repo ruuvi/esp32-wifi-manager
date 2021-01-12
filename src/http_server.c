@@ -255,7 +255,7 @@ write_content_from_fatfs(struct netconn *p_conn, const http_server_resp_t *p_res
         {
             netconn_flags |= (uint8_t)NETCONN_MORE;
         }
-        LOG_DBG("Send %u bytes", num_bytes);
+        LOG_VERBOSE("Send %u bytes", num_bytes);
         const err_t err = netconn_write(p_conn, tmp_buf, num_bytes, netconn_flags);
         if (ERR_OK != err)
         {
