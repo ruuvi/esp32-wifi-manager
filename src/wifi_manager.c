@@ -116,6 +116,25 @@ ATTR_NORETURN
 static void
 wifi_manager(const void *p_params);
 
+static void
+wifi_manager_event_handler(
+    ATTR_UNUSED void *     p_ctx,
+    const esp_event_base_t event_base,
+    const int32_t          event_id,
+    void *                 event_data);
+
+static void
+wifi_manager_set_ant_config(const WiFiAntConfig_t *p_wifi_ant_config);
+
+static void
+wifi_manager_esp_wifi_configure(const struct wifi_settings_t *p_wifi_settings);
+
+static void
+wifi_manager_tcpip_adapter_set_default_ip(void);
+
+static void
+wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *p_wifi_settings);
+
 void
 wifi_manager_scan_async(void)
 {
@@ -162,6 +181,37 @@ wifi_manager_start(
     }
     sta_ip_safe_init();
     g_wifi_manager_event_group = xEventGroupCreate();
+
+    /* initialize the tcp stack */
+    tcpip_adapter_init();
+
+    /* event handler and event group for the wifi driver */
+    g_wifi_manager_event_group = xEventGroupCreate();
+
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
+
+    /* default wifi config */
+    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+
+    wifi_manager_set_ant_config(p_wifi_ant_config);
+    /* SoftAP - Wifi Access Point configuration setup */
+    wifi_manager_tcpip_adapter_set_default_ip();
+    const wifi_settings_t *p_wifi_settings = wifi_sta_config_get_wifi_settings();
+    wifi_manager_esp_wifi_configure(p_wifi_settings);
+
+    /* STA - Wifi Station configuration setup */
+    wifi_manager_tcpip_adapter_configure(p_wifi_settings);
+
+    /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    /* enqueue first event: load previous config */
+    wifiman_msg_send_cmd_load_restore_sta();
 
     /* start wifi manager task */
     const char *   task_name   = "wifi_manager";
@@ -883,39 +933,6 @@ ATTR_NORETURN
 static void
 wifi_manager(const void *p_params)
 {
-    const WiFiAntConfig_t *p_wifi_ant_config = p_params;
-
-    /* initialize the tcp stack */
-    tcpip_adapter_init();
-
-    /* event handler and event group for the wifi driver */
-    g_wifi_manager_event_group = xEventGroupCreate();
-
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
-
-    /* default wifi config */
-    wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-
-    wifi_manager_set_ant_config(p_wifi_ant_config);
-    /* SoftAP - Wifi Access Point configuration setup */
-    wifi_manager_tcpip_adapter_set_default_ip();
-    const wifi_settings_t *p_wifi_settings = wifi_sta_config_get_wifi_settings();
-    wifi_manager_esp_wifi_configure(p_wifi_settings);
-
-    /* STA - Wifi Station configuration setup */
-    wifi_manager_tcpip_adapter_configure(p_wifi_settings);
-
-    /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    /* enqueue first event: load previous config */
-    wifiman_msg_send_cmd_load_restore_sta();
-
     wifi_manager_main_loop();
 
     vTaskDelete(NULL);
