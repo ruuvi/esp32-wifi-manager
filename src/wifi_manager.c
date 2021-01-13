@@ -482,7 +482,6 @@ wifi_handle_ev_scan_done(void)
     {
         LOG_ERR("could not get access to json mutex in wifi_scan");
     }
-    dns_server_start();
 }
 
 static void
@@ -702,6 +701,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *p_param)
     {
         return false;
     }
+    dns_server_start();
     return true;
 }
 
@@ -752,12 +752,17 @@ static void
 wifi_handle_ev_ap_sta_connected(void)
 {
     LOG_INFO("MESSAGE: EVENT_AP_STA_CONNECTED");
+    if (!wifi_manager_is_connected())
+    {
+        dns_server_start();
+    }
 }
 
 static void
 wifi_handle_ev_ap_sta_disconnected(void)
 {
     LOG_INFO("MESSAGE: EVENT_AP_STA_DISCONNECTED");
+    dns_server_stop();
 }
 
 static void
