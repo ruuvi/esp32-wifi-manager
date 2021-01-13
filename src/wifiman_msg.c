@@ -149,6 +149,15 @@ wifiman_msg_send_ev_got_ip(const sta_ip_address_t ip_addr)
 }
 
 bool
+wifiman_msg_send_ev_ap_sta_connected(void)
+{
+    const wifiman_msg_param_t msg_param = {
+        .val = 0,
+    };
+    return wifiman_msg_send(EVENT_AP_STA_CONNECTED, msg_param);
+}
+
+bool
 wifiman_msg_send_ev_disconnected(const wifiman_disconnection_reason_t reason)
 {
     const wifiman_msg_param_t msg_param = {

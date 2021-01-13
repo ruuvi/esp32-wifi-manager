@@ -340,6 +340,7 @@ wifi_manager_event_handler(
             case WIFI_EVENT_AP_STACONNECTED: /* a user disconnected from the SoftAP */
                 LOG_INFO("WIFI_EVENT_AP_STACONNECTED");
                 xEventGroupSetBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
+                wifiman_msg_send_ev_ap_sta_connected();
                 break;
             case WIFI_EVENT_AP_STADISCONNECTED:
                 LOG_INFO("WIFI_EVENT_AP_STADISCONNECTED");
@@ -734,6 +735,12 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *p_param)
 }
 
 static void
+wifi_handle_ev_ap_sta_connected(void)
+{
+    LOG_INFO("MESSAGE: EVENT_AP_STA_CONNECTED");
+}
+
+static void
 wifi_handle_cmd_disconnect_sta(void)
 {
     LOG_INFO("MESSAGE: ORDER_DISCONNECT_STA");
@@ -793,6 +800,9 @@ wifi_manager_main_loop(void)
                 break;
             case EVENT_STA_GOT_IP:
                 wifi_handle_ev_sta_got_ip(&msg.msg_param);
+                break;
+            case EVENT_AP_STA_CONNECTED:
+                wifi_handle_ev_ap_sta_connected();
                 break;
             case ORDER_DISCONNECT_STA:
                 wifi_handle_cmd_disconnect_sta();
