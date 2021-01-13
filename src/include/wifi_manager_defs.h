@@ -204,7 +204,8 @@ typedef enum message_code_e
     EVENT_SCAN_DONE            = 13,
     EVENT_STA_GOT_IP           = 14,
     EVENT_AP_STA_CONNECTED     = 15,
-    MESSAGE_CODE_COUNT         = 16 /* important for the callback array */
+    EVENT_AP_STA_DISCONNECTED  = 16,
+    MESSAGE_CODE_COUNT         = 17 /* important for the callback array */
 } message_code_e;
 
 /**

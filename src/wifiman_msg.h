@@ -64,6 +64,9 @@ wifiman_msg_send_ev_got_ip(const sta_ip_address_t ip_addr);
 bool
 wifiman_msg_send_ev_ap_sta_connected(void);
 
+bool
+wifiman_msg_send_ev_ap_sta_disconnected(void);
+
 #ifdef __cplusplus
 }
 #endif

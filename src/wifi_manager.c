@@ -345,6 +345,7 @@ wifi_manager_event_handler(
             case WIFI_EVENT_AP_STADISCONNECTED:
                 LOG_INFO("WIFI_EVENT_AP_STADISCONNECTED");
                 xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
+                wifiman_msg_send_ev_ap_sta_disconnected();
                 break;
             case WIFI_EVENT_STA_START:
                 LOG_INFO("WIFI_EVENT_STA_START");
@@ -741,6 +742,12 @@ wifi_handle_ev_ap_sta_connected(void)
 }
 
 static void
+wifi_handle_ev_ap_sta_disconnected(void)
+{
+    LOG_INFO("MESSAGE: EVENT_AP_STA_DISCONNECTED");
+}
+
+static void
 wifi_handle_cmd_disconnect_sta(void)
 {
     LOG_INFO("MESSAGE: ORDER_DISCONNECT_STA");
@@ -803,6 +810,9 @@ wifi_manager_main_loop(void)
                 break;
             case EVENT_AP_STA_CONNECTED:
                 wifi_handle_ev_ap_sta_connected();
+                break;
+            case EVENT_AP_STA_DISCONNECTED:
+                wifi_handle_ev_ap_sta_disconnected();
                 break;
             case ORDER_DISCONNECT_STA:
                 wifi_handle_cmd_disconnect_sta();
