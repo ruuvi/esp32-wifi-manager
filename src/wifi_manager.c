@@ -212,6 +212,8 @@ wifi_manager_start(
     /* enqueue first event: load previous config */
     wifiman_msg_send_cmd_load_restore_sta();
 
+    http_server_start();
+
     /* start wifi manager task */
     const char *   task_name   = "wifi_manager";
     const uint32_t stack_depth = 4096U;
@@ -480,8 +482,6 @@ wifi_handle_ev_scan_done(void)
     {
         LOG_ERR("could not get access to json mutex in wifi_scan");
     }
-
-    http_server_start();
     dns_server_start();
 }
 
