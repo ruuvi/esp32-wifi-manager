@@ -842,12 +842,9 @@ wifi_manager_main_loop(void)
             default:
                 break;
         }
-        if (NULL != g_wifi_cb_ptr_arr[msg.code])
+        if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
         {
-            if (!flag_do_not_call_cb)
-            {
-                (*g_wifi_cb_ptr_arr[msg.code])(NULL);
-            }
+            (*g_wifi_cb_ptr_arr[msg.code])(NULL);
         }
     }
 }
