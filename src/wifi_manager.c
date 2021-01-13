@@ -89,7 +89,8 @@ static EventGroupHandle_t g_wifi_manager_event_group;
 /* @brief indicate that the ESP32 is currently connected. */
 #define WIFI_MANAGER_WIFI_CONNECTED_BIT (BIT0)
 
-#define WIFI_MANAGER_AP_STA_CONNECTED_BIT (BIT1)
+#define WIFI_MANAGER_AP_STA_CONNECTED_BIT   (BIT1)
+#define WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT (BIT9)
 
 /* @brief Set automatically once the SoftAP is started */
 #define WIFI_MANAGER_AP_STARTED_BIT (BIT2)
@@ -340,6 +341,7 @@ wifi_manager_event_handler(
                 break;
             case WIFI_EVENT_AP_STACONNECTED: /* a user disconnected from the SoftAP */
                 LOG_INFO("WIFI_EVENT_AP_STACONNECTED");
+                xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
                 xEventGroupSetBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
                 wifiman_msg_send_ev_ap_sta_connected();
                 break;
@@ -375,6 +377,7 @@ wifi_manager_event_handler(
                 break;
             case IP_EVENT_AP_STAIPASSIGNED:
                 LOG_INFO("IP_EVENT_AP_STAIPASSIGNED");
+                xEventGroupSetBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
                 wifiman_msg_send_ev_ap_sta_ip_assigned();
                 break;
             default:
