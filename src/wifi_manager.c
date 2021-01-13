@@ -185,9 +185,6 @@ wifi_manager_start(
     /* initialize the tcp stack */
     tcpip_adapter_init();
 
-    /* event handler and event group for the wifi driver */
-    g_wifi_manager_event_group = xEventGroupCreate();
-
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
