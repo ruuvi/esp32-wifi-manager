@@ -355,12 +355,9 @@ wifi_manager_event_handler(
                 LOG_INFO("WIFI_EVENT_STA_CONNECTED");
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
-            {
                 LOG_INFO("WIFI_EVENT_STA_DISCONNECTED");
-                const wifi_event_sta_disconnected_t *p_disconnected = (const wifi_event_sta_disconnected_t *)event_data;
-                wifiman_msg_send_ev_disconnected(p_disconnected->reason);
+                wifiman_msg_send_ev_disconnected(((const wifi_event_sta_disconnected_t *)event_data)->reason);
                 break;
-            }
             default:
                 break;
         }
