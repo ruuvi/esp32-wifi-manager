@@ -336,6 +336,7 @@ wifi_manager_event_handler(
                 wifi_manager_scan_async();
                 break;
             case WIFI_EVENT_AP_STOP:
+                LOG_INFO("WIFI_EVENT_AP_STOP");
                 break;
             case WIFI_EVENT_AP_PROBEREQRECVED:
                 break;
@@ -971,4 +972,16 @@ wifi_manager(const void *p_params)
     wifi_manager_main_loop();
 
     vTaskDelete(NULL);
+}
+
+bool
+wifi_manager_is_connected(void)
+{
+    return (0 != (xEventGroupGetBits(g_wifi_manager_event_group) & WIFI_MANAGER_WIFI_CONNECTED_BIT));
+}
+
+bool
+wifi_manager_is_ap_sta_ip_assigned(void)
+{
+    return (0 != (xEventGroupGetBits(g_wifi_manager_event_group) & WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT));
 }
