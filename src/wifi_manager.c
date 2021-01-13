@@ -698,7 +698,7 @@ wifi_handle_cmd_start_ap(void)
 }
 
 static void
-wifi_handle_ev_got_ip(const wifiman_msg_param_t *p_param)
+wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *p_param)
 {
     LOG_INFO("MESSAGE: EVENT_STA_GOT_IP");
 
@@ -792,7 +792,7 @@ wifi_manager_main_loop(void)
                 wifi_handle_cmd_start_ap();
                 break;
             case EVENT_STA_GOT_IP:
-                wifi_handle_ev_got_ip(&msg.msg_param);
+                wifi_handle_ev_sta_got_ip(&msg.msg_param);
                 break;
             case ORDER_DISCONNECT_STA:
                 wifi_handle_cmd_disconnect_sta();
