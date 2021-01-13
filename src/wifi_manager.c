@@ -188,6 +188,7 @@ wifi_manager_start(
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler, NULL));
 
     /* default wifi config */
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -366,11 +367,18 @@ wifi_manager_event_handler(
     }
     else if (IP_EVENT == event_base)
     {
-        if (IP_EVENT_STA_GOT_IP == event_id)
+        switch (event_id)
         {
-            LOG_INFO("IP_EVENT_STA_GOT_IP");
-            const ip_event_got_ip_t *p_ip_event = (const ip_event_got_ip_t *)event_data;
-            wifiman_msg_send_ev_got_ip(p_ip_event->ip_info.ip.addr);
+            case IP_EVENT_STA_GOT_IP:
+                LOG_INFO("IP_EVENT_STA_GOT_IP");
+                wifiman_msg_send_ev_got_ip(((const ip_event_got_ip_t *)event_data)->ip_info.ip.addr);
+                break;
+            case IP_EVENT_AP_STAIPASSIGNED:
+                LOG_INFO("IP_EVENT_AP_STAIPASSIGNED");
+                wifiman_msg_send_ev_ap_sta_ip_assigned();
+                break;
+            default:
+                break;
         }
     }
     else
@@ -426,6 +434,7 @@ wifi_manager_stop(void)
     LOG_INFO("%s", __func__);
     esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler);
     esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler);
+    esp_event_handler_unregister(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler);
 
     esp_wifi_disconnect();
     esp_wifi_stop();
@@ -748,6 +757,12 @@ wifi_handle_ev_ap_sta_disconnected(void)
 }
 
 static void
+wifi_handle_ev_ap_sta_ip_assigned(void)
+{
+    LOG_INFO("MESSAGE: EVENT_AP_STA_IP_ASSIGNED");
+}
+
+static void
 wifi_handle_cmd_disconnect_sta(void)
 {
     LOG_INFO("MESSAGE: ORDER_DISCONNECT_STA");
@@ -810,6 +825,9 @@ wifi_manager_main_loop(void)
                 break;
             case EVENT_AP_STA_CONNECTED:
                 wifi_handle_ev_ap_sta_connected();
+                break;
+            case EVENT_AP_STA_IP_ASSIGNED:
+                wifi_handle_ev_ap_sta_ip_assigned();
                 break;
             case EVENT_AP_STA_DISCONNECTED:
                 wifi_handle_ev_ap_sta_disconnected();

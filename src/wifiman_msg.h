@@ -67,6 +67,9 @@ wifiman_msg_send_ev_ap_sta_connected(void);
 bool
 wifiman_msg_send_ev_ap_sta_disconnected(void);
 
+bool
+wifiman_msg_send_ev_ap_sta_ip_assigned(void);
+
 #ifdef __cplusplus
 }
 #endif
