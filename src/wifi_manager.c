@@ -691,7 +691,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *p_param)
 }
 
 static void
-wifi_handle_cmd_start_ip(void)
+wifi_handle_cmd_start_ap(void)
 {
     LOG_INFO("MESSAGE: ORDER_START_AP");
     esp_wifi_set_mode(WIFI_MODE_APSTA);
@@ -789,7 +789,7 @@ wifi_manager_main_loop(void)
                 }
                 break;
             case ORDER_START_AP:
-                wifi_handle_cmd_start_ip();
+                wifi_handle_cmd_start_ap();
                 break;
             case EVENT_STA_GOT_IP:
                 wifi_handle_ev_got_ip(&msg.msg_param);
