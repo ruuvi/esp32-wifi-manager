@@ -47,6 +47,9 @@ bool
 wifiman_msg_send_cmd_start_ap(void);
 
 bool
+wifiman_msg_send_cmd_stop_ap(void);
+
+bool
 wifiman_msg_send_cmd_disconnect_sta(void);
 
 bool

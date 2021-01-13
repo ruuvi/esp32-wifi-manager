@@ -350,7 +350,9 @@ wifi_manager_event_handler(
                 break;
             case WIFI_EVENT_AP_STADISCONNECTED:
                 LOG_INFO("WIFI_EVENT_AP_STADISCONNECTED");
-                xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
+                xEventGroupClearBits(
+                    g_wifi_manager_event_group,
+                    WIFI_MANAGER_AP_STA_CONNECTED_BIT | WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
                 wifiman_msg_send_ev_ap_sta_disconnected();
                 break;
             case WIFI_EVENT_STA_START:
@@ -713,6 +715,18 @@ wifi_handle_cmd_start_ap(void)
 }
 
 static void
+wifi_handle_cmd_stop_ap(void)
+{
+    LOG_INFO("MESSAGE: ORDER_STOP_AP");
+    LOG_INFO("Configure WiFi mode: Station");
+    const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "esp_wifi_set_mode failed");
+    }
+}
+
+static void
 wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *p_param)
 {
     LOG_INFO("MESSAGE: EVENT_STA_GOT_IP");
@@ -762,6 +776,7 @@ static void
 wifi_handle_ev_ap_sta_disconnected(void)
 {
     LOG_INFO("MESSAGE: EVENT_AP_STA_DISCONNECTED");
+    xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
     dns_server_stop();
 }
 
@@ -828,6 +843,9 @@ wifi_manager_main_loop(void)
                 break;
             case ORDER_START_AP:
                 wifi_handle_cmd_start_ap();
+                break;
+            case ORDER_STOP_AP:
+                wifi_handle_cmd_stop_ap();
                 break;
             case EVENT_STA_GOT_IP:
                 wifi_handle_ev_sta_got_ip(&msg.msg_param);

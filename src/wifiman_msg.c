@@ -104,6 +104,15 @@ wifiman_msg_send_cmd_start_ap(void)
 }
 
 bool
+wifiman_msg_send_cmd_stop_ap(void)
+{
+    const wifiman_msg_param_t msg_param = {
+        .ptr = NULL,
+    };
+    return wifiman_msg_send(ORDER_STOP_AP, msg_param);
+}
+
+bool
 wifiman_msg_send_cmd_connect_sta(const connection_request_made_by_code_e conn_req_code)
 {
     const wifiman_msg_param_t msg_param = {

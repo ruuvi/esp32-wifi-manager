@@ -198,7 +198,7 @@ typedef enum message_code_e
     ORDER_CONNECT_STA          = 7,
     ORDER_DISCONNECT_STA       = 8,
     ORDER_START_AP             = 9,
-    ORDER_START_HTTP           = 10,
+    ORDER_STOP_AP              = 10,
     ORDER_START_DNS_HIJACK     = 11,
     EVENT_STA_DISCONNECTED     = 12,
     EVENT_SCAN_DONE            = 13,
