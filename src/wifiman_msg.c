@@ -131,6 +131,16 @@ wifiman_msg_send_cmd_disconnect_sta(void)
 }
 
 bool
+wifiman_msg_send_cmd_stop_and_destroy(void)
+{
+    const wifiman_msg_param_t msg_param = {
+        .ptr = NULL,
+    };
+    LOG_INFO("Send msg: ORDER_STOP_AND_DESTROY");
+    return wifiman_msg_send(ORDER_STOP_AND_DESTROY, msg_param);
+}
+
+bool
 wifiman_msg_send_cmd_start_wifi_scan(void)
 {
     const wifiman_msg_param_t msg_param = {

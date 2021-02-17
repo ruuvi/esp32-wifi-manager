@@ -53,6 +53,9 @@ bool
 wifiman_msg_send_cmd_disconnect_sta(void);
 
 bool
+wifiman_msg_send_cmd_stop_and_destroy(void);
+
+bool
 wifiman_msg_send_cmd_start_wifi_scan(void);
 
 bool

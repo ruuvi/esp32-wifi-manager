@@ -80,9 +80,6 @@ static wifi_manager_http_callback_t   g_wifi_cb_on_http_get;
 static wifi_manager_http_cb_on_post_t g_wifi_cb_on_http_post;
 static wifi_manager_http_callback_t   g_wifi_cb_on_http_delete;
 
-/* @brief task handle for the main wifi_manager task */
-static TaskHandle_t gh_wifi_manager_task = NULL;
-
 static EventGroupHandle_t g_wifi_manager_event_group;
 
 /* @brief indicate that the ESP32 is currently connected. */
@@ -112,7 +109,6 @@ static EventGroupHandle_t g_wifi_manager_event_group;
 /* @brief When set, means user requested for a disconnect */
 #define WIFI_MANAGER_REQUEST_DISCONNECT_BIT (BIT8)
 
-ATTR_NORETURN
 static void
 wifi_manager_task(void);
 
@@ -216,12 +212,7 @@ wifi_manager_start(
     /* start wifi manager task */
     const char *   task_name   = "wifi_manager";
     const uint32_t stack_depth = 4096U;
-    if (!os_task_create_without_param(
-            &wifi_manager_task,
-            task_name,
-            stack_depth,
-            WIFI_MANAGER_TASK_PRIORITY,
-            &gh_wifi_manager_task))
+    if (!os_task_create_finite_without_param(&wifi_manager_task, task_name, stack_depth, WIFI_MANAGER_TASK_PRIORITY))
     {
         LOG_ERR("Can't create thread: %s", task_name);
     }
@@ -408,48 +399,11 @@ wifi_manager_connect_async(void)
     wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
 }
 
-/**
- * Frees up all memory allocated by the wifi_manager and kill the task.
- */
-static void
-wifi_manager_destroy(void)
-{
-    LOG_INFO("%s", __func__);
-    if (NULL != gh_wifi_manager_task)
-    {
-        vTaskDelete(gh_wifi_manager_task);
-        gh_wifi_manager_task = NULL;
-
-        /* heap buffers */
-        json_access_points_deinit();
-        json_network_info_deinit();
-        sta_ip_safe_deinit();
-
-        /* RTOS objects */
-        vSemaphoreDelete(gh_wifi_json_mutex);
-        gh_wifi_json_mutex = NULL;
-        vEventGroupDelete(g_wifi_manager_event_group);
-        g_wifi_manager_event_group = NULL;
-        wifiman_msg_deinit();
-    }
-}
-
 void
 wifi_manager_stop(void)
 {
     LOG_INFO("%s", __func__);
-    esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler);
-    esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler);
-    esp_event_handler_unregister(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler);
-
-    esp_wifi_disconnect();
-    esp_wifi_stop();
-    esp_wifi_deinit();
-
-    wifi_manager_destroy();
-
-    tcpip_adapter_stop(TCPIP_ADAPTER_IF_STA);
-    tcpip_adapter_stop(TCPIP_ADAPTER_IF_AP);
+    wifiman_msg_send_cmd_stop_and_destroy();
 }
 
 void
@@ -799,10 +753,11 @@ wifi_handle_cmd_disconnect_sta(void)
     }
 }
 
-static void
+static bool
 wifi_manager_recv_and_handle_msg(void)
 {
-    queue_message msg = { 0 };
+    bool          flag_terminate = false;
+    queue_message msg            = { 0 };
     if (!wifiman_msg_recv(&msg))
     {
         LOG_ERR("%s failed", "wifiman_msg_recv");
@@ -813,11 +768,15 @@ wifi_manager_recv_and_handle_msg(void)
          */
         const uint32_t delay_ms = 100U;
         vTaskDelay(delay_ms / portTICK_PERIOD_MS);
-        return;
+        return flag_terminate;
     }
     bool flag_do_not_call_cb = false;
     switch (msg.code)
     {
+        case ORDER_STOP_AND_DESTROY:
+            LOG_INFO("Got msg: ORDER_STOP_AND_DESTROY");
+            flag_terminate = true;
+            break;
         case ORDER_START_WIFI_SCAN:
             wifi_handle_cmd_start_wifi_scan();
             break;
@@ -865,25 +824,50 @@ wifi_manager_recv_and_handle_msg(void)
     {
         (*g_wifi_cb_ptr_arr[msg.code])(NULL);
     }
+    return flag_terminate;
 }
 
-ATTR_NORETURN
 static void
 wifi_manager_main_loop(void)
 {
     for (;;)
     {
-        wifi_manager_recv_and_handle_msg();
+        if (wifi_manager_recv_and_handle_msg())
+        {
+            break;
+        }
     }
 }
 
-ATTR_NORETURN
 static void
 wifi_manager_task(void)
 {
     wifi_manager_main_loop();
 
-    vTaskDelete(NULL);
+    LOG_INFO("Finish task");
+
+    esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler);
+    esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler);
+    esp_event_handler_unregister(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler);
+
+    esp_wifi_disconnect();
+    esp_wifi_stop();
+    esp_wifi_deinit();
+
+    /* heap buffers */
+    json_access_points_deinit();
+    json_network_info_deinit();
+    sta_ip_safe_deinit();
+
+    /* RTOS objects */
+    vSemaphoreDelete(gh_wifi_json_mutex);
+    gh_wifi_json_mutex = NULL;
+    vEventGroupDelete(g_wifi_manager_event_group);
+    g_wifi_manager_event_group = NULL;
+    wifiman_msg_deinit();
+
+    tcpip_adapter_stop(TCPIP_ADAPTER_IF_STA);
+    tcpip_adapter_stop(TCPIP_ADAPTER_IF_AP);
 }
 
 static void

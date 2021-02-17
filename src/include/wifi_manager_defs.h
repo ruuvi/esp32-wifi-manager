@@ -189,19 +189,20 @@ typedef struct wifi_password_t
 typedef enum message_code_e
 {
     NONE                       = 0,
-    ORDER_START_WIFI_SCAN      = 1,
-    ORDER_LOAD_AND_RESTORE_STA = 2,
-    ORDER_CONNECT_STA          = 3,
-    ORDER_DISCONNECT_STA       = 4,
-    ORDER_START_AP             = 5,
-    ORDER_STOP_AP              = 6,
-    EVENT_STA_DISCONNECTED     = 7,
-    EVENT_SCAN_DONE            = 8,
-    EVENT_STA_GOT_IP           = 9,
-    EVENT_AP_STA_CONNECTED     = 10,
-    EVENT_AP_STA_DISCONNECTED  = 11,
-    EVENT_AP_STA_IP_ASSIGNED   = 12,
-    MESSAGE_CODE_COUNT         = 13 /* important for the callback array */
+    ORDER_STOP_AND_DESTROY     = 1,
+    ORDER_START_WIFI_SCAN      = 2,
+    ORDER_LOAD_AND_RESTORE_STA = 3,
+    ORDER_CONNECT_STA          = 4,
+    ORDER_DISCONNECT_STA       = 5,
+    ORDER_START_AP             = 6,
+    ORDER_STOP_AP              = 7,
+    EVENT_STA_DISCONNECTED     = 8,
+    EVENT_SCAN_DONE            = 9,
+    EVENT_STA_GOT_IP           = 10,
+    EVENT_AP_STA_CONNECTED     = 11,
+    EVENT_AP_STA_DISCONNECTED  = 12,
+    EVENT_AP_STA_IP_ASSIGNED   = 13,
+    MESSAGE_CODE_COUNT         = 14 /* important for the callback array */
 } message_code_e;
 
 /**
