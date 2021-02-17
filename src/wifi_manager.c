@@ -818,9 +818,6 @@ wifi_manager_recv_and_handle_msg(void)
     bool flag_do_not_call_cb = false;
     switch (msg.code)
     {
-        case EVENT_SCAN_DONE:
-            wifi_handle_ev_scan_done();
-            break;
         case ORDER_START_WIFI_SCAN:
             wifi_handle_cmd_start_wifi_scan();
             break;
@@ -830,11 +827,8 @@ wifi_manager_recv_and_handle_msg(void)
         case ORDER_CONNECT_STA:
             wifi_handle_cmd_connect_sta(&msg.msg_param);
             break;
-        case EVENT_STA_DISCONNECTED:
-            if (!wifi_handle_ev_sta_disconnected(&msg.msg_param))
-            {
-                flag_do_not_call_cb = true;
-            }
+        case ORDER_DISCONNECT_STA:
+            wifi_handle_cmd_disconnect_sta();
             break;
         case ORDER_START_AP:
             wifi_handle_cmd_start_ap();
@@ -842,20 +836,27 @@ wifi_manager_recv_and_handle_msg(void)
         case ORDER_STOP_AP:
             wifi_handle_cmd_stop_ap();
             break;
+
+        case EVENT_STA_DISCONNECTED:
+            if (!wifi_handle_ev_sta_disconnected(&msg.msg_param))
+            {
+                flag_do_not_call_cb = true;
+            }
+            break;
+        case EVENT_SCAN_DONE:
+            wifi_handle_ev_scan_done();
+            break;
         case EVENT_STA_GOT_IP:
             wifi_handle_ev_sta_got_ip(&msg.msg_param);
             break;
         case EVENT_AP_STA_CONNECTED:
             wifi_handle_ev_ap_sta_connected();
             break;
-        case EVENT_AP_STA_IP_ASSIGNED:
-            wifi_handle_ev_ap_sta_ip_assigned();
-            break;
         case EVENT_AP_STA_DISCONNECTED:
             wifi_handle_ev_ap_sta_disconnected();
             break;
-        case ORDER_DISCONNECT_STA:
-            wifi_handle_cmd_disconnect_sta();
+        case EVENT_AP_STA_IP_ASSIGNED:
+            wifi_handle_ev_ap_sta_ip_assigned();
             break;
         default:
             break;
