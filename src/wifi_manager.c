@@ -114,7 +114,7 @@ static EventGroupHandle_t g_wifi_manager_event_group;
 
 ATTR_NORETURN
 static void
-wifi_manager_task(const void *p_params);
+wifi_manager_task(void);
 
 static void
 wifi_manager_event_handler(
@@ -216,11 +216,10 @@ wifi_manager_start(
     /* start wifi manager task */
     const char *   task_name   = "wifi_manager";
     const uint32_t stack_depth = 4096U;
-    if (!os_task_create_with_const_param(
+    if (!os_task_create_without_param(
             &wifi_manager_task,
             task_name,
             stack_depth,
-            (const void *)p_wifi_ant_config,
             WIFI_MANAGER_TASK_PRIORITY,
             &gh_wifi_manager_task))
     {
@@ -879,7 +878,7 @@ wifi_manager_main_loop(void)
 
 ATTR_NORETURN
 static void
-wifi_manager_task(const void *p_params)
+wifi_manager_task(void)
 {
     wifi_manager_main_loop();
 
