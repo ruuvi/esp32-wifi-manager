@@ -800,75 +800,90 @@ wifi_handle_cmd_disconnect_sta(void)
     }
 }
 
+static void
+wifi_manager_recv_and_handle_msg(void)
+{
+    queue_message msg = { 0 };
+    if (!wifiman_msg_recv(&msg))
+    {
+        LOG_ERR("%s failed", "wifiman_msg_recv");
+        /**
+         * wifiman_msg_recv calls xQueueReceive with infinite timeout,
+         * so it should never return false and we should never get here,
+         * but as a safety precaution to prevent 100% CPU usage we can sleep for a while to give time other threads.
+         */
+        const uint32_t delay_ms = 100U;
+        vTaskDelay(delay_ms / portTICK_PERIOD_MS);
+        return;
+    }
+    bool flag_do_not_call_cb = false;
+    switch (msg.code)
+    {
+        case EVENT_SCAN_DONE:
+            wifi_handle_ev_scan_done();
+            break;
+        case ORDER_START_WIFI_SCAN:
+            wifi_handle_cmd_start_wifi_scan();
+            break;
+        case ORDER_LOAD_AND_RESTORE_STA:
+            wifi_handle_cmd_load_sta();
+            break;
+        case ORDER_CONNECT_STA:
+            wifi_handle_cmd_connect_sta(&msg.msg_param);
+            break;
+        case EVENT_STA_DISCONNECTED:
+            if (!wifi_handle_ev_sta_disconnected(&msg.msg_param))
+            {
+                flag_do_not_call_cb = true;
+            }
+            break;
+        case ORDER_START_AP:
+            wifi_handle_cmd_start_ap();
+            break;
+        case ORDER_STOP_AP:
+            wifi_handle_cmd_stop_ap();
+            break;
+        case EVENT_STA_GOT_IP:
+            wifi_handle_ev_sta_got_ip(&msg.msg_param);
+            break;
+        case EVENT_AP_STA_CONNECTED:
+            wifi_handle_ev_ap_sta_connected();
+            break;
+        case EVENT_AP_STA_IP_ASSIGNED:
+            wifi_handle_ev_ap_sta_ip_assigned();
+            break;
+        case EVENT_AP_STA_DISCONNECTED:
+            wifi_handle_ev_ap_sta_disconnected();
+            break;
+        case ORDER_DISCONNECT_STA:
+            wifi_handle_cmd_disconnect_sta();
+            break;
+        default:
+            break;
+    }
+    if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
+    {
+        (*g_wifi_cb_ptr_arr[msg.code])(NULL);
+    }
+}
+
 ATTR_NORETURN
 static void
 wifi_manager_main_loop(void)
 {
     for (;;)
     {
-        queue_message msg = { 0 };
-        if (!wifiman_msg_recv(&msg))
-        {
-            LOG_ERR("%s failed", "wifiman_msg_recv");
-            /**
-             * wifiman_msg_recv calls xQueueReceive with infinite timeout,
-             * so it should never return false and we should never get here,
-             * but as a safety precaution to prevent 100% CPU usage we can sleep for a while to give time other threads.
-             */
-            const uint32_t delay_ms = 100U;
-            vTaskDelay(delay_ms / portTICK_PERIOD_MS);
-            continue;
-        }
-        bool flag_do_not_call_cb = false;
-        switch (msg.code)
-        {
-            case EVENT_SCAN_DONE:
-                wifi_handle_ev_scan_done();
-                break;
-            case ORDER_START_WIFI_SCAN:
-                wifi_handle_cmd_start_wifi_scan();
-                break;
-            case ORDER_LOAD_AND_RESTORE_STA:
-                wifi_handle_cmd_load_sta();
-                break;
-            case ORDER_CONNECT_STA:
-                wifi_handle_cmd_connect_sta(&msg.msg_param);
-                break;
-            case EVENT_STA_DISCONNECTED:
-                if (!wifi_handle_ev_sta_disconnected(&msg.msg_param))
-                {
-                    flag_do_not_call_cb = true;
-                }
-                break;
-            case ORDER_START_AP:
-                wifi_handle_cmd_start_ap();
-                break;
-            case ORDER_STOP_AP:
-                wifi_handle_cmd_stop_ap();
-                break;
-            case EVENT_STA_GOT_IP:
-                wifi_handle_ev_sta_got_ip(&msg.msg_param);
-                break;
-            case EVENT_AP_STA_CONNECTED:
-                wifi_handle_ev_ap_sta_connected();
-                break;
-            case EVENT_AP_STA_IP_ASSIGNED:
-                wifi_handle_ev_ap_sta_ip_assigned();
-                break;
-            case EVENT_AP_STA_DISCONNECTED:
-                wifi_handle_ev_ap_sta_disconnected();
-                break;
-            case ORDER_DISCONNECT_STA:
-                wifi_handle_cmd_disconnect_sta();
-                break;
-            default:
-                break;
-        }
-        if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
-        {
-            (*g_wifi_cb_ptr_arr[msg.code])(NULL);
-        }
+        wifi_manager_recv_and_handle_msg();
     }
+}
+
+ATTR_NORETURN
+static void
+wifi_manager_task(const void *p_params)
+{
+    wifi_manager_main_loop();
+
+    vTaskDelete(NULL);
 }
 
 static void
@@ -982,15 +997,6 @@ wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *p_wifi_settin
             ESP_ERROR_CHECK(tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA));
         }
     }
-}
-
-ATTR_NORETURN
-static void
-wifi_manager_task(const void *p_params)
-{
-    wifi_manager_main_loop();
-
-    vTaskDelete(NULL);
 }
 
 bool
