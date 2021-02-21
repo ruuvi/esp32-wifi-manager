@@ -62,6 +62,7 @@ Contains the freeRTOS task and all necessary support
 #include "access_points_list.h"
 #include "wifi_sta_config.h"
 #include "http_req.h"
+#include "os_mutex.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_DEBUG
 #include "log.h"
@@ -69,7 +70,9 @@ Contains the freeRTOS task and all necessary support
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "wifi_manager";
 
-static SemaphoreHandle_t gh_wifi_json_mutex = NULL;
+static SemaphoreHandle_t gh_wifi_json_mutex;
+static os_mutex_static_t g_wifi_manager_mutex_mem;
+static bool              g_wifi_manager_is_running;
 
 static uint16_t         g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t g_wifi_accessp_records[MAX_AP_NUM];
@@ -81,6 +84,7 @@ static wifi_manager_http_cb_on_post_t g_wifi_cb_on_http_post;
 static wifi_manager_http_callback_t   g_wifi_cb_on_http_delete;
 
 static EventGroupHandle_t g_wifi_manager_event_group;
+static StaticEventGroup_t g_wifi_manager_event_group_mem;
 
 /* @brief indicate that the ESP32 is currently connected. */
 #define WIFI_MANAGER_WIFI_CONNECTED_BIT (BIT0)
@@ -143,13 +147,28 @@ wifi_manager_disconnect_async(void)
     wifiman_msg_send_cmd_disconnect_sta();
 }
 
-bool
-wifi_manager_start(
+static bool
+wifi_manager_init(
     const WiFiAntConfig_t *        p_wifi_ant_config,
     wifi_manager_http_callback_t   cb_on_http_get,
     wifi_manager_http_cb_on_post_t cb_on_http_post,
     wifi_manager_http_callback_t   cb_on_http_delete)
 {
+    if (g_wifi_manager_is_running)
+    {
+        LOG_ERR("wifi_manager is already running");
+        return false;
+    }
+    g_wifi_manager_is_running = true;
+
+    if (NULL == g_wifi_manager_event_group)
+    {
+        // wifi_manager can be re-started after stopping,
+        // this global variable is not released on stopping,
+        // so, we need to initialize it only on the first start.
+        g_wifi_manager_event_group = xEventGroupCreateStatic(&g_wifi_manager_event_group_mem);
+    }
+
     g_wifi_cb_on_http_get    = cb_on_http_get;
     g_wifi_cb_on_http_post   = cb_on_http_post;
     g_wifi_cb_on_http_delete = cb_on_http_delete;
@@ -162,8 +181,6 @@ wifi_manager_start(
         LOG_ERR("%s failed", "wifiman_msg_init");
         return false;
     }
-    /* memory allocation */
-    gh_wifi_json_mutex = xSemaphoreCreateMutex();
 
     json_access_points_init();
     json_network_info_init();
@@ -175,7 +192,6 @@ wifi_manager_start(
         g_wifi_cb_ptr_arr[i] = NULL;
     }
     sta_ip_safe_init();
-    g_wifi_manager_event_group = xEventGroupCreate();
 
     /* initialize the tcp stack */
     tcpip_adapter_init();
@@ -263,6 +279,27 @@ wifi_manager_start(
         return false;
     }
     return true;
+}
+
+bool
+wifi_manager_start(
+    const WiFiAntConfig_t *        p_wifi_ant_config,
+    wifi_manager_http_callback_t   cb_on_http_get,
+    wifi_manager_http_cb_on_post_t cb_on_http_post,
+    wifi_manager_http_callback_t   cb_on_http_delete)
+{
+    if (NULL == gh_wifi_json_mutex)
+    {
+        // Init this mutex only on the first start,
+        // do not free it when wifi_manager is stopped.
+        gh_wifi_json_mutex = os_mutex_create_static(&g_wifi_manager_mutex_mem);
+    }
+    os_mutex_lock(gh_wifi_json_mutex);
+
+    const bool res = wifi_manager_init(p_wifi_ant_config, cb_on_http_get, cb_on_http_post, cb_on_http_delete);
+
+    os_mutex_unlock(gh_wifi_json_mutex);
+    return res;
 }
 
 http_server_resp_t
