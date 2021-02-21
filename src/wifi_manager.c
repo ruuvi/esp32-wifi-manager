@@ -364,17 +364,13 @@ wifi_manager_lock_json_buffer(const TickType_t ticks_to_wait)
     {
         return false;
     }
-    if (pdTRUE != xSemaphoreTake(gh_wifi_json_mutex, ticks_to_wait))
-    {
-        return false;
-    }
-    return true;
+    return os_mutex_lock_with_timeout(gh_wifi_json_mutex, ticks_to_wait);
 }
 
 void
 wifi_manager_unlock_json_buffer(void)
 {
-    xSemaphoreGive(gh_wifi_json_mutex);
+    os_mutex_unlock(gh_wifi_json_mutex);
 }
 
 static void
