@@ -98,14 +98,8 @@ static StaticEventGroup_t g_wifi_manager_event_group_mem;
 /* @brief When set, means a client requested to connect to an access point.*/
 #define WIFI_MANAGER_REQUEST_STA_CONNECT_BIT (BIT3)
 
-/* @brief This bit is set automatically as soon as a connection was lost */
-#define WIFI_MANAGER_STA_DISCONNECT_BIT (BIT4)
-
 /* @brief When set, means the wifi manager attempts to restore a previously saved connection at startup. */
 #define WIFI_MANAGER_REQUEST_RESTORE_STA_BIT (BIT5)
-
-/* @brief When set, means a client requested to disconnect from currently connected AP. */
-#define WIFI_MANAGER_REQUEST_WIFI_DISCONNECT_BIT (BIT6)
 
 /* @brief When set, means a scan is in progress */
 #define WIFI_MANAGER_SCAN_BIT (BIT7)
