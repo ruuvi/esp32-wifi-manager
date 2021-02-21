@@ -165,8 +165,7 @@ wifi_manager_start(
     /* memory allocation */
     gh_wifi_json_mutex = xSemaphoreCreateMutex();
 
-    ESP_ERROR_CHECK(json_access_points_init());
-
+    json_access_points_init();
     json_network_info_init();
 
     wifi_sta_config_init();
