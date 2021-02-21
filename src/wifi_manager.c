@@ -358,17 +358,21 @@ wifi_manager_generate_ip_info_json(const update_reason_code_e update_reason_code
 }
 
 bool
-wifi_manager_lock_json_buffer(const TickType_t ticks_to_wait)
+wifi_manager_lock_with_timeout(const os_delta_ticks_t ticks_to_wait)
 {
-    if (NULL == gh_wifi_json_mutex)
-    {
-        return false;
-    }
+    assert(NULL != gh_wifi_json_mutex);
     return os_mutex_lock_with_timeout(gh_wifi_json_mutex, ticks_to_wait);
 }
 
 void
-wifi_manager_unlock_json_buffer(void)
+wifi_manager_lock(void)
+{
+    assert(NULL != gh_wifi_json_mutex);
+    os_mutex_lock(gh_wifi_json_mutex);
+}
+
+void
+wifi_manager_unlock(void)
 {
     os_mutex_unlock(gh_wifi_json_mutex);
 }
@@ -465,11 +469,9 @@ wifi_manager_connect_async(void)
      * There'se a risk the front end sees an IP or a password error when in fact
      * it's a remnant from a previous connection
      */
-    if (wifi_manager_lock_json_buffer(portMAX_DELAY))
-    {
-        json_network_info_clear();
-        wifi_manager_unlock_json_buffer();
-    }
+    wifi_manager_lock();
+    json_network_info_clear();
+    wifi_manager_unlock();
     wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
 }
 
@@ -499,12 +501,12 @@ wifi_handle_ev_scan_done(void)
     g_wifi_ap_num = MAX_AP_NUM;
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&g_wifi_ap_num, g_wifi_accessp_records));
     /* make sure the http server isn't trying to access the list while it gets refreshed */
-    if (wifi_manager_lock_json_buffer(pdMS_TO_TICKS(1000)))
+    if (wifi_manager_lock_with_timeout(pdMS_TO_TICKS(1000)))
     {
         /* Will remove the duplicate SSIDs from the list and update ap_num */
         g_wifi_ap_num = ap_list_filter_unique(g_wifi_accessp_records, g_wifi_ap_num);
         json_access_points_generate(g_wifi_accessp_records, g_wifi_ap_num);
-        wifi_manager_unlock_json_buffer();
+        wifi_manager_unlock();
     }
     else
     {
@@ -688,11 +690,9 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *p_param)
          * request bit and move on */
         xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
 
-        if (wifi_manager_lock_json_buffer(portMAX_DELAY))
-        {
-            wifi_manager_generate_ip_info_json(UPDATE_FAILED_ATTEMPT);
-            wifi_manager_unlock_json_buffer();
-        }
+        wifi_manager_lock();
+        wifi_manager_generate_ip_info_json(UPDATE_FAILED_ATTEMPT);
+        wifi_manager_unlock();
     }
     else if (0 != (event_bits & (uint32_t)WIFI_MANAGER_REQUEST_DISCONNECT_BIT))
     {
@@ -701,11 +701,9 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *p_param)
          * and restart the AP */
         xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
 
-        if (wifi_manager_lock_json_buffer(portMAX_DELAY))
-        {
-            wifi_manager_generate_ip_info_json(UPDATE_USER_DISCONNECT);
-            wifi_manager_unlock_json_buffer();
-        }
+        wifi_manager_lock();
+        wifi_manager_generate_ip_info_json(UPDATE_USER_DISCONNECT);
+        wifi_manager_unlock();
 
         /* Erase configuration and save it ot NVS memory */
         wifi_sta_config_clear();
@@ -717,11 +715,9 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *p_param)
     {
         LOG_INFO("lost connection");
         /* lost connection ? */
-        if (wifi_manager_lock_json_buffer(portMAX_DELAY))
-        {
-            wifi_manager_generate_ip_info_json(UPDATE_LOST_CONNECTION);
-            wifi_manager_unlock_json_buffer();
-        }
+        wifi_manager_lock();
+        wifi_manager_generate_ip_info_json(UPDATE_LOST_CONNECTION);
+        wifi_manager_unlock();
 
         wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
     }
@@ -773,16 +769,10 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *p_param)
     }
 
     /* refresh JSON with the new IP */
-    if (wifi_manager_lock_json_buffer(portMAX_DELAY))
-    {
-        /* generate the connection info with success */
-        wifi_manager_generate_ip_info_json(UPDATE_CONNECTION_OK);
-        wifi_manager_unlock_json_buffer();
-    }
-    else
-    {
-        ESP_ERROR_CHECK(ESP_FAIL);
-    }
+    wifi_manager_lock();
+    /* generate the connection info with success */
+    wifi_manager_generate_ip_info_json(UPDATE_CONNECTION_OK);
+    wifi_manager_unlock();
 
     /* bring down DNS hijack */
     dns_server_stop();
