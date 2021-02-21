@@ -70,7 +70,7 @@ Contains the freeRTOS task and all necessary support
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "wifi_manager";
 
-static SemaphoreHandle_t gh_wifi_json_mutex;
+static SemaphoreHandle_t gh_wifi_mutex;
 static os_mutex_static_t g_wifi_manager_mutex_mem;
 static bool              g_wifi_manager_is_running;
 
@@ -282,17 +282,17 @@ wifi_manager_start(
     wifi_manager_http_cb_on_post_t cb_on_http_post,
     wifi_manager_http_callback_t   cb_on_http_delete)
 {
-    if (NULL == gh_wifi_json_mutex)
+    if (NULL == gh_wifi_mutex)
     {
         // Init this mutex only on the first start,
         // do not free it when wifi_manager is stopped.
-        gh_wifi_json_mutex = os_mutex_create_static(&g_wifi_manager_mutex_mem);
+        gh_wifi_mutex = os_mutex_create_static(&g_wifi_manager_mutex_mem);
     }
-    os_mutex_lock(gh_wifi_json_mutex);
+    os_mutex_lock(gh_wifi_mutex);
 
     const bool res = wifi_manager_init(p_wifi_ant_config, cb_on_http_get, cb_on_http_post, cb_on_http_delete);
 
-    os_mutex_unlock(gh_wifi_json_mutex);
+    os_mutex_unlock(gh_wifi_mutex);
     return res;
 }
 
@@ -360,21 +360,21 @@ wifi_manager_generate_ip_info_json(const update_reason_code_e update_reason_code
 bool
 wifi_manager_lock_with_timeout(const os_delta_ticks_t ticks_to_wait)
 {
-    assert(NULL != gh_wifi_json_mutex);
-    return os_mutex_lock_with_timeout(gh_wifi_json_mutex, ticks_to_wait);
+    assert(NULL != gh_wifi_mutex);
+    return os_mutex_lock_with_timeout(gh_wifi_mutex, ticks_to_wait);
 }
 
 void
 wifi_manager_lock(void)
 {
-    assert(NULL != gh_wifi_json_mutex);
-    os_mutex_lock(gh_wifi_json_mutex);
+    assert(NULL != gh_wifi_mutex);
+    os_mutex_lock(gh_wifi_mutex);
 }
 
 void
 wifi_manager_unlock(void)
 {
-    os_mutex_unlock(gh_wifi_json_mutex);
+    os_mutex_unlock(gh_wifi_mutex);
 }
 
 static void
@@ -924,8 +924,8 @@ wifi_manager_task(void)
     sta_ip_safe_deinit();
 
     /* RTOS objects */
-    vSemaphoreDelete(gh_wifi_json_mutex);
-    gh_wifi_json_mutex = NULL;
+    vSemaphoreDelete(gh_wifi_mutex);
+    gh_wifi_mutex = NULL;
     vEventGroupDelete(g_wifi_manager_event_group);
     g_wifi_manager_event_group = NULL;
     wifiman_msg_deinit();
