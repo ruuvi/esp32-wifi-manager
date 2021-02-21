@@ -143,7 +143,7 @@ wifi_manager_disconnect_async(void)
     wifiman_msg_send_cmd_disconnect_sta();
 }
 
-void
+bool
 wifi_manager_start(
     const WiFiAntConfig_t *        p_wifi_ant_config,
     wifi_manager_http_callback_t   cb_on_http_get,
@@ -160,7 +160,7 @@ wifi_manager_start(
     if (!wifiman_msg_init())
     {
         LOG_ERR("%s failed", "wifiman_msg_init");
-        return;
+        return false;
     }
     /* memory allocation */
     gh_wifi_json_mutex = xSemaphoreCreateMutex();
@@ -181,15 +181,50 @@ wifi_manager_start(
     /* initialize the tcp stack */
     tcpip_adapter_init();
 
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler, NULL));
+    esp_err_t err = esp_event_loop_create_default();
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_event_loop_create_default");
+        return false;
+    }
+
+    err = esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_event_handler_register");
+        return false;
+    }
+
+    err = esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler, NULL);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_event_handler_register");
+        return false;
+    }
+
+    err = esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &wifi_manager_event_handler, NULL);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_event_handler_register");
+        return false;
+    }
 
     /* default wifi config */
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+
+    err = esp_wifi_init(&wifi_init_config);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_init");
+        return false;
+    }
+
+    err = esp_wifi_set_storage(WIFI_STORAGE_RAM);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_set_storage");
+        return false;
+    }
 
     wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wifi Access Point configuration setup */
@@ -201,8 +236,19 @@ wifi_manager_start(
     wifi_manager_tcpip_adapter_configure(p_wifi_settings);
 
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
+    err = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_set_mode");
+        return false;
+    }
+
+    err = esp_wifi_start();
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_start");
+        return false;
+    }
 
     /* enqueue first event: load previous config */
     wifiman_msg_send_cmd_load_restore_sta();
@@ -215,7 +261,9 @@ wifi_manager_start(
     if (!os_task_create_finite_without_param(&wifi_manager_task, task_name, stack_depth, WIFI_MANAGER_TASK_PRIORITY))
     {
         LOG_ERR("Can't create thread: %s", task_name);
+        return false;
     }
+    return true;
 }
 
 http_server_resp_t

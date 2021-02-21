@@ -51,7 +51,7 @@ typedef struct
 /**
  * @brief Allocate heap memory for the wifi manager and start the wifi_manager RTOS task.
  */
-void
+bool
 wifi_manager_start(
     const WiFiAntConfig_t *        p_wifi_ant_config,
     wifi_manager_http_callback_t   cb_on_http_get,
