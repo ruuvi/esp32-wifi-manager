@@ -86,20 +86,23 @@ static wifi_manager_http_callback_t   g_wifi_cb_on_http_delete;
 static EventGroupHandle_t g_wifi_manager_event_group;
 static StaticEventGroup_t g_wifi_manager_event_group_mem;
 
-/* @brief indicate that the ESP32 is currently connected. */
-#define WIFI_MANAGER_WIFI_CONNECTED_BIT ((uint32_t)(BIT0))
+/* @brief indicate that wifi_manager is working. */
+#define WIFI_MANAGER_IS_WORKING ((uint32_t)(BIT0))
 
-#define WIFI_MANAGER_AP_STA_CONNECTED_BIT   ((uint32_t)(BIT1))
-#define WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT ((uint32_t)(BIT9))
+/* @brief indicate that the ESP32 is currently connected. */
+#define WIFI_MANAGER_WIFI_CONNECTED_BIT ((uint32_t)(BIT1))
+
+#define WIFI_MANAGER_AP_STA_CONNECTED_BIT   ((uint32_t)(BIT2))
+#define WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT ((uint32_t)(BIT3))
 
 /* @brief Set automatically once the SoftAP is started */
-#define WIFI_MANAGER_AP_STARTED_BIT ((uint32_t)(BIT2))
+#define WIFI_MANAGER_AP_STARTED_BIT ((uint32_t)(BIT4))
 
 /* @brief When set, means a client requested to connect to an access point.*/
-#define WIFI_MANAGER_REQUEST_STA_CONNECT_BIT ((uint32_t)(BIT3))
+#define WIFI_MANAGER_REQUEST_STA_CONNECT_BIT ((uint32_t)(BIT5))
 
 /* @brief When set, means the wifi manager attempts to restore a previously saved connection at startup. */
-#define WIFI_MANAGER_REQUEST_RESTORE_STA_BIT ((uint32_t)(BIT5))
+#define WIFI_MANAGER_REQUEST_RESTORE_STA_BIT ((uint32_t)(BIT6))
 
 /* @brief When set, means a scan is in progress */
 #define WIFI_MANAGER_SCAN_BIT ((uint32_t)(BIT7))
