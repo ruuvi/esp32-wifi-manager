@@ -38,9 +38,6 @@ wifiman_disconnection_reason_t
 wifiman_conv_param_to_reason(const wifiman_msg_param_t *p_param);
 
 bool
-wifiman_msg_send_cmd_load_restore_sta(void);
-
-bool
 wifiman_msg_send_cmd_connect_sta(const connection_request_made_by_code_e conn_req_code);
 
 bool

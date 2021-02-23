@@ -253,8 +253,17 @@ wifi_manager_init(
         return false;
     }
 
-    /* enqueue first event: load previous config */
-    wifiman_msg_send_cmd_load_restore_sta();
+    if (wifi_sta_config_fetch())
+    {
+        LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
+    }
+    else
+    {
+        /* no wifi saved: start soft AP! This is what should happen during a first run */
+        LOG_INFO("No saved wifi found on startup. Starting access point.");
+        wifiman_msg_send_cmd_start_ap();
+    }
 
     http_server_start();
 
@@ -560,23 +569,6 @@ wifi_handle_cmd_start_wifi_scan(void)
 }
 
 static void
-wifi_handle_cmd_load_sta(void)
-{
-    LOG_INFO("MESSAGE: ORDER_LOAD_AND_RESTORE_STA");
-    if (wifi_sta_config_fetch())
-    {
-        LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
-        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
-    }
-    else
-    {
-        /* no wifi saved: start soft AP! This is what should happen during a first run */
-        LOG_INFO("No saved wifi found on startup. Starting access point.");
-        wifiman_msg_send_cmd_start_ap();
-    }
-}
-
-static void
 wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *p_param)
 {
     LOG_INFO("MESSAGE: ORDER_CONNECT_STA");
@@ -850,9 +842,6 @@ wifi_manager_recv_and_handle_msg(void)
             break;
         case ORDER_START_WIFI_SCAN:
             wifi_handle_cmd_start_wifi_scan();
-            break;
-        case ORDER_LOAD_AND_RESTORE_STA:
-            wifi_handle_cmd_load_sta();
             break;
         case ORDER_CONNECT_STA:
             wifi_handle_cmd_connect_sta(&msg.msg_param);

@@ -191,7 +191,6 @@ typedef enum message_code_e
     NONE                       = 0,
     ORDER_STOP_AND_DESTROY     = 1,
     ORDER_START_WIFI_SCAN      = 2,
-    ORDER_LOAD_AND_RESTORE_STA = 3,
     ORDER_CONNECT_STA          = 4,
     ORDER_DISCONNECT_STA       = 5,
     ORDER_START_AP             = 6,
