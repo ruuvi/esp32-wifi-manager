@@ -71,8 +71,7 @@ Contains the freeRTOS task and all necessary support
 static const char TAG[] = "wifi_manager";
 
 static SemaphoreHandle_t gh_wifi_mutex;
-static os_mutex_static_t g_wifi_manager_mutex_mem;
-static bool              g_wifi_manager_is_running;
+static StaticQueue_t     g_wifi_manager_mutex_mem;
 
 static uint16_t         g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t g_wifi_accessp_records[MAX_AP_NUM];
@@ -151,20 +150,12 @@ wifi_manager_init(
     wifi_manager_http_cb_on_post_t cb_on_http_post,
     wifi_manager_http_callback_t   cb_on_http_delete)
 {
-    if (g_wifi_manager_is_running)
+    if (wifi_manager_is_working())
     {
         LOG_ERR("wifi_manager is already running");
         return false;
     }
-    g_wifi_manager_is_running = true;
-
-    if (NULL == g_wifi_manager_event_group)
-    {
-        // wifi_manager can be re-started after stopping,
-        // this global variable is not released on stopping,
-        // so, we need to initialize it only on the first start.
-        g_wifi_manager_event_group = xEventGroupCreateStatic(&g_wifi_manager_event_group_mem);
-    }
+    xEventGroupSetBits(g_wifi_manager_event_group, WIFI_MANAGER_IS_WORKING);
 
     g_wifi_cb_on_http_get    = cb_on_http_get;
     g_wifi_cb_on_http_post   = cb_on_http_post;
@@ -289,13 +280,25 @@ wifi_manager_start(
     {
         // Init this mutex only on the first start,
         // do not free it when wifi_manager is stopped.
-        gh_wifi_mutex = os_mutex_create_static(&g_wifi_manager_mutex_mem);
+        gh_wifi_mutex = xSemaphoreCreateRecursiveMutexStatic(&g_wifi_manager_mutex_mem);
     }
-    os_mutex_lock(gh_wifi_mutex);
+    wifi_manager_lock();
+
+    if (NULL == g_wifi_manager_event_group)
+    {
+        // wifi_manager can be re-started after stopping,
+        // this global variable is not released on stopping,
+        // so, we need to initialize it only on the first start.
+        g_wifi_manager_event_group = xEventGroupCreateStatic(&g_wifi_manager_event_group_mem);
+    }
 
     const bool res = wifi_manager_init(p_wifi_ant_config, cb_on_http_get, cb_on_http_post, cb_on_http_delete);
+    if (!res)
+    {
+        xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_IS_WORKING);
+    }
 
-    os_mutex_unlock(gh_wifi_mutex);
+    wifi_manager_unlock();
     return res;
 }
 
@@ -364,20 +367,21 @@ bool
 wifi_manager_lock_with_timeout(const os_delta_ticks_t ticks_to_wait)
 {
     assert(NULL != gh_wifi_mutex);
-    return os_mutex_lock_with_timeout(gh_wifi_mutex, ticks_to_wait);
+    return xSemaphoreTakeRecursive(gh_wifi_mutex, ticks_to_wait);
 }
 
 void
 wifi_manager_lock(void)
 {
     assert(NULL != gh_wifi_mutex);
-    os_mutex_lock(gh_wifi_mutex);
+    xSemaphoreTakeRecursive(gh_wifi_mutex, portMAX_DELAY);
 }
 
 void
 wifi_manager_unlock(void)
 {
-    os_mutex_unlock(gh_wifi_mutex);
+    assert(NULL != gh_wifi_mutex);
+    xSemaphoreGiveRecursive(gh_wifi_mutex);
 }
 
 static void
@@ -912,6 +916,15 @@ wifi_manager_task(void)
     wifi_manager_main_loop();
 
     LOG_INFO("Finish task");
+    wifi_manager_lock();
+
+    // Do not delete gh_wifi_json_mutex
+    // Do not delete g_wifi_manager_event_group
+    xEventGroupClearBits(
+        g_wifi_manager_event_group,
+        WIFI_MANAGER_IS_WORKING | WIFI_MANAGER_WIFI_CONNECTED_BIT | WIFI_MANAGER_AP_STA_CONNECTED_BIT
+            | WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT | WIFI_MANAGER_AP_STARTED_BIT | WIFI_MANAGER_REQUEST_STA_CONNECT_BIT
+            | WIFI_MANAGER_REQUEST_RESTORE_STA_BIT | WIFI_MANAGER_SCAN_BIT | WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
 
     esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler);
     esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_manager_event_handler);
@@ -926,15 +939,12 @@ wifi_manager_task(void)
     json_network_info_deinit();
     sta_ip_safe_deinit();
 
-    /* RTOS objects */
-    vSemaphoreDelete(gh_wifi_mutex);
-    gh_wifi_mutex = NULL;
-    vEventGroupDelete(g_wifi_manager_event_group);
-    g_wifi_manager_event_group = NULL;
     wifiman_msg_deinit();
 
     tcpip_adapter_stop(TCPIP_ADAPTER_IF_STA);
     tcpip_adapter_stop(TCPIP_ADAPTER_IF_AP);
+
+    wifi_manager_unlock();
 }
 
 static void
@@ -1048,6 +1058,12 @@ wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *p_wifi_settin
             ESP_ERROR_CHECK(tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA));
         }
     }
+}
+
+bool
+wifi_manager_is_working(void)
+{
+    return (0 != (xEventGroupGetBits(g_wifi_manager_event_group) & WIFI_MANAGER_IS_WORKING));
 }
 
 bool

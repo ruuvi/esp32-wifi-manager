@@ -10,6 +10,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "log.h"
+#include "wifi_manager_internal.h"
 
 static QueueHandle_t gh_wifiman_msg_queue;
 
@@ -77,11 +78,21 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
         .code      = code,
         .msg_param = msg_param,
     };
+    wifi_manager_lock();
+    // need to lock access to wifi_manager since gh_wifiman_msg_queue can be de-initialized asynchronously
+    if (NULL == gh_wifiman_msg_queue)
+    {
+        LOG_WARN("wifiman_msg is not initialized");
+        wifi_manager_unlock();
+        return false;
+    }
     if (pdTRUE != xQueueSend(gh_wifiman_msg_queue, &msg, portMAX_DELAY))
     {
         LOG_ERR("%s failed", "xQueueSend");
+        wifi_manager_unlock();
         return false;
     }
+    wifi_manager_unlock();
     return true;
 }
 
