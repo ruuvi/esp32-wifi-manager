@@ -178,7 +178,7 @@ wifi_sta_config_save(void)
     LOG_DBG("wifi_settings: sta_ip_addr: %s", ip4addr_ntoa(&g_wifi_settings.sta_static_ip_config.ip));
     LOG_DBG("wifi_settings: sta_gw_addr: %s", ip4addr_ntoa(&g_wifi_settings.sta_static_ip_config.gw));
     LOG_DBG("wifi_settings: sta_netmask: %s", ip4addr_ntoa(&g_wifi_settings.sta_static_ip_config.netmask));
-    return ESP_OK;
+    return true;
 }
 
 bool
