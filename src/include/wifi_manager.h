@@ -53,6 +53,7 @@ typedef struct
  */
 bool
 wifi_manager_start(
+    const bool                     flag_start_wifi,
     const WiFiAntConfig_t *        p_wifi_ant_config,
     wifi_manager_http_callback_t   cb_on_http_get,
     wifi_manager_http_cb_on_post_t cb_on_http_post,
