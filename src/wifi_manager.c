@@ -1066,3 +1066,9 @@ wifi_manager_is_ap_sta_ip_assigned(void)
 {
     return (0 != (xEventGroupGetBits(g_wifi_manager_event_group) & WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT));
 }
+
+bool
+wifi_manager_is_sta_configured(void)
+{
+    return wifi_sta_config_is_ssid_configured();
+}

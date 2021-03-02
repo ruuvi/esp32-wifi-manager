@@ -103,6 +103,9 @@ wifi_manager_is_connected(void);
 bool
 wifi_manager_is_ap_sta_ip_assigned(void);
 
+bool
+wifi_manager_is_sta_configured(void);
+
 #ifdef __cplusplus
 }
 #endif
