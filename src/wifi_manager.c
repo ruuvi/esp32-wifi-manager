@@ -1226,7 +1226,7 @@ wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *p_wifi_settin
         /* start DHCP client if not started*/
         LOG_INFO("wifi_manager: Start DHCP client for STA interface. If not already running");
         tcpip_adapter_dhcp_status_t status = 0;
-       
+
         esp_err_t err = tcpip_adapter_dhcpc_get_status(TCPIP_ADAPTER_IF_STA, &status);
         if (ESP_OK != err)
         {
