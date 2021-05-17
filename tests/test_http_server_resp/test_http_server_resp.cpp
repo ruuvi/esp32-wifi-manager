@@ -49,7 +49,7 @@ TEST_F(TestHttpServerResp, resp_400) // NOLINT
     const http_server_resp_t resp = http_server_resp_400();
     ASSERT_EQ(HTTP_RESP_CODE_400, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    ASSERT_FALSE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
@@ -62,7 +62,7 @@ TEST_F(TestHttpServerResp, resp_404) // NOLINT
     const http_server_resp_t resp = http_server_resp_404();
     ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    ASSERT_FALSE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
@@ -75,7 +75,7 @@ TEST_F(TestHttpServerResp, resp_503) // NOLINT
     const http_server_resp_t resp = http_server_resp_503();
     ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    ASSERT_FALSE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
@@ -128,6 +128,7 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_with_caching) // N
 {
     const char *p_content     = "qwer";
     const bool  flag_no_cache = false;
+    const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_static_mem(
         HTTP_CONENT_TYPE_TEXT_PLAIN,
@@ -135,7 +136,8 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_with_caching) // N
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
         reinterpret_cast<const uint8_t *>(p_content),
-        flag_no_cache);
+        flag_no_cache,
+        flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_EQ(flag_no_cache, resp.flag_no_cache);
@@ -150,6 +152,7 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_without_caching) /
 {
     const char *p_content     = "qwer";
     const bool  flag_no_cache = true;
+    const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_static_mem(
         HTTP_CONENT_TYPE_TEXT_PLAIN,
@@ -157,7 +160,8 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_without_caching) /
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
         reinterpret_cast<const uint8_t *>(p_content),
-        flag_no_cache);
+        flag_no_cache,
+        flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_EQ(flag_no_cache, resp.flag_no_cache);
@@ -172,6 +176,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_with_caching) // NOLINT
 {
     const char *p_content     = "qwer";
     const bool  flag_no_cache = false;
+    const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_heap(
         HTTP_CONENT_TYPE_APPLICATION_JSON,
@@ -179,7 +184,8 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_with_caching) // NOLINT
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
         reinterpret_cast<const uint8_t *>(p_content),
-        flag_no_cache);
+        flag_no_cache,
+        flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp.content_location);
     ASSERT_EQ(flag_no_cache, resp.flag_no_cache);
@@ -194,6 +200,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
 {
     const char *p_content     = "qwer";
     const bool  flag_no_cache = true;
+    const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_heap(
         HTTP_CONENT_TYPE_APPLICATION_JSON,
@@ -201,7 +208,8 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
         reinterpret_cast<const uint8_t *>(p_content),
-        flag_no_cache);
+        flag_no_cache,
+        flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp.content_location);
     ASSERT_EQ(flag_no_cache, resp.flag_no_cache);
