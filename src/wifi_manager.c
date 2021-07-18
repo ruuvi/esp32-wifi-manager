@@ -84,7 +84,7 @@ static wifi_manager_callbacks_t g_wifi_callbacks;
 static EventGroupHandle_t g_wifi_manager_event_group;
 static StaticEventGroup_t g_wifi_manager_event_group_mem;
 
-static os_sema_t g_scan_sync_sema;
+static os_sema_t        g_scan_sync_sema;
 static os_sema_static_t g_scan_sync_sema_mem;
 
 /* @brief indicate that wifi_manager is working. */
@@ -145,7 +145,7 @@ wifi_manager_scan_async(void)
     wifiman_msg_send_cmd_start_wifi_scan();
 }
 
-const char*
+const char *
 wifi_manager_scan_sync(void)
 {
     wifi_manager_lock();
@@ -167,7 +167,7 @@ wifi_manager_scan_sync(void)
 
     wifi_manager_lock();
     os_sema_delete(&g_scan_sync_sema);
-    const char* const p_buf = wifi_manager_generate_json_access_points();
+    const char *const p_buf = wifi_manager_generate_json_access_points();
     wifi_manager_unlock();
 
     return p_buf;
@@ -638,7 +638,7 @@ wifi_manager_generate_json_access_points(void)
     if (wifi_manager_lock_with_timeout(pdMS_TO_TICKS(100)))
     {
         json_access_points_generate(g_wifi_accessp_records, g_wifi_ap_num);
-        const char* const p_buf = json_access_points_get();
+        const char *const p_buf = json_access_points_get();
         wifi_manager_unlock();
         return p_buf;
     }

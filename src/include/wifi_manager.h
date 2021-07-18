@@ -103,7 +103,7 @@ wifi_manager_scan_async(void);
 /**
  * @brief scan WiFi APs and return json
  */
-const char*
+const char *
 wifi_manager_scan_sync(void);
 
 /**
