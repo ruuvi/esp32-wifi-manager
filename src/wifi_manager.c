@@ -388,7 +388,7 @@ wifi_manager_cb_on_user_req(const http_server_user_req_code_e req_code)
     {
         return;
     }
-    return g_wifi_callbacks.cb_on_http_user_req(req_code);
+    g_wifi_callbacks.cb_on_http_user_req(req_code);
 }
 
 http_server_resp_t
