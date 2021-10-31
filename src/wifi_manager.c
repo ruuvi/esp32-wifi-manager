@@ -733,9 +733,7 @@ wifi_handle_ev_scan_done(void)
     wifi_manager_lock();
 
     uint16_t        wifi_ap_num = MAX_AP_NUM;
-    const esp_err_t err         = esp_wifi_scan_get_ap_records(
-        &wifi_ap_num,
-        &g_wifi_accessp_records[MAX_AP_NUM]);
+    const esp_err_t err         = esp_wifi_scan_get_ap_records(&wifi_ap_num, &g_wifi_accessp_records[MAX_AP_NUM]);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(

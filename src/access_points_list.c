@@ -7,6 +7,7 @@
 
 #include "access_points_list.h"
 #include <string.h>
+#include <stdlib.h>
 
 ACCESS_POINTS_LIST_STATIC
 void
@@ -122,7 +123,7 @@ ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
 }
 
 void
-ap_list_sort_by_rssi(wifi_ap_record_t * const p_arr_of_ap, const number_wifi_access_points_t num_aps)
+ap_list_sort_by_rssi(wifi_ap_record_t *const p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     if (0 == num_aps)
     {

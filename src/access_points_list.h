@@ -31,7 +31,7 @@ number_wifi_access_points_t
 ap_list_filter_unique(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t num_aps);
 
 void
-ap_list_sort_by_rssi(wifi_ap_record_t * const p_arr_of_ap, const number_wifi_access_points_t num_aps);
+ap_list_sort_by_rssi(wifi_ap_record_t *const p_arr_of_ap, const number_wifi_access_points_t num_aps);
 
 #if RUUVI_TESTS_ACCESS_POINTS_LIST
 
