@@ -21,6 +21,8 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/http_req.c
             src/http_req.h
             src/http_server.c
+            src/http_server_accept_and_handle_conn.c
+            src/http_server_accept_and_handle_conn.h
             src/http_server_auth.c
             src/http_server_auth.h
             src/http_server_auth_common.h

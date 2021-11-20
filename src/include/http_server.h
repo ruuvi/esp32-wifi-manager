@@ -57,6 +57,12 @@ void
 http_server_init(void);
 
 void
+http_server_sema_send_wait_immediate(void);
+
+bool
+http_server_sema_send_wait_timeout(const uint32_t send_timeout_ms);
+
+void
 http_server_disable_ap_stopping_by_timeout(void);
 
 /**
