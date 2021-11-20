@@ -366,7 +366,7 @@ wifi_manager_init(
     if (flag_start_wifi)
     {
         const bool is_ssid_configured = wifi_sta_config_fetch();
-        if (is_ssid_configured && !flag_start_ap_only)
+        if (is_ssid_configured && (!flag_start_ap_only))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
             wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
@@ -691,6 +691,7 @@ wifi_manager_set_callback(const message_code_e message_code, wifi_manager_cb_ptr
 static void
 wifi_manger_notify_scan_done(wifi_manger_scan_info_t *const p_scan_info)
 {
+    (void)p_scan_info;
     xEventGroupClearBits(g_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
     if (NULL != g_scan_sync_sema)
     {
@@ -715,6 +716,7 @@ wifi_handle_ev_scan_next(void)
                 .min = 0,
                 .max = 100,
             },
+            .passive = 0,
         },
     };
 
@@ -823,7 +825,7 @@ wifi_handle_cmd_start_wifi_scan(void)
 
     wifi_manger_scan_info_t *const p_scan_info = &g_wifi_scan_info;
     p_scan_info->first_chan                    = wifi_country.schan;
-    p_scan_info->last_chan                     = wifi_country.schan + wifi_country.nchan - 1;
+    p_scan_info->last_chan                     = (wifi_country.schan + wifi_country.nchan) - 1;
     p_scan_info->cur_chan                      = 0;
     p_scan_info->num_access_points             = 0;
 

@@ -1,4 +1,3 @@
-#include <limits.h>
 /*
 Copyright (c) 2017-2019 Tony Pottier
 
@@ -39,28 +38,19 @@ function to process requests, decode URLs, serve files, etc. etc.
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
 #include <esp_task_wdt.h>
-#include "esp_wifi.h"
-#include "esp_event.h"
 #include "lwip/netbuf.h"
-#include "mdns.h"
 #include "lwip/api.h"
 #include "lwip/err.h"
-#include "lwip/netdb.h"
 #include "lwip/opt.h"
-#include "lwip/memp.h"
-#include "lwip/ip.h"
 #include "lwip/raw.h"
 #include "lwip/udp.h"
 #include "lwip/priv/api_msg.h"
 #include "lwip/priv/tcp_priv.h"
-#include "lwip/priv/tcpip_priv.h"
 
 #include "wifi_manager_internal.h"
 #include "wifi_manager.h"
 #include "json_access_points.h"
-#include "json_network_info.h"
 
 #include "cJSON.h"
 #include "sta_ip_safe.h"
@@ -73,7 +63,6 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "os_mutex.h"
 #include "os_sema.h"
 #include "wifiman_msg.h"
-#include "http_server_handle_req_get_auth.h"
 #include "http_server_handle_req.h"
 #include "os_timer_sig.h"
 
@@ -85,12 +74,15 @@ typedef enum http_server_sig_e
     HTTP_SERVER_SIG_STOP               = OS_SIGNAL_NUM_0,
     HTTP_SERVER_SIG_TASK_WATCHDOG_FEED = OS_SIGNAL_NUM_1,
     HTTP_SERVER_SIG_USER_REQ_1         = OS_SIGNAL_NUM_2,
+    HTTP_SERVER_SIG_USER_REQ_2         = OS_SIGNAL_NUM_3,
 } http_server_sig_e;
 
 #define HTTP_SERVER_SIG_FIRST (HTTP_SERVER_SIG_STOP)
 #define HTTP_SERVER_SIG_LAST  (HTTP_SERVER_SIG_USER_REQ_1)
 
 #define FULLBUF_SIZE (4U * 1024U)
+
+#define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG (256U)
 
 #define HTTP_SERVER_ACCEPT_TIMEOUT_MS (1 * 1000)
 
@@ -110,6 +102,9 @@ typedef struct http_header_date_str_t
  */
 static void
 http_server_task(void);
+
+static void
+http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16_t len);
 
 /**
  * @brief Helper function that processes one HTTP request at a time.
@@ -159,6 +154,7 @@ http_server_init(void)
     os_signal_add(g_p_http_server_sig, http_server_conv_to_sig_num(HTTP_SERVER_SIG_STOP));
     os_signal_add(g_p_http_server_sig, http_server_conv_to_sig_num(HTTP_SERVER_SIG_TASK_WATCHDOG_FEED));
     os_signal_add(g_p_http_server_sig, http_server_conv_to_sig_num(HTTP_SERVER_SIG_USER_REQ_1));
+    os_signal_add(g_p_http_server_sig, http_server_conv_to_sig_num(HTTP_SERVER_SIG_USER_REQ_2));
     g_p_http_server_sema_send = os_sema_create_static(&g_http_server_sema_send_mem);
 }
 
@@ -188,7 +184,7 @@ http_server_netconn_write(
         os_sema_wait_immediate(g_p_http_server_sema_send);
         const err_t err = netconn_write_partly(
             p_conn,
-            &((uint8_t *)p_buf)[offset],
+            &((const uint8_t *)p_buf)[offset],
             buf_len - offset,
             netconn_flags | (uint8_t)NETCONN_DONTBLOCK,
             &bytes_written);
@@ -211,11 +207,11 @@ http_server_netconn_write(
 
 ATTR_PRINTF(3, 4)
 static bool
-http_server_netconn_printf(struct netconn *p_conn, const bool flag_more, const char *fmt, ...)
+http_server_netconn_printf(struct netconn *const p_conn, const bool flag_more, const char *const p_fmt, ...)
 {
     va_list args;
-    va_start(args, fmt);
-    str_buf_t str_buf = str_buf_vprintf_with_alloc(fmt, args);
+    va_start(args, p_fmt);
+    str_buf_t str_buf = str_buf_vprintf_with_alloc(p_fmt, args);
     va_end(args);
     if (NULL == str_buf.buf)
     {
@@ -244,68 +240,68 @@ http_server_netconn_printf(struct netconn *p_conn, const bool flag_more, const c
 static const char *
 http_get_content_type_str(const http_content_type_e content_type)
 {
-    const char *content_type_str = "application/octet-stream";
+    const char *p_content_type_str = "application/octet-stream";
     switch (content_type)
     {
         case HTTP_CONENT_TYPE_TEXT_HTML:
-            content_type_str = "text/html";
+            p_content_type_str = "text/html";
             break;
         case HTTP_CONENT_TYPE_TEXT_PLAIN:
-            content_type_str = "text/plain";
+            p_content_type_str = "text/plain";
             break;
         case HTTP_CONENT_TYPE_TEXT_CSS:
-            content_type_str = "text/css";
+            p_content_type_str = "text/css";
             break;
         case HTTP_CONENT_TYPE_TEXT_JAVASCRIPT:
-            content_type_str = "text/javascript";
+            p_content_type_str = "text/javascript";
             break;
         case HTTP_CONENT_TYPE_IMAGE_PNG:
-            content_type_str = "image/png";
+            p_content_type_str = "image/png";
             break;
         case HTTP_CONENT_TYPE_IMAGE_SVG_XML:
-            content_type_str = "image/svg+xml";
+            p_content_type_str = "image/svg+xml";
             break;
         case HTTP_CONENT_TYPE_APPLICATION_JSON:
-            content_type_str = "application/json";
+            p_content_type_str = "application/json";
             break;
         case HTTP_CONENT_TYPE_APPLICATION_OCTET_STREAM:
-            content_type_str = "application/octet-stream";
+            p_content_type_str = "application/octet-stream";
             break;
     }
-    return content_type_str;
+    return p_content_type_str;
 }
 
 const char *
-http_get_content_encoding_str(const http_server_resp_t *p_resp)
+http_get_content_encoding_str(const http_server_resp_t *const p_resp)
 {
-    const char *content_encoding_str = "";
+    const char *p_content_encoding_str = "";
     switch (p_resp->content_encoding)
     {
         case HTTP_CONENT_ENCODING_NONE:
-            content_encoding_str = "";
+            p_content_encoding_str = "";
             break;
         case HTTP_CONENT_ENCODING_GZIP:
-            content_encoding_str = "Content-Encoding: gzip\r\n";
+            p_content_encoding_str = "Content-Encoding: gzip\r\n";
             break;
     }
-    return content_encoding_str;
+    return p_content_encoding_str;
 }
 
 static const char *
-http_get_cache_control_str(const http_server_resp_t *p_resp)
+http_get_cache_control_str(const http_server_resp_t *const p_resp)
 {
-    const char *cache_control_str = "";
+    const char *p_cache_control_str = "";
     if (p_resp->flag_no_cache)
     {
-        cache_control_str
+        p_cache_control_str
             = "Cache-Control: no-store, no-cache, must-revalidate, max-age=0\r\n"
               "Pragma: no-cache\r\n";
     }
-    return cache_control_str;
+    return p_cache_control_str;
 }
 
 static void
-write_content_from_flash(struct netconn *p_conn, const http_server_resp_t *p_resp)
+write_content_from_memory(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
 {
     LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
@@ -320,38 +316,14 @@ write_content_from_flash(struct netconn *p_conn, const http_server_resp_t *p_res
 }
 
 static void
-write_content_from_static_mem(struct netconn *p_conn, const http_server_resp_t *p_resp)
+write_content_from_heap(struct netconn *const p_conn, http_server_resp_t *const p_resp)
 {
-    LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
-    const bool res = http_server_netconn_write(
-        p_conn,
-        p_resp->select_location.memory.p_buf,
-        p_resp->content_len,
-        NETCONN_COPY);
-    if (!res)
-    {
-        LOG_ERR("%s failed", "http_server_netconn_write");
-    }
-}
-
-static void
-write_content_from_heap(struct netconn *p_conn, http_server_resp_t *p_resp)
-{
-    LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
-    const bool res = http_server_netconn_write(
-        p_conn,
-        p_resp->select_location.memory.p_buf,
-        p_resp->content_len,
-        NETCONN_COPY);
-    if (!res)
-    {
-        LOG_ERR("%s failed", "http_server_netconn_write");
-    }
+    write_content_from_memory(p_conn, p_resp);
     os_free(p_resp->select_location.memory.p_buf);
 }
 
 static void
-write_content_from_fatfs(struct netconn *p_conn, const http_server_resp_t *p_resp)
+write_content_from_fatfs(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
 {
     const size_t tmp_buf_size = FULLBUF_SIZE;
     char *       p_tmp_buf    = os_malloc(tmp_buf_size);
@@ -411,50 +383,16 @@ http_server_gen_header_date_str(const bool flag_gen_date)
 }
 
 static void
-http_server_netconn_resp_200(
-    struct netconn *                        p_conn,
-    http_server_resp_t *                    p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+http_server_write_content(struct netconn *const p_conn, http_server_resp_t *const p_resp)
 {
-    const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
-                                              && ('\0' != p_resp->p_content_type_param[0]);
-    const http_header_date_str_t date_str = http_server_gen_header_date_str(p_resp->flag_add_header_date);
-
-    LOG_INFO("Respond: 200 OK");
-    if (!http_server_netconn_printf(
-            p_conn,
-            true,
-            "HTTP/1.1 200 OK\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
-            "Content-Length: %lu\r\n"
-            "%s"
-            "%s"
-            "%s"
-            "\r\n",
-            date_str.buf,
-            http_get_content_type_str(p_resp->content_type),
-            use_extra_content_type_param ? "; " : "",
-            use_extra_content_type_param ? p_resp->p_content_type_param : "",
-            (printf_ulong_t)p_resp->content_len,
-            http_get_content_encoding_str(p_resp),
-            http_get_cache_control_str(p_resp),
-            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
-
     switch (p_resp->content_location)
     {
         case HTTP_CONTENT_LOCATION_NO_CONTENT:
             break;
         case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            write_content_from_flash(p_conn, p_resp);
-            break;
+            ATTR_FALLTHROUGH;
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            write_content_from_static_mem(p_conn, p_resp);
+            write_content_from_memory(p_conn, p_resp);
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
             write_content_from_heap(p_conn, p_resp);
@@ -466,7 +404,87 @@ http_server_netconn_resp_200(
 }
 
 static void
-http_server_netconn_resp_302(struct netconn *p_conn)
+http_server_netconn_resp_with_content(
+    struct netconn *const                   p_conn,
+    http_server_resp_t *const               p_resp,
+    const http_header_extra_fields_t *const p_extra_header_fields,
+    const http_resp_code_e                  resp_code,
+    const char *const                       p_status_msg)
+{
+    if (HTTP_RESP_CODE_200 == resp_code)
+    {
+        LOG_INFO("Respond: %s", p_status_msg);
+    }
+    else
+    {
+        LOG_WARN("Respond: %s", p_status_msg);
+    }
+    const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
+                                              && ('\0' != p_resp->p_content_type_param[0]);
+    const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
+    if (!http_server_netconn_printf(
+            p_conn,
+            true,
+            "HTTP/1.1 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "%s"
+            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "Content-Length: %lu\r\n"
+            "%s"
+            "%s"
+            "%s"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg,
+            date_str.buf,
+            http_get_content_type_str(p_resp->content_type),
+            use_extra_content_type_param ? "; " : "",
+            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            (printf_ulong_t)p_resp->content_len,
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            http_get_content_encoding_str(p_resp),
+            http_get_cache_control_str(p_resp)))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+
+    http_server_write_content(p_conn, p_resp);
+}
+
+static void
+http_server_netconn_resp_without_content(
+    struct netconn *const  p_conn,
+    const http_resp_code_e resp_code,
+    const char *const      p_status_msg)
+{
+    LOG_WARN("Respond: %s", p_status_msg);
+    if (!http_server_netconn_printf(
+            p_conn,
+            false,
+            "HTTP/1.1 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "Content-Length: 0\r\n"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
+http_server_netconn_resp_200(
+    struct netconn *const                   p_conn,
+    http_server_resp_t *const               p_resp,
+    const http_header_extra_fields_t *const p_extra_header_fields)
+{
+    http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_200, "OK");
+}
+
+static void
+http_server_netconn_resp_302(struct netconn *const p_conn)
 {
     LOG_INFO("Respond: 302 Found");
     if (!http_server_netconn_printf(
@@ -485,7 +503,7 @@ http_server_netconn_resp_302(struct netconn *p_conn)
 
 static void
 http_server_netconn_resp_302_auth_html(
-    struct netconn *                        p_conn,
+    struct netconn *const                   p_conn,
     const sta_ip_string_t *const            p_ip_str,
     const http_header_extra_fields_t *const p_extra_header_fields)
 {
@@ -507,179 +525,45 @@ http_server_netconn_resp_302_auth_html(
 }
 
 static void
-http_server_netconn_resp_400(struct netconn *p_conn)
+http_server_netconn_resp_400(struct netconn *const p_conn)
 {
-    LOG_WARN("Respond: 400 Bad Request");
-    if (!http_server_netconn_printf(
-            p_conn,
-            false,
-            "HTTP/1.1 400 Bad Request\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n"))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
 }
 
 static void
 http_server_netconn_resp_401(
-    struct netconn *                        p_conn,
-    http_server_resp_t *                    p_resp,
+    struct netconn *const                   p_conn,
+    http_server_resp_t *const               p_resp,
     const http_header_extra_fields_t *const p_extra_header_fields)
 {
-    LOG_INFO("Respond: 401 Unauthorized");
-    const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
-                                              && ('\0' != p_resp->p_content_type_param[0]);
-    const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
-    if (!http_server_netconn_printf(
-            p_conn,
-            true,
-            "HTTP/1.1 401 Unauthorized\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
-            "Content-Length: %lu\r\n"
-            "%s"
-            "%s"
-            "%s"
-            "\r\n",
-            date_str.buf,
-            http_get_content_type_str(p_resp->content_type),
-            use_extra_content_type_param ? "; " : "",
-            use_extra_content_type_param ? p_resp->p_content_type_param : "",
-            (printf_ulong_t)p_resp->content_len,
-            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-            http_get_content_encoding_str(p_resp),
-            http_get_cache_control_str(p_resp)))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
-
-    switch (p_resp->content_location)
-    {
-        case HTTP_CONTENT_LOCATION_NO_CONTENT:
-            break;
-        case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            write_content_from_flash(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            write_content_from_static_mem(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_HEAP:
-            write_content_from_heap(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_FATFS:
-            write_content_from_fatfs(p_conn, p_resp);
-            break;
-    }
+    http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_401, "Unauthorized");
 }
 
 static void
 http_server_netconn_resp_403(
-    struct netconn *                        p_conn,
-    http_server_resp_t *                    p_resp,
+    struct netconn *const                   p_conn,
+    http_server_resp_t *const               p_resp,
     const http_header_extra_fields_t *const p_extra_header_fields)
 {
-    LOG_INFO("Respond: 403 Forbidden");
-    const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
-                                              && ('\0' != p_resp->p_content_type_param[0]);
-    const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
-    if (!http_server_netconn_printf(
-            p_conn,
-            true,
-            "HTTP/1.1 403 Forbidden\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
-            "Content-Length: %lu\r\n"
-            "%s"
-            "%s"
-            "%s"
-            "\r\n",
-            date_str.buf,
-            http_get_content_type_str(p_resp->content_type),
-            use_extra_content_type_param ? "; " : "",
-            use_extra_content_type_param ? p_resp->p_content_type_param : "",
-            (printf_ulong_t)p_resp->content_len,
-            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-            http_get_content_encoding_str(p_resp),
-            http_get_cache_control_str(p_resp)))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
-
-    switch (p_resp->content_location)
-    {
-        case HTTP_CONTENT_LOCATION_NO_CONTENT:
-            break;
-        case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            write_content_from_flash(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            write_content_from_static_mem(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_HEAP:
-            write_content_from_heap(p_conn, p_resp);
-            break;
-        case HTTP_CONTENT_LOCATION_FATFS:
-            write_content_from_fatfs(p_conn, p_resp);
-            break;
-    }
+    http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_403, "Forbidden");
 }
 
 static void
-http_server_netconn_resp_404(struct netconn *p_conn)
+http_server_netconn_resp_404(struct netconn *const p_conn)
 {
-    LOG_WARN("Respond: 404 Not Found");
-    if (!http_server_netconn_printf(
-            p_conn,
-            false,
-            "HTTP/1.1 404 Not Found\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n"))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
 }
 
 static void
-http_server_netconn_resp_503(struct netconn *p_conn)
+http_server_netconn_resp_503(struct netconn *const p_conn)
 {
-    LOG_WARN("Respond: 503 Service Unavailable");
-    if (!http_server_netconn_printf(
-            p_conn,
-            false,
-            "HTTP/1.1 503 Service Unavailable\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n"))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
 }
 
 static void
-http_server_netconn_resp_504(struct netconn *p_conn)
+http_server_netconn_resp_504(struct netconn *const p_conn)
 {
-    LOG_WARN("Respond: 504 Gateway timeout");
-    if (!http_server_netconn_printf(
-            p_conn,
-            false,
-            "HTTP/1.1 504 Gateway timeout\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n"))
-    {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
-    }
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
 }
 
 void
@@ -708,6 +592,7 @@ http_server_start(void)
     }
 }
 
+ATTR_UNUSED
 void
 http_server_stop(void)
 {
@@ -740,6 +625,9 @@ http_server_user_req(const http_server_user_req_code_e req_code)
         {
             case HTTP_SERVER_USER_REQ_CODE_1:
                 sig_num = HTTP_SERVER_SIG_USER_REQ_1;
+                break;
+            case HTTP_SERVER_USER_REQ_CODE_2:
+                sig_num = HTTP_SERVER_SIG_USER_REQ_2;
                 break;
         }
         if (HTTP_SERVER_SIG_STOP == sig_num)
@@ -903,15 +791,12 @@ http_server_check_if_configuring_complete(const os_delta_ticks_t time_for_proces
             &g_is_ap_sta_ip_assigned,
             time_for_processing_request);
     }
-    else if (wifi_manager_is_connected_to_ethernet())
+    if (wifi_manager_is_connected_to_ethernet())
     {
         return http_server_check_if_configuring_complete_ethernet(&g_is_network_connected, time_for_processing_request);
     }
-    else
-    {
-        g_is_network_connected  = false;
-        g_is_ap_sta_ip_assigned = false;
-    }
+    g_is_network_connected  = false;
+    g_is_ap_sta_ip_assigned = false;
     return false;
 }
 
@@ -931,6 +816,7 @@ http_server_wdt_add_and_start(void)
 static void
 http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16_t len)
 {
+    (void)len;
     if (p_conn != g_p_conn_listen)
     {
         if (NETCONN_EVT_SENDPLUS == event)
@@ -942,7 +828,113 @@ http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16
             LOG_DBG("NETCONN_EVT_ERROR");
             os_sema_signal(g_p_http_server_sema_send);
         }
+        else
+        {
+            // MISRA C:2012, 15.7 - All "if...else if" constructs shall be terminated with an else statement
+        }
     }
+}
+
+static bool
+http_server_handle_sig_events(os_signal_events_t *const p_sig_events)
+{
+    bool flag_stop = false;
+    for (;;)
+    {
+        const os_signal_num_e sig_num = os_signal_num_get_next(p_sig_events);
+        if (OS_SIGNAL_NUM_NONE == sig_num)
+        {
+            break;
+        }
+        const http_server_sig_e http_server_task_sig = http_server_conv_from_sig_num(sig_num);
+        switch (http_server_task_sig)
+        {
+            case HTTP_SERVER_SIG_STOP:
+                LOG_INFO("Got signal STOP");
+                flag_stop = true;
+                break;
+            case HTTP_SERVER_SIG_TASK_WATCHDOG_FEED:
+            {
+                const esp_err_t err = esp_task_wdt_reset();
+                if (ESP_OK != err)
+                {
+                    LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
+                }
+                break;
+            }
+            case HTTP_SERVER_SIG_USER_REQ_1:
+                LOG_INFO("Got signal USER_REQ_1");
+                wifi_manager_cb_on_user_req(HTTP_SERVER_USER_REQ_CODE_1);
+                break;
+            case HTTP_SERVER_SIG_USER_REQ_2:
+                LOG_INFO("Got signal USER_REQ_2");
+                wifi_manager_cb_on_user_req(HTTP_SERVER_USER_REQ_CODE_2);
+                break;
+        }
+    }
+    return flag_stop;
+}
+
+static os_delta_ticks_t
+http_server_accept_and_handle_conn(struct netconn *const p_conn)
+{
+    struct netconn *p_new_conn = NULL;
+
+    const err_t err = netconn_accept(p_conn, &p_new_conn);
+
+    os_delta_ticks_t time_for_processing_request = 0;
+    if (ERR_OK == err)
+    {
+        if (NULL == p_new_conn)
+        {
+            LOG_ERR("netconn_accept returned OK, but p_new_conn is NULL");
+        }
+        else if (NULL == p_conn->pcb.tcp)
+        {
+            // It seems that's a bug in netconn_accept, err is ERR_OK, p_new_conn is not NULL,
+            // but p_conn->pcb.tcp is NULL.
+            // Perhaps, err_tcp() was called. So the socked has already been closed.
+            // As a workaround try to free resources and ignore this error.
+            LOG_ERR("netconn_accept returned OK, but p_conn->pcb.tcp is NULL");
+            netconn_delete(p_new_conn);
+        }
+        else
+        {
+            const int_fast32_t timeout_ms = 1500;
+            netconn_set_recvtimeout(p_new_conn, timeout_ms);
+            netconn_set_sendtimeout(p_new_conn, timeout_ms);
+            const os_delta_ticks_t t0 = xTaskGetTickCount();
+            LOG_DBG("call http_server_netconn_serve");
+            http_server_netconn_serve(p_new_conn);
+            LOG_DBG("call netconn_close");
+            const err_t err_close = netconn_close(p_new_conn);
+            if (ESP_OK != err_close)
+            {
+                LOG_ERR_ESP(err_close, "%s failed", "netconn_close");
+            }
+            LOG_DBG("call netconn_delete");
+            const err_t err_delete = netconn_delete(p_new_conn);
+            if (ESP_OK != err_delete)
+            {
+                LOG_ERR_ESP(err_delete, "%s failed", "netconn_delete");
+            }
+            time_for_processing_request = xTaskGetTickCount() - t0;
+            LOG_DBG("req processed for %u ticks", (printf_uint_t)time_for_processing_request);
+        }
+    }
+    else if (ERR_TIMEOUT == err)
+    {
+        LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
+    }
+    else if (ERR_ABRT == err)
+    {
+        LOG_ERR("netconn_accept ERR_ABRT");
+    }
+    else
+    {
+        LOG_ERR("netconn_accept: %d", err);
+    }
+    return time_for_processing_request;
 }
 
 static void
@@ -988,99 +980,20 @@ http_server_task(void)
 
     http_server_wdt_add_and_start();
 
-    bool flag_stop = false;
-    while (!flag_stop)
+    for (;;)
     {
         os_signal_events_t sig_events = { 0 };
         if (os_signal_wait_with_timeout(g_p_http_server_sig, OS_DELTA_TICKS_IMMEDIATE, &sig_events))
         {
-            for (;;)
+            const bool flag_stop = http_server_handle_sig_events(&sig_events);
+            if (flag_stop)
             {
-                const os_signal_num_e sig_num = os_signal_num_get_next(&sig_events);
-                if (OS_SIGNAL_NUM_NONE == sig_num)
-                {
-                    break;
-                }
-                const http_server_sig_e http_server_task_sig = http_server_conv_from_sig_num(sig_num);
-                switch (http_server_task_sig)
-                {
-                    case HTTP_SERVER_SIG_STOP:
-                        LOG_INFO("Got signal STOP");
-                        flag_stop = true;
-                        break;
-                    case HTTP_SERVER_SIG_TASK_WATCHDOG_FEED:
-                    {
-                        const esp_err_t err = esp_task_wdt_reset();
-                        if (ESP_OK != err)
-                        {
-                            LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
-                        }
-                        break;
-                    }
-                    case HTTP_SERVER_SIG_USER_REQ_1:
-                        LOG_INFO("Got signal USER_REQ_1");
-                        wifi_manager_cb_on_user_req(HTTP_SERVER_USER_REQ_CODE_1);
-                        break;
-                }
+                break;
             }
         }
 
-        struct netconn *p_new_conn = NULL;
+        const os_delta_ticks_t time_for_processing_request = http_server_accept_and_handle_conn(p_conn);
 
-        const err_t err = netconn_accept(p_conn, &p_new_conn);
-
-        os_delta_ticks_t time_for_processing_request = 0;
-        if (ERR_OK == err)
-        {
-            if (NULL == p_new_conn)
-            {
-                LOG_ERR("netconn_accept returned OK, but p_new_conn is NULL");
-            }
-            else if (NULL == p_conn->pcb.tcp)
-            {
-                // It seems that's a bug in netconn_accept, err is ERR_OK, p_new_conn is not NULL,
-                // but p_conn->pcb.tcp is NULL.
-                // Perhaps, err_tcp() was called. So the socked has already been closed.
-                // As a workaround try to free resources and ignore this error.
-                LOG_ERR("netconn_accept returned OK, but p_conn->pcb.tcp is NULL");
-                netconn_delete(p_new_conn);
-            }
-            else
-            {
-                const int_fast32_t timeout_ms = 1500;
-                netconn_set_recvtimeout(p_new_conn, timeout_ms);
-                netconn_set_sendtimeout(p_new_conn, timeout_ms);
-                const os_delta_ticks_t t0 = xTaskGetTickCount();
-                LOG_DBG("call http_server_netconn_serve");
-                http_server_netconn_serve(p_new_conn);
-                LOG_DBG("call netconn_close");
-                const err_t err_close = netconn_close(p_new_conn);
-                if (ESP_OK != err_close)
-                {
-                    LOG_ERR_ESP(err_close, "%s failed", "netconn_close");
-                }
-                LOG_DBG("call netconn_delete");
-                const err_t err_delete = netconn_delete(p_new_conn);
-                if (ESP_OK != err_delete)
-                {
-                    LOG_ERR_ESP(err_delete, "%s failed", "netconn_delete");
-                }
-                time_for_processing_request = xTaskGetTickCount() - t0;
-                LOG_DBG("req processed for %u ticks", (printf_uint_t)time_for_processing_request);
-            }
-        }
-        else if (ERR_TIMEOUT == err)
-        {
-            LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
-        }
-        else if (ERR_ABRT == err)
-        {
-            LOG_ERR("netconn_accept ERR_ABRT");
-        }
-        else
-        {
-            LOG_ERR("netconn_accept: %d", err);
-        }
         if (wifi_manager_is_ap_active() && http_server_check_if_configuring_complete(time_for_processing_request)
             && wifi_manager_is_connected_to_wifi_or_ethernet())
         {
@@ -1103,26 +1016,30 @@ http_server_task(void)
 }
 
 static const char *
-get_http_body(const char *msg, uint32_t len, uint32_t *p_body_len)
+get_http_body(const char *const p_msg, const uint32_t len, uint32_t *const p_body_len)
 {
     static const char g_newlines[] = "\r\n\r\n";
 
-    const char *p_body = strstr(msg, g_newlines);
+    const char *p_body = strstr(p_msg, g_newlines);
     if (NULL == p_body)
     {
-        LOG_DBG("http body not found: %s", msg);
+        LOG_DBG("http body not found: %s", p_msg);
         return 0;
     }
     p_body += strlen(g_newlines);
     if (NULL != p_body_len)
     {
-        *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - msg);
+        *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - p_msg);
     }
     return p_body;
 }
 
 static bool
-http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p_req_size, bool *p_req_ready)
+http_server_recv_and_handle(
+    struct netconn *const p_conn,
+    char *const           p_req_buf,
+    uint32_t *const       p_req_size,
+    bool *const           p_req_ready)
 {
     struct netbuf *p_netbuf_in = NULL;
 
@@ -1186,6 +1103,43 @@ http_server_recv_and_handle(struct netconn *p_conn, char *p_req_buf, uint32_t *p
         *p_req_ready = true;
     }
     return true;
+}
+
+static void
+http_server_netconn_resp(
+    struct netconn *const        p_conn,
+    http_server_resp_t *const    p_resp,
+    const sta_ip_string_t *const p_local_ip_str)
+{
+    switch (p_resp->http_resp_code)
+    {
+        case HTTP_RESP_CODE_200:
+            http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
+            return;
+        case HTTP_RESP_CODE_302:
+            http_server_netconn_resp_302_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            return;
+        case HTTP_RESP_CODE_400:
+            http_server_netconn_resp_400(p_conn);
+            return;
+        case HTTP_RESP_CODE_401:
+            http_server_netconn_resp_401(p_conn, p_resp, &g_http_server_extra_header_fields);
+            return;
+        case HTTP_RESP_CODE_403:
+            http_server_netconn_resp_403(p_conn, p_resp, &g_http_server_extra_header_fields);
+            return;
+        case HTTP_RESP_CODE_404:
+            http_server_netconn_resp_404(p_conn);
+            return;
+        case HTTP_RESP_CODE_503:
+            http_server_netconn_resp_503(p_conn);
+            return;
+        case HTTP_RESP_CODE_504:
+            http_server_netconn_resp_504(p_conn);
+            return;
+    }
+    assert(0);
+    http_server_netconn_resp_503(p_conn);
 }
 
 static void
@@ -1294,7 +1248,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
             || (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)))
     {
         const size_t content_len = strlen((const char *)resp.select_location.memory.p_buf);
-        if (content_len < 256)
+        if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG)
         {
             LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
         }
@@ -1303,33 +1257,5 @@ http_server_netconn_serve(struct netconn *const p_conn)
             LOG_INFO("Json resp: code=%u, content_len=%lu", resp.http_resp_code, (printf_ulong_t)content_len);
         }
     }
-    switch (resp.http_resp_code)
-    {
-        case HTTP_RESP_CODE_200:
-            http_server_netconn_resp_200(p_conn, &resp, &g_http_server_extra_header_fields);
-            return;
-        case HTTP_RESP_CODE_302:
-            http_server_netconn_resp_302_auth_html(p_conn, &local_ip_str, &g_http_server_extra_header_fields);
-            return;
-        case HTTP_RESP_CODE_400:
-            http_server_netconn_resp_400(p_conn);
-            return;
-        case HTTP_RESP_CODE_401:
-            http_server_netconn_resp_401(p_conn, &resp, &g_http_server_extra_header_fields);
-            return;
-        case HTTP_RESP_CODE_403:
-            http_server_netconn_resp_403(p_conn, &resp, &g_http_server_extra_header_fields);
-            return;
-        case HTTP_RESP_CODE_404:
-            http_server_netconn_resp_404(p_conn);
-            return;
-        case HTTP_RESP_CODE_503:
-            http_server_netconn_resp_503(p_conn);
-            return;
-        case HTTP_RESP_CODE_504:
-            http_server_netconn_resp_504(p_conn);
-            return;
-    }
-    assert(0);
-    http_server_netconn_resp_503(p_conn);
+    http_server_netconn_resp(p_conn, &resp, &local_ip_str);
 }

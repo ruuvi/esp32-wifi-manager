@@ -22,7 +22,7 @@ ap_list_clear_identical_ap(wifi_ap_record_t *p_ap_src, wifi_ap_record_t *p_ap_ds
 {
     /* same SSID, different auth mode is skipped */
     if ((0 == strcmp((const char *)p_ap_src->ssid, (const char *)p_ap_dst->ssid))
-        && (!!p_ap_src->authmode == !!p_ap_dst->authmode))
+        && ((!(WIFI_AUTH_OPEN == p_ap_src->authmode)) == (!(WIFI_AUTH_OPEN == p_ap_dst->authmode))))
     {
         /* save the rssi for the display */
         if (p_ap_src->rssi < p_ap_dst->rssi)
@@ -115,11 +115,13 @@ ap_list_filter_unique(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_po
 static int
 ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
 {
-    if ('\0' == ((wifi_ap_record_t *)p_elem2)->ssid[0])
+    const wifi_ap_record_t *p_item1 = (const wifi_ap_record_t *)p_elem1;
+    const wifi_ap_record_t *p_item2 = (const wifi_ap_record_t *)p_elem2;
+    if ('\0' == p_item2->ssid[0])
     {
-        return -1000;
+        return INT16_MIN;
     }
-    return (int)((wifi_ap_record_t *)p_elem2)->rssi - (int)((wifi_ap_record_t *)p_elem1)->rssi;
+    return (int)p_item2->rssi - (int)p_item1->rssi;
 }
 
 void

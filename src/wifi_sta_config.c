@@ -289,6 +289,36 @@ wifi_sta_config_do_save(wifiman_sta_config_t *const p_cfg, void *const p_param)
     return true;
 }
 
+static const char *
+wifi_sta_config_get_sta_password_for_logging(const wifiman_sta_config_t *const p_cfg)
+{
+    return ((LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG) ? (const char *)p_cfg->wifi_config_sta.sta.password : "********");
+}
+
+static void
+wifi_sta_config_log(const wifiman_sta_config_t *const p_cfg, const char *const p_prefix)
+{
+    LOG_INFO(
+        "%s: ssid:%s password:%s",
+        p_prefix,
+        p_cfg->wifi_config_sta.sta.ssid,
+        wifi_sta_config_get_sta_password_for_logging(p_cfg));
+    LOG_INFO("%s: SoftAP_ssid: %s", p_prefix, p_cfg->wifi_settings.ap_ssid);
+    LOG_INFO("%s: SoftAP_pwd: %s", p_prefix, p_cfg->wifi_settings.ap_pwd);
+    LOG_INFO("%s: SoftAP_channel: %i", p_prefix, p_cfg->wifi_settings.ap_channel);
+    LOG_INFO("%s: SoftAP_hidden (1 = yes): %i", p_prefix, p_cfg->wifi_settings.ap_ssid_hidden);
+    LOG_INFO("%s: SoftAP_bandwidth (1 = 20MHz, 2 = 40MHz): %i", p_prefix, p_cfg->wifi_settings.ap_bandwidth);
+    LOG_INFO("%s: sta_only (0 = APSTA, 1 = STA when connected): %i", p_prefix, p_cfg->wifi_settings.sta_only);
+    LOG_INFO("%s: sta_power_save (1 = yes): %i", p_prefix, p_cfg->wifi_settings.sta_power_save);
+    LOG_INFO("%s: sta_static_ip (0 = dhcp client, 1 = static ip): %i", p_prefix, p_cfg->wifi_settings.sta_static_ip);
+    LOG_INFO(
+        "%s: sta_static_ip_config: IP: %s , GW: %s , Mask: %s",
+        p_prefix,
+        ip4addr_ntoa(&p_cfg->wifi_settings.sta_static_ip_config.ip),
+        ip4addr_ntoa(&p_cfg->wifi_settings.sta_static_ip_config.gw),
+        ip4addr_ntoa(&p_cfg->wifi_settings.sta_static_ip_config.netmask));
+}
+
 bool
 wifi_sta_config_save(void)
 {
@@ -300,22 +330,7 @@ wifi_sta_config_save(void)
         LOG_ERR("%s failed", "wifi_sta_config_do_save");
         return false;
     }
-
-    LOG_INFO(
-        "wifi_sta_config: ssid:%s password:%s",
-        cfg.wifi_config_sta.sta.ssid,
-        ((LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG) ? (char *)cfg.wifi_config_sta.sta.password : "********"));
-    LOG_INFO("wifi_settings: SoftAP_ssid: %s", cfg.wifi_settings.ap_ssid);
-    LOG_INFO("wifi_settings: SoftAP_pwd: %s", cfg.wifi_settings.ap_pwd);
-    LOG_INFO("wifi_settings: SoftAP_channel: %i", cfg.wifi_settings.ap_channel);
-    LOG_INFO("wifi_settings: SoftAP_hidden (1 = yes): %i", cfg.wifi_settings.ap_ssid_hidden);
-    LOG_INFO("wifi_settings: SoftAP_bandwidth (1 = 20MHz, 2 = 40MHz): %i", cfg.wifi_settings.ap_bandwidth);
-    LOG_INFO("wifi_settings: sta_only (0 = APSTA, 1 = STA when connected): %i", cfg.wifi_settings.sta_only);
-    LOG_INFO("wifi_settings: sta_power_save (1 = yes): %i", cfg.wifi_settings.sta_power_save);
-    LOG_INFO("wifi_settings: sta_static_ip (0 = dhcp client, 1 = static ip): %i", cfg.wifi_settings.sta_static_ip);
-    LOG_INFO("wifi_settings: sta_ip_addr: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.ip));
-    LOG_INFO("wifi_settings: sta_gw_addr: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.gw));
-    LOG_INFO("wifi_settings: sta_netmask: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.netmask));
+    wifi_sta_config_log(&cfg, "wifi_settings");
     return true;
 }
 
@@ -393,30 +408,7 @@ wifi_sta_config_fetch(void)
         LOG_ERR("%s failed", "wifi_sta_config_do_fetch");
         return false;
     }
-
-    LOG_INFO(
-        "wifi_sta_config_fetch: ssid:%s password:%s",
-        cfg.wifi_config_sta.sta.ssid,
-        ((LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG) ? (char *)cfg.wifi_config_sta.sta.password : "********"));
-    LOG_INFO("wifi_sta_config_fetch: SoftAP_ssid:%s", cfg.wifi_settings.ap_ssid);
-    LOG_INFO("wifi_sta_config_fetch: SoftAP_pwd:%s", cfg.wifi_settings.ap_pwd);
-    LOG_INFO("wifi_sta_config_fetch: SoftAP_channel:%i", cfg.wifi_settings.ap_channel);
-    LOG_INFO("wifi_sta_config_fetch: SoftAP_hidden (1 = yes):%i", cfg.wifi_settings.ap_ssid_hidden);
-    LOG_INFO("wifi_sta_config_fetch: SoftAP_bandwidth (1 = 20MHz, 2 = 40MHz)%i", cfg.wifi_settings.ap_bandwidth);
-    LOG_INFO("wifi_sta_config_fetch: sta_only (0 = APSTA, 1 = STA when connected):%i", cfg.wifi_settings.sta_only);
-    LOG_INFO("wifi_sta_config_fetch: sta_power_save (1 = yes):%i", cfg.wifi_settings.sta_power_save);
-    LOG_INFO(
-        "wifi_sta_config_fetch: sta_static_ip (0 = dhcp client, 1 = static ip):%i",
-        cfg.wifi_settings.sta_static_ip);
-    LOG_INFO(
-        "wifi_sta_config_fetch: sta_static_ip_config: IP: %s , GW: %s , Mask: %s",
-        ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.ip),
-        ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.gw),
-        ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.netmask));
-    LOG_INFO("wifi_sta_config_fetch: sta_ip_addr: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.ip));
-    LOG_INFO("wifi_sta_config_fetch: sta_gw_addr: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.gw));
-    LOG_INFO("wifi_sta_config_fetch: sta_netmask: %s", ip4addr_ntoa(&cfg.wifi_settings.sta_static_ip_config.netmask));
-
+    wifi_sta_config_log(&cfg, "wifi_sta_config_fetch");
     return wifi_sta_config_is_ssid_configured();
 }
 

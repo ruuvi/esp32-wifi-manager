@@ -150,7 +150,7 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_remote_ip, p_ap_ssid, p_extra_header_fields);
+            return http_server_resp_401_auth_ruuvi(p_ap_ssid);
         }
         else
         {
@@ -164,7 +164,7 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_remote_ip, p_ap_ssid, p_extra_header_fields);
+            return http_server_resp_401_auth_ruuvi(p_ap_ssid);
         }
         else
         {

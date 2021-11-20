@@ -37,6 +37,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include <stdbool.h>
 #include <stdint.h>
 #include "http_server_auth_type.h"
+#include "attribs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,6 +46,7 @@ extern "C" {
 typedef enum http_server_user_req_code_e
 {
     HTTP_SERVER_USER_REQ_CODE_1 = 1,
+    HTTP_SERVER_USER_REQ_CODE_2 = 2,
 } http_server_user_req_code_e;
 
 /**
@@ -66,6 +68,7 @@ http_server_start(void);
 /**
  * @brief Stop the http server task.
  */
+ATTR_UNUSED
 void
 http_server_stop(void);
 
