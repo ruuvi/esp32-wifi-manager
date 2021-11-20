@@ -62,6 +62,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "os_timer_sig.h"
 #include "wifiman_msg.h"
 #include "http_server_accept_and_handle_conn.h"
+#include "time_units.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -81,6 +82,9 @@ typedef enum http_server_sig_e
 
 #define HTTP_SERVER_STATUS_JSON_REQUEST_TIMEOUT_MS (20 * 1000)
 #define HTTP_SERVER_STA_AP_TIMEOUT_MS              (60 * 1000)
+
+#define HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS (1000U)
+#define HTTP_SERVER_TASK_WDOG_MIN_FEED_FREQ        (3U)
 
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.
@@ -468,6 +472,18 @@ http_server_handle_sig_events(os_signal_events_t *const p_sig_events)
     return flag_stop;
 }
 
+static uint32_t
+http_server_get_task_wdog_feed_period_ms(void)
+{
+    const uint32_t period_ms = (CONFIG_ESP_TASK_WDT_TIMEOUT_S * TIME_UNITS_MS_PER_SECOND)
+                               / HTTP_SERVER_TASK_WDOG_MIN_FEED_FREQ;
+    if (period_ms > HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS)
+    {
+        return HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS;
+    }
+    return period_ms;
+}
+
 static void
 http_server_task(void)
 {
@@ -506,8 +522,7 @@ http_server_task(void)
         "http:wdog",
         g_p_http_server_sig,
         http_server_conv_to_sig_num(HTTP_SERVER_SIG_TASK_WATCHDOG_FEED),
-        ((CONFIG_ESP_TASK_WDT_TIMEOUT_S > 3) ? pdMS_TO_TICKS(1000U)
-                                             : pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U)));
+        pdMS_TO_TICKS(http_server_get_task_wdog_feed_period_ms()));
 
     http_server_task_wdt_add_and_start();
 

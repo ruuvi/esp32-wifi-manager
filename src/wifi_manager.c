@@ -72,6 +72,9 @@ Contains the freeRTOS task and all necessary support
 
 #define WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS (200U)
 
+#define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL (1U)
+#define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_NUM_CHANNELS  (13U)
+
 typedef struct wifi_manger_scan_info_t
 {
     uint8_t  first_chan;
@@ -87,7 +90,7 @@ static SemaphoreHandle_t gh_wifi_mutex;
 static StaticQueue_t     g_wifi_manager_mutex_mem;
 
 static uint16_t         g_wifi_ap_num = MAX_AP_NUM;
-static wifi_ap_record_t g_wifi_accessp_records[2 * MAX_AP_NUM];
+static wifi_ap_record_t g_wifi_ap_records[2 * MAX_AP_NUM];
 
 static wifi_manager_cb_ptr g_wifi_cb_ptr_arr[MESSAGE_CODE_COUNT];
 
@@ -312,6 +315,7 @@ wifi_manager_init_start_wifi(const WiFiAntConfig_t *p_wifi_ant_config, const wif
 static void
 wifi_scan_next_timer_handler(TimerHandle_t xTimer)
 {
+    (void)xTimer;
     wifiman_msg_send_ev_scan_next();
 }
 
@@ -743,7 +747,7 @@ wifi_handle_ev_scan_done(void)
     wifi_manager_lock();
 
     uint16_t        wifi_ap_num = MAX_AP_NUM;
-    const esp_err_t err         = esp_wifi_scan_get_ap_records(&wifi_ap_num, &g_wifi_accessp_records[MAX_AP_NUM]);
+    const esp_err_t err         = esp_wifi_scan_get_ap_records(&wifi_ap_num, &g_wifi_ap_records[MAX_AP_NUM]);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(
@@ -761,10 +765,12 @@ wifi_handle_ev_scan_done(void)
         (printf_int_t)p_scan_info->cur_chan);
 
     /* Will remove the duplicate SSIDs from the list and update ap_num */
-    p_scan_info->num_access_points = ap_list_filter_unique(g_wifi_accessp_records, MAX_AP_NUM * 2);
+    p_scan_info->num_access_points = ap_list_filter_unique(
+        g_wifi_ap_records,
+        sizeof(g_wifi_ap_records) / sizeof(g_wifi_ap_records[0]));
 
     /* Put SSID's with the highest quality to the beginning of the list */
-    ap_list_sort_by_rssi(g_wifi_accessp_records, p_scan_info->num_access_points);
+    ap_list_sort_by_rssi(g_wifi_ap_records, p_scan_info->num_access_points);
     g_wifi_ap_num = p_scan_info->num_access_points;
 
     if (p_scan_info->num_access_points >= MAX_AP_NUM)
@@ -788,7 +794,7 @@ wifi_manager_generate_json_access_points(void)
 {
     if (wifi_manager_lock_with_timeout(pdMS_TO_TICKS(100)))
     {
-        json_access_points_generate(g_wifi_accessp_records, g_wifi_ap_num);
+        json_access_points_generate(g_wifi_ap_records, g_wifi_ap_num);
         const char *const p_buf = json_access_points_get();
         wifi_manager_unlock();
         return p_buf;
@@ -819,8 +825,8 @@ wifi_handle_cmd_start_wifi_scan(void)
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_get_country");
-        wifi_country.schan = 1;
-        wifi_country.nchan = 13;
+        wifi_country.schan = WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL;
+        wifi_country.nchan = WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_NUM_CHANNELS;
     }
 
     wifi_manger_scan_info_t *const p_scan_info = &g_wifi_scan_info;
@@ -1242,6 +1248,8 @@ static os_timer_periodic_static_t g_wifi_manager_timer_task_watchdog_mem;
 static void
 wifi_manager_timer_cb_task_watchdog_feed(os_timer_periodic_t *p_timer, void *p_arg)
 {
+    (void)p_timer;
+    (void)p_arg;
     wifiman_msg_send_cmd_task_watchdog_feed();
 }
 
