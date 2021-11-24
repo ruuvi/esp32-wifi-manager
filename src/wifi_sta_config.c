@@ -45,6 +45,7 @@ typedef struct wifiman_sta_config_t
 
 typedef bool (*wifiman_sta_config_callback_t)(wifiman_sta_config_t *const p_cfg, void *const p_param);
 typedef void (*wifiman_sta_config_callback_void_t)(wifiman_sta_config_t *const p_cfg, void *const p_param);
+typedef void (*wifiman_sta_const_config_callback_void_t)(const wifiman_sta_config_t *const p_cfg, void *const p_param);
 typedef bool (*wifiman_sta_config_callback_cptr_t)(wifiman_sta_config_t *const p_cfg, const void *const p_param);
 typedef void (*wifiman_sta_config_callback_void_cptr_t)(wifiman_sta_config_t *const p_cfg, const void *const p_param);
 typedef void (*wifiman_sta_config_callback_without_param_t)(wifiman_sta_config_t *const p_cfg);
@@ -82,6 +83,13 @@ wifiman_sta_config_unlock(wifiman_sta_config_t **pp_cfg)
     os_mutex_unlock(g_wifi_sta_config_mutex);
 }
 
+void
+wifiman_sta_const_config_unlock(const wifiman_sta_config_t **pp_cfg)
+{
+    *pp_cfg = NULL;
+    os_mutex_unlock(g_wifi_sta_config_mutex);
+}
+
 static bool
 wifiman_sta_config_transaction(wifiman_sta_config_callback_t cb_func, void *const p_param)
 {
@@ -97,6 +105,14 @@ wifiman_sta_config_safe_transaction(wifiman_sta_config_callback_void_t cb_func, 
     wifiman_sta_config_t *p_cfg = wifiman_sta_config_lock();
     cb_func(p_cfg, p_param);
     wifiman_sta_config_unlock(&p_cfg);
+}
+
+static void
+wifiman_sta_const_config_safe_transaction(wifiman_sta_const_config_callback_void_t cb_func, void *const p_param)
+{
+    const wifiman_sta_config_t *p_cfg = wifiman_sta_config_lock();
+    cb_func(p_cfg, p_param);
+    wifiman_sta_const_config_unlock(&p_cfg);
 }
 
 static void
@@ -413,7 +429,7 @@ wifi_sta_config_fetch(void)
 }
 
 static void
-wifi_sta_config_do_get_copy(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_get_copy(const wifiman_sta_config_t *const p_cfg, void *const p_param)
 {
     wifi_config_t *const p_wifi_cfg = p_param;
 
@@ -424,12 +440,12 @@ wifi_config_t
 wifi_sta_config_get_copy(void)
 {
     wifi_config_t wifi_config = { 0 };
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_get_copy, &wifi_config);
+    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_get_copy, &wifi_config);
     return wifi_config;
 }
 
 static void
-wifi_sta_config_do_get_wifi_settings(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_get_wifi_settings(const wifiman_sta_config_t *const p_cfg, void *const p_param)
 {
     wifi_settings_t *const p_settings = p_param;
 
@@ -440,12 +456,12 @@ wifi_settings_t
 wifi_sta_config_get_wifi_settings(void)
 {
     wifi_settings_t settings = { 0 };
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_get_wifi_settings, &settings);
+    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_get_wifi_settings, &settings);
     return settings;
 }
 
 static void
-wifi_sta_config_do_check_is_ssid_configured(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_check_is_ssid_configured(const wifiman_sta_config_t *const p_cfg, void *const p_param)
 {
     bool *const p_flag_ssid_configured = p_param;
 
@@ -456,12 +472,12 @@ bool
 wifi_sta_config_is_ssid_configured(void)
 {
     bool flag_is_ssid_configured = false;
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_check_is_ssid_configured, &flag_is_ssid_configured);
+    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_check_is_ssid_configured, &flag_is_ssid_configured);
     return flag_is_ssid_configured;
 }
 
 static void
-wifi_sta_config_do_get_ssid(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_get_ssid(const wifiman_sta_config_t *const p_cfg, void *const p_param)
 {
     wifi_ssid_t *const p_ssid = p_param;
 
@@ -472,7 +488,7 @@ wifi_ssid_t
 wifi_sta_config_get_ssid(void)
 {
     wifi_ssid_t ssid = { 0 };
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_get_ssid, &ssid);
+    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_get_ssid, &ssid);
     return ssid;
 }
 
@@ -485,7 +501,7 @@ typedef struct wifiman_set_ssid_password_t
 } wifiman_set_ssid_password_t;
 
 static void
-wifi_sta_config_do_set_ssid_and_password(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_set_ssid_and_password(wifiman_sta_config_t *const p_cfg, const void *const p_param)
 {
     const wifiman_set_ssid_password_t *const p_info = p_param;
 
@@ -517,11 +533,11 @@ wifi_sta_config_set_ssid_and_password(
         .p_password   = p_password,
         .password_len = password_len,
     };
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_set_ssid_and_password, &info);
+    wifiman_sta_config_safe_transaction_with_const_param(&wifi_sta_config_do_set_ssid_and_password, &info);
 }
 
 static void
-wifi_sta_config_do_get_ap_ssid(wifiman_sta_config_t *const p_cfg, void *const p_param)
+wifi_sta_config_do_get_ap_ssid(const wifiman_sta_config_t *const p_cfg, void *const p_param)
 {
     (void)p_cfg;
     wifi_ssid_t *const p_ap_ssid = p_param;
@@ -533,6 +549,6 @@ wifi_ssid_t
 wifi_sta_config_get_ap_ssid(void)
 {
     wifi_ssid_t ap_ssid = { 0 };
-    wifiman_sta_config_safe_transaction(&wifi_sta_config_do_get_ap_ssid, &ap_ssid);
+    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_get_ap_ssid, &ap_ssid);
     return ap_ssid;
 }

@@ -35,7 +35,7 @@ typedef struct http_server_gen_resp_status_json_param_t
 static http_server_resp_status_json_t g_resp_status_json;
 
 static void
-http_server_gen_resp_status_json(json_network_info_t *const p_info, void *const p_param)
+http_server_gen_resp_status_json(const json_network_info_t *const p_info, void *const p_param)
 {
     http_server_gen_resp_status_json_param_t *p_params = p_param;
     if (NULL == p_info)
@@ -130,7 +130,7 @@ http_server_handle_req_get(
                 .flag_access_from_lan = flag_access_from_lan,
             };
             const os_delta_ticks_t ticks_to_wait = 10U;
-            json_network_info_do_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
+            json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
             return http_resp;
         }
     }

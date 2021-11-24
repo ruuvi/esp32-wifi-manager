@@ -93,9 +93,6 @@ typedef enum http_server_sig_e
 static void
 http_server_task(void);
 
-static void
-http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16_t len);
-
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "http_server";
 
@@ -418,9 +415,8 @@ http_server_task_wdt_reset(void)
 }
 
 static void
-http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16_t len)
+http_server_netconn_callback(const struct netconn *const p_conn, const enum netconn_evt event)
 {
-    (void)len;
     if (p_conn != g_p_conn_listen)
     {
         switch (event)
@@ -436,6 +432,12 @@ http_server_netconn_callback(struct netconn *p_conn, enum netconn_evt event, u16
                 break;
         }
     }
+}
+
+static void
+http_server_netconn_callback_wrap(struct netconn *p_conn, enum netconn_evt event, ATTR_UNUSED u16_t len)
+{
+    http_server_netconn_callback(p_conn, event);
 }
 
 static bool
@@ -484,6 +486,18 @@ http_server_get_task_wdog_feed_period_ms(void)
     return period_ms;
 }
 
+static bool
+http_server_netconn_listen(struct netconn *const p_conn)
+{
+    const err_t err = netconn_listen(p_conn);
+    if (ERR_OK != err)
+    {
+        LOG_ERR_ESP(err, "Can't open socket for HTTP Server");
+        return false;
+    }
+    return true;
+}
+
 static void
 http_server_task(void)
 {
@@ -494,7 +508,7 @@ http_server_task(void)
         return;
     }
 
-    struct netconn *p_conn = netconn_new_with_callback(NETCONN_TCP, &http_server_netconn_callback);
+    struct netconn *p_conn = netconn_new_with_callback(NETCONN_TCP, &http_server_netconn_callback_wrap);
     if (NULL == p_conn)
     {
         LOG_ERR("Can't create netconn for HTTP Server");
@@ -504,13 +518,9 @@ http_server_task(void)
     const u16_t http_port = 80U;
     netconn_bind(p_conn, IP_ADDR_ANY, http_port);
 
+    if (!http_server_netconn_listen(p_conn))
     {
-        const err_t err = netconn_listen(p_conn);
-        if (ERR_OK != err)
-        {
-            LOG_ERR("Can't open socket for HTTP Server, err=%d", (printf_int_t)err);
-            return;
-        }
+        return;
     }
 
     netconn_set_recvtimeout(p_conn, HTTP_SERVER_ACCEPT_TIMEOUT_MS);

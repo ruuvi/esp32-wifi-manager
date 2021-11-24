@@ -62,8 +62,8 @@ static const char TAG[] = "wifi_manager";
 EventGroupHandle_t        g_p_wifi_manager_event_group;
 static StaticEventGroup_t g_wifi_manager_event_group_mem;
 
-static os_timer_periodic_t *      g_p_wifi_manager_timer_task_watchdog;
-static os_timer_periodic_static_t g_wifi_manager_timer_task_watchdog_mem;
+static os_timer_periodic_cptr_without_arg_t *g_p_wifi_manager_timer_task_watchdog;
+static os_timer_periodic_static_t            g_wifi_manager_timer_task_watchdog_mem;
 
 void
 wifi_manager_disconnect_eth(void)
@@ -203,10 +203,9 @@ wifi_manager_start_ap(void)
 }
 
 static void
-wifi_manager_timer_cb_task_watchdog_feed(os_timer_periodic_t *p_timer, void *p_arg)
+wifi_manager_timer_cb_task_watchdog_feed(const os_timer_periodic_cptr_without_arg_t *const p_timer)
 {
     (void)p_timer;
-    (void)p_arg;
     wifiman_msg_send_cmd_task_watchdog_feed();
 }
 
@@ -220,19 +219,18 @@ wifi_manager_wdt_add_and_start(void)
         LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_add");
     }
     LOG_INFO("TaskWatchdog: Start timer");
-    os_timer_periodic_start(g_p_wifi_manager_timer_task_watchdog);
+    os_timer_periodic_cptr_without_arg_start(g_p_wifi_manager_timer_task_watchdog);
 }
 
 void
 wifi_manager_task(void)
 {
     LOG_INFO("TaskWatchdog: Create timer");
-    g_p_wifi_manager_timer_task_watchdog = os_timer_periodic_create_static(
+    g_p_wifi_manager_timer_task_watchdog = os_timer_periodic_cptr_without_arg_create_static(
         &g_wifi_manager_timer_task_watchdog_mem,
         "wifi:wdog",
         pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U),
-        &wifi_manager_timer_cb_task_watchdog_feed,
-        NULL);
+        &wifi_manager_timer_cb_task_watchdog_feed);
 
     wifi_manager_wdt_add_and_start();
 
@@ -250,9 +248,9 @@ wifi_manager_task(void)
     LOG_INFO("TaskWatchdog: Unregister current thread");
     esp_task_wdt_delete(xTaskGetCurrentTaskHandle());
     LOG_INFO("TaskWatchdog: Stop timer");
-    os_timer_periodic_stop(g_p_wifi_manager_timer_task_watchdog);
+    os_timer_periodic_cptr_without_arg_stop(g_p_wifi_manager_timer_task_watchdog);
     LOG_INFO("TaskWatchdog: Delete timer");
-    os_timer_periodic_delete(&g_p_wifi_manager_timer_task_watchdog);
+    os_timer_periodic_cptr_without_arg_delete(&g_p_wifi_manager_timer_task_watchdog);
 
     // Do not delete gh_wifi_json_mutex
     // Do not delete g_p_wifi_manager_event_group

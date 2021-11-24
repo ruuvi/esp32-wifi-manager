@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef int qsort_callback_result_t;
+
 ACCESS_POINTS_LIST_STATIC
 void
 ap_list_clear_wifi_ap_record(wifi_ap_record_t *p_wifi_ap)
@@ -112,7 +114,7 @@ ap_list_filter_unique(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_po
     return ap_list_reorder(p_arr_of_ap, num_aps);
 }
 
-static int
+static qsort_callback_result_t
 ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
 {
     const wifi_ap_record_t *p_item1 = (const wifi_ap_record_t *)p_elem1;
@@ -121,7 +123,7 @@ ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
     {
         return INT16_MIN;
     }
-    return (int)p_item2->rssi - (int)p_item1->rssi;
+    return (qsort_callback_result_t)p_item2->rssi - (qsort_callback_result_t)p_item1->rssi;
 }
 
 void
