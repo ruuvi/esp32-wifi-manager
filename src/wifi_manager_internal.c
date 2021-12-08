@@ -374,9 +374,9 @@ wifi_manager_init_start_wifi(
 
     json_access_points_init();
 
-    for (message_code_e msg_code = WIFI_MAN_MSG_CODE_NONE; msg_code < MESSAGE_CODE_COUNT; ++msg_code)
+    for (int32_t msg_code = WIFI_MAN_MSG_CODE_NONE; msg_code < MESSAGE_CODE_COUNT; ++msg_code)
     {
-        wifi_manager_set_callback(msg_code, NULL);
+        wifi_manager_set_callback((message_code_e)msg_code, NULL);
     }
 
     esp_err_t err = esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_manager_event_handler, NULL);

@@ -576,7 +576,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
     sta_ip_string_t local_ip_str  = { '\0' };
     sta_ip_string_t remote_ip_str = { '\0' };
 
-    struct tcp_pcb *const p_tcp = p_conn->pcb.tcp;
+    const struct tcp_pcb *const p_tcp = p_conn->pcb.tcp;
     if (NULL == p_tcp)
     {
         LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");

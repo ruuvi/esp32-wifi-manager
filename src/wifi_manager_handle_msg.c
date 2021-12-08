@@ -47,9 +47,8 @@ wifi_scan_next(wifi_manager_scan_info_t *const p_scan_info)
 }
 
 static void
-wifi_manger_notify_scan_done(wifi_manager_scan_info_t *const p_scan_info)
+wifi_manger_notify_scan_done(void)
 {
-    (void)p_scan_info;
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
     if (NULL != g_p_scan_sync_sema)
     {
@@ -302,16 +301,16 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
         /* refresh JSON with the new IP */
         const wifi_ssid_t ssid = wifi_sta_config_get_ssid();
 
-        ip4_addr_t *    p_dhcp_ip = NULL;
-        struct netif *  p_netif   = NULL;
-        const esp_err_t err2      = tcpip_adapter_get_netif(TCPIP_ADAPTER_IF_STA, (void **)&p_netif);
+        const ip4_addr_t *p_dhcp_ip = NULL;
+        struct netif *    p_netif   = NULL;
+        const esp_err_t   err2      = tcpip_adapter_get_netif(TCPIP_ADAPTER_IF_STA, (void **)&p_netif);
         if (ESP_OK != err2)
         {
             LOG_ERR_ESP(err2, "%s failed", "tcpip_adapter_get_netif");
         }
         else
         {
-            struct dhcp *const p_dhcp = netif_dhcp_data(p_netif);
+            const struct dhcp *const p_dhcp = netif_dhcp_data(p_netif);
             if (NULL != p_dhcp)
             {
                 p_dhcp_ip = &p_dhcp->server_ip_addr.u_addr.ip4;
@@ -397,7 +396,7 @@ wifi_handle_cmd_disconnect_sta(void)
 static void
 wifi_handle_ev_scan_next(void)
 {
-    wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    const wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
     /* wifi scanner config */
     const wifi_scan_config_t scan_config = {
         .ssid        = NULL,
@@ -423,7 +422,7 @@ wifi_handle_ev_scan_next(void)
     {
         LOG_WARN("EVENT_SCAN_NEXT: scan start return: %d", ret);
         wifi_manager_lock();
-        wifi_manger_notify_scan_done(p_scan_info);
+        wifi_manger_notify_scan_done();
         wifi_manager_unlock();
     }
 }
@@ -444,7 +443,7 @@ wifi_handle_ev_scan_done(void)
             err,
             "MESSAGE: EVENT_SCAN_DONE: channel=%u: esp_wifi_scan_get_ap_records failed",
             (printf_uint_t)p_scan_info->cur_chan);
-        wifi_manger_notify_scan_done(p_scan_info);
+        wifi_manger_notify_scan_done();
         wifi_manager_unlock();
         return;
     }
@@ -470,7 +469,7 @@ wifi_handle_ev_scan_done(void)
     if (wifi_scan_next(&g_wifi_scan_info))
     {
         LOG_INFO("EVENT_SCAN_DONE: scanning finished");
-        wifi_manger_notify_scan_done(p_scan_info);
+        wifi_manger_notify_scan_done();
         wifi_manager_unlock();
     }
     else
