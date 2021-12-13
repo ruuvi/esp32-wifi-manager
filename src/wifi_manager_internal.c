@@ -26,12 +26,12 @@
 
 static const char TAG[] = "wifi_manager";
 
-wifi_manager_callbacks_t g_wifi_callbacks;
+static wifi_manager_callbacks_t g_wifi_callbacks;
 
-os_timer_periodic_t *             g_p_wifi_scan_timer;
-static os_timer_periodic_static_t g_wifi_scan_timer_mem;
+static os_timer_one_shot_without_arg_t *g_p_wifi_scan_timer;
+static os_timer_one_shot_static_t       g_wifi_scan_timer_mem;
 
-os_sema_t               g_p_scan_sync_sema;
+static os_sema_t        g_p_scan_sync_sema;
 static os_sema_static_t g_scan_sync_sema_mem;
 
 static os_mutex_recursive_t        g_p_wifi_mutex;
@@ -259,10 +259,9 @@ wifi_manager_tcpip_adapter_configure(const struct wifi_settings_t *const p_wifi_
 }
 
 static void
-wifi_scan_next_timer_handler(os_timer_periodic_t *p_timer, void *p_arg)
+wifi_scan_next_timer_handler(os_timer_one_shot_without_arg_t *const p_timer)
 {
     (void)p_timer;
-    (void)p_arg;
     wifiman_msg_send_ev_scan_next();
 }
 
@@ -477,12 +476,11 @@ wifi_manager_init(
     }
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_IS_WORKING);
 
-    g_p_wifi_scan_timer = os_timer_periodic_create_static(
+    g_p_wifi_scan_timer = os_timer_one_shot_without_arg_create_static(
         &g_wifi_scan_timer_mem,
         "wifi_scan",
         pdMS_TO_TICKS(WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS),
-        &wifi_scan_next_timer_handler,
-        NULL);
+        &wifi_scan_next_timer_handler);
 
     wifi_manager_set_callbacks(p_callbacks);
 
@@ -533,6 +531,12 @@ wifi_manager_init(
     return true;
 }
 
+void
+wifi_manager_scan_timer_start(void)
+{
+    os_timer_one_shot_without_arg_start(g_p_wifi_scan_timer);
+}
+
 static const char *
 wifi_manager_generate_json_access_points(void)
 {
@@ -580,4 +584,60 @@ wifi_manager_scan_sync(void)
     wifi_manager_unlock();
 
     return p_buf;
+}
+
+void
+wifi_callback_on_connect_eth_cmd(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_connect_eth_cmd)
+    {
+        g_wifi_callbacks.cb_on_connect_eth_cmd();
+    }
+}
+
+void
+wifi_callback_on_ap_sta_connected(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_sta_connected)
+    {
+        g_wifi_callbacks.cb_on_ap_sta_connected();
+    }
+}
+
+void
+wifi_callback_on_ap_sta_disconnected(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_sta_disconnected)
+    {
+        g_wifi_callbacks.cb_on_ap_sta_disconnected();
+    }
+}
+
+void
+wifi_callback_on_disconnect_eth_cmd(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_disconnect_eth_cmd)
+    {
+        g_wifi_callbacks.cb_on_disconnect_eth_cmd();
+    }
+}
+
+void
+wifi_callback_on_disconnect_sta_cmd(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_disconnect_sta_cmd)
+    {
+        g_wifi_callbacks.cb_on_disconnect_sta_cmd();
+    }
+}
+
+void
+wifi_manger_notify_scan_done(void)
+{
+    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
+    if (NULL != g_p_scan_sync_sema)
+    {
+        LOG_INFO("NOTIFY: wifi scan done");
+        os_sema_signal(g_p_scan_sync_sema);
+    }
 }

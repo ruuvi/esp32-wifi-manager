@@ -66,10 +66,7 @@ typedef struct wifi_manager_scan_info_t
     uint16_t num_access_points;
 } wifi_manager_scan_info_t;
 
-extern EventGroupHandle_t       g_p_wifi_manager_event_group;
-extern wifi_manager_callbacks_t g_wifi_callbacks;
-extern os_timer_periodic_t *    g_p_wifi_scan_timer;
-extern os_sema_t                g_p_scan_sync_sema;
+extern EventGroupHandle_t g_p_wifi_manager_event_group;
 
 void
 wifi_manager_init_mutex(void);
@@ -145,6 +142,27 @@ wifi_manager_init(
     const wifi_ssid_t *const                   p_gw_wifi_ssid,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks);
+
+void
+wifi_manager_scan_timer_start(void);
+
+void
+wifi_callback_on_connect_eth_cmd(void);
+
+void
+wifi_callback_on_ap_sta_connected(void);
+
+void
+wifi_callback_on_ap_sta_disconnected(void);
+
+void
+wifi_callback_on_disconnect_eth_cmd(void);
+
+void
+wifi_callback_on_disconnect_sta_cmd(void);
+
+void
+wifi_manger_notify_scan_done(void);
 
 #ifdef __cplusplus
 }

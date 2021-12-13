@@ -42,19 +42,8 @@ wifi_scan_next(wifi_manager_scan_info_t *const p_scan_info)
         "Delay %u ms before scanning Wi-Fi APs on channel %u",
         (printf_uint_t)WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS,
         (printf_uint_t)p_scan_info->cur_chan);
-    xTimerStart(g_p_wifi_scan_timer, pdMS_TO_TICKS(WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS));
+    wifi_manager_scan_timer_start();
     return false; // scanning not finished
-}
-
-static void
-wifi_manger_notify_scan_done(void)
-{
-    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
-    if (NULL != g_p_scan_sync_sema)
-    {
-        LOG_INFO("NOTIFY: wifi scan done");
-        os_sema_signal(g_p_scan_sync_sema);
-    }
 }
 
 static void
@@ -97,10 +86,7 @@ static void
 wifi_handle_cmd_connect_eth(void)
 {
     LOG_INFO("MESSAGE: ORDER_CONNECT_ETH");
-    if (NULL != g_wifi_callbacks.cb_on_connect_eth_cmd)
-    {
-        g_wifi_callbacks.cb_on_connect_eth_cmd();
-    }
+    wifi_callback_on_connect_eth_cmd();
 }
 
 static void
@@ -331,10 +317,7 @@ wifi_handle_ev_ap_sta_connected(void)
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
     http_server_on_ap_sta_connected();
-    if (NULL != g_wifi_callbacks.cb_on_ap_sta_connected)
-    {
-        g_wifi_callbacks.cb_on_ap_sta_connected();
-    }
+    wifi_callback_on_ap_sta_connected();
     if (!wifi_manager_is_connected_to_wifi())
     {
         dns_server_start();
@@ -349,10 +332,7 @@ wifi_handle_ev_ap_sta_disconnected(void)
         g_p_wifi_manager_event_group,
         WIFI_MANAGER_AP_STA_CONNECTED_BIT | WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
     http_server_on_ap_sta_disconnected();
-    if (NULL != g_wifi_callbacks.cb_on_ap_sta_disconnected)
-    {
-        g_wifi_callbacks.cb_on_ap_sta_disconnected();
-    }
+    wifi_callback_on_ap_sta_disconnected();
     dns_server_stop();
 }
 
@@ -368,10 +348,7 @@ static void
 wifi_handle_cmd_disconnect_eth(void)
 {
     LOG_INFO("MESSAGE: ORDER_DISCONNECT_ETH");
-    if (NULL != g_wifi_callbacks.cb_on_disconnect_eth_cmd)
-    {
-        g_wifi_callbacks.cb_on_disconnect_eth_cmd();
-    }
+    wifi_callback_on_disconnect_eth_cmd();
 }
 
 static void
@@ -387,10 +364,7 @@ wifi_handle_cmd_disconnect_sta(void)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_disconnect");
     }
-    if (NULL != g_wifi_callbacks.cb_on_disconnect_sta_cmd)
-    {
-        g_wifi_callbacks.cb_on_disconnect_sta_cmd();
-    }
+    wifi_callback_on_disconnect_sta_cmd();
 }
 
 static void
