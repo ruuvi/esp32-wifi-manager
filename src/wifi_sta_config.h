@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include "esp_wifi_types.h"
 #include "wifi_manager_defs.h"
-#include "tcpip_adapter.h"
+#include "esp_netif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +30,7 @@ typedef struct wifi_settings_t
     bool                    sta_only;
     wifi_ps_type_t          sta_power_save;
     bool                    sta_static_ip;
-    tcpip_adapter_ip_info_t sta_static_ip_config;
+    esp_netif_ip_info_t sta_static_ip_config;
 } wifi_settings_t;
 
 /**
