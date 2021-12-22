@@ -66,7 +66,7 @@ typedef struct wifi_manager_scan_info_t
     uint16_t num_access_points;
 } wifi_manager_scan_info_t;
 
-extern EventGroupHandle_t       g_p_wifi_manager_event_group;
+extern EventGroupHandle_t g_p_wifi_manager_event_group;
 
 void
 wifi_manager_init_mutex(void);

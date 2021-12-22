@@ -185,12 +185,12 @@ static void
 wifi_manager_netif_set_default_ip(void)
 {
     LOG_INFO("Set default IP for WiFi AP: %s", DEFAULT_AP_IP);
-    esp_netif_t * const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
-    esp_netif_ip_info_t info = { 0 };
-    info.ip.addr = esp_ip4addr_aton(DEFAULT_AP_IP); /* access point is on a static IP */
-    info.gw.addr = esp_ip4addr_aton(DEFAULT_AP_GATEWAY);
-    info.netmask.addr = esp_ip4addr_aton(DEFAULT_AP_NETMASK);
-    esp_err_t err = esp_netif_dhcps_stop(p_netif_ap);
+    esp_netif_t *const  p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    esp_netif_ip_info_t info       = { 0 };
+    info.ip.addr                   = esp_ip4addr_aton(DEFAULT_AP_IP); /* access point is on a static IP */
+    info.gw.addr                   = esp_ip4addr_aton(DEFAULT_AP_GATEWAY);
+    info.netmask.addr              = esp_ip4addr_aton(DEFAULT_AP_NETMASK);
+    esp_err_t err                  = esp_netif_dhcps_stop(p_netif_ap);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_netif_dhcps_stop");
@@ -213,7 +213,7 @@ wifi_manager_netif_set_default_ip(void)
 static void
 wifi_manager_netif_configure(const struct wifi_settings_t *const p_wifi_settings)
 {
-    esp_netif_t * const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     if (p_wifi_settings->sta_static_ip)
     {
         wifi_ip4_addr_str_t buf_ip;
@@ -447,7 +447,7 @@ wifi_manager_init_start_wifi(
         return false;
     }
 
-    esp_netif_t * const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
     LOG_INFO("Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
     err = esp_netif_set_hostname(p_netif_sta, p_gw_wifi_ssid->ssid_buf);
@@ -505,13 +505,13 @@ wifi_manager_init(
 
     /* initialize the tcp stack */
     esp_netif_init();
-    esp_netif_t* const p_netif_ap = esp_netif_create_default_wifi_ap();
+    esp_netif_t *const p_netif_ap = esp_netif_create_default_wifi_ap();
     if (NULL == p_netif_ap)
     {
         LOG_ERR("%s failed", "esp_netif_create_default_wifi_ap");
         return false;
     }
-    esp_netif_t* const p_netif_sta = esp_netif_create_default_wifi_sta();
+    esp_netif_t *const p_netif_sta = esp_netif_create_default_wifi_sta();
     if (NULL == p_netif_sta)
     {
         LOG_ERR("%s failed", "esp_netif_create_default_wifi_sta");

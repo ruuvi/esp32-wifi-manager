@@ -152,7 +152,7 @@ replace_non_ascii_with_dots(char *p_domain)
 }
 
 static void
-dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t * const p_ip_resolved)
+dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resolved)
 {
     struct sockaddr_in client     = { 0 };
     socklen_t          client_len = sizeof(client);
@@ -338,7 +338,7 @@ dns_server_task(void)
     struct sockaddr_in bind_addr = { 0 };
     /* Bind to port 53 (typical DNS Server port) */
     esp_netif_ip_info_t ip_info     = { 0 };
-    esp_netif_t * p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t *       p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     esp_netif_get_ip_info(p_netif_sta, &ip_info);
     bind_addr.sin_family      = AF_INET;
     bind_addr.sin_addr.s_addr = ip_info.ip.addr;
@@ -353,7 +353,7 @@ dns_server_task(void)
 
     /* Set redirection DNS hijack to the access point IP */
     esp_ip4_addr_t ip_resolved = { 0 };
-    ip_resolved.addr = esp_ip4addr_aton(DEFAULT_AP_IP);
+    ip_resolved.addr           = esp_ip4addr_aton(DEFAULT_AP_IP);
 
     LOG_INFO("DNS Server listening on 53/udp");
 

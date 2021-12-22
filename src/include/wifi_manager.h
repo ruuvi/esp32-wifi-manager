@@ -144,10 +144,10 @@ wifi_manager_is_sta_configured(void);
  */
 void
 wifi_manager_update_network_connection_info(
-    const update_reason_code_e           update_reason_code,
-    const wifi_ssid_t *const             p_ssid,
+    const update_reason_code_e       update_reason_code,
+    const wifi_ssid_t *const         p_ssid,
     const esp_netif_ip_info_t *const p_ip_info,
-    const esp_ip4_addr_t *const              p_dhcp_ip);
+    const esp_ip4_addr_t *const      p_dhcp_ip);
 
 void
 wifi_manager_set_extra_info_for_status_json(const char *const p_extra);

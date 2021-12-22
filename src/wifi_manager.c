@@ -125,10 +125,10 @@ wifi_manager_clear_sta_config(const wifi_ssid_t *const p_gw_wifi_ssid)
 
 void
 wifi_manager_update_network_connection_info(
-    const update_reason_code_e           update_reason_code,
-    const wifi_ssid_t *const             p_ssid,
+    const update_reason_code_e       update_reason_code,
+    const wifi_ssid_t *const         p_ssid,
     const esp_netif_ip_info_t *const p_ip_info,
-    const esp_ip4_addr_t *const              p_dhcp_ip)
+    const esp_ip4_addr_t *const      p_dhcp_ip)
 {
     network_info_str_t ip_info_str = {
         .ip      = { "0" },
@@ -276,10 +276,10 @@ wifi_manager_task(void)
 
     wifiman_msg_deinit();
 
-    esp_netif_t * const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     esp_netif_action_stop(p_netif_sta, NULL, 0, NULL);
 
-    esp_netif_t * const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    esp_netif_t *const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
     esp_netif_action_stop(p_netif_ap, NULL, 0, NULL);
 
     wifi_manager_unlock();

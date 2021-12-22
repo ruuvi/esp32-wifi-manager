@@ -283,15 +283,15 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
 
     esp_netif_ip_info_t ip_info = { 0 };
 
-    esp_netif_t * const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    const esp_err_t err = esp_netif_get_ip_info(p_netif_sta, &ip_info);
+    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    const esp_err_t    err         = esp_netif_get_ip_info(p_netif_sta, &ip_info);
     if (ESP_OK == err)
     {
         /* refresh JSON with the new IP */
         const wifi_ssid_t ssid = wifi_sta_config_get_ssid();
 
-        esp_ip4_addr_t dhcp_ip = {0};
-        const struct dhcp *const p_dhcp = netif_dhcp_data((struct netif*)esp_netif_get_netif_impl(p_netif_sta));
+        esp_ip4_addr_t           dhcp_ip = { 0 };
+        const struct dhcp *const p_dhcp  = netif_dhcp_data((struct netif *)esp_netif_get_netif_impl(p_netif_sta));
         if (NULL != p_dhcp)
         {
             dhcp_ip.addr = p_dhcp->server_ip_addr.u_addr.ip4.addr;
