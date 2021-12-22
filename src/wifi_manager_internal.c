@@ -496,6 +496,13 @@ wifi_manager_init(
     json_network_info_init();
     sta_ip_safe_init();
 
+    esp_err_t err = esp_event_loop_create_default();
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_event_loop_create_default");
+        return false;
+    }
+
     /* initialize the tcp stack */
     esp_netif_init();
     esp_netif_t* const p_netif_ap = esp_netif_create_default_wifi_ap();
@@ -515,13 +522,6 @@ wifi_manager_init(
 
     http_server_init();
     http_server_start();
-
-    esp_err_t err = esp_event_loop_create_default();
-    if (ESP_OK != err)
-    {
-        LOG_ERR("%s failed", "esp_event_loop_create_default");
-        return false;
-    }
 
     LOG_INFO("WiFi manager init: start WiFi");
     wifi_manager_init_start_wifi(p_wifi_ant_config, p_gw_wifi_ssid);
