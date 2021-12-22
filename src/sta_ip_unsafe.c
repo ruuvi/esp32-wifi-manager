@@ -8,6 +8,7 @@
 #include "sta_ip_unsafe.h"
 #include <stdint.h>
 #include "lwip/sockets.h"
+#include "esp_err.h"
 #include "esp_netif.h"
 
 static char g_sta_ip_str_buf[IP4ADDR_STRLEN_MAX + 1];
