@@ -54,7 +54,11 @@ http_server_strnstr(const char *const p_haystack, const char *const p_needle, co
 }
 
 bool
-http_server_set_auth(const char *const p_auth_type, const char *const p_auth_user, const char *const p_auth_pass)
+http_server_set_auth(
+    const char *const p_auth_type,
+    const char *const p_auth_user,
+    const char *const p_auth_pass,
+    const char *const p_auth_api_key)
 {
     http_server_auth_type_e auth_type = HTTP_SERVER_AUTH_TYPE_DENY;
     if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_DENY, p_auth_type))
@@ -91,9 +95,18 @@ http_server_set_auth(const char *const p_auth_type, const char *const p_auth_use
     {
         return false;
     }
+    if ((NULL != p_auth_api_key) && (strlen(p_auth_api_key) >= sizeof(g_auth_info.auth_api_key)))
+    {
+        return false;
+    }
     g_auth_info.auth_type = auth_type;
     snprintf(g_auth_info.auth_user, sizeof(g_auth_info.auth_user), "%s", (NULL != p_auth_user) ? p_auth_user : "");
     snprintf(g_auth_info.auth_pass, sizeof(g_auth_info.auth_pass), "%s", (NULL != p_auth_pass) ? p_auth_pass : "");
+    snprintf(
+        g_auth_info.auth_api_key,
+        sizeof(g_auth_info.auth_api_key),
+        "%s",
+        (NULL != p_auth_api_key) ? p_auth_api_key : "");
     return true;
 }
 

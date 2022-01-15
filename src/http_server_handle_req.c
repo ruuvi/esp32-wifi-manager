@@ -82,13 +82,15 @@ http_server_handle_req_get(
         return resp_auth;
     }
 
-    const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
+    http_server_auth_api_key_e access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    const http_server_resp_t   resp_auth_check   = http_server_handle_req_check_auth(
         flag_access_from_lan,
         http_header,
         p_remote_ip,
         p_auth_info,
         &ap_ssid,
-        p_extra_header_fields);
+        p_extra_header_fields,
+        &access_by_api_key);
 
     if ((NULL != p_file_ext) && ((0 == strcmp(p_file_ext, ".html")) || (0 == strcmp(p_file_ext, ".json"))))
     {
@@ -134,19 +136,31 @@ http_server_handle_req_get(
             return http_resp;
         }
     }
-    if ((NULL == p_file_ext) && (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code))
+    if (NULL == p_file_ext)
     {
-        if (HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+        switch (access_by_api_key)
         {
-            snprintf(
-                p_extra_header_fields->buf,
-                sizeof(p_extra_header_fields->buf),
-                "Set-Cookie: %s=/%s",
-                HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
-                p_file_name);
-            return http_server_resp_302();
+            case HTTP_SERVER_AUTH_API_KEY_NOT_USED:
+                if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
+                {
+                    if (HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+                    {
+                        snprintf(
+                            p_extra_header_fields->buf,
+                            sizeof(p_extra_header_fields->buf),
+                            "Set-Cookie: %s=/%s",
+                            HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
+                            p_file_name);
+                        return http_server_resp_302();
+                    }
+                    return resp_auth_check;
+                }
+                break;
+            case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
+                break;
+            case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
+                return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(&ap_ssid));
         }
-        return resp_auth_check;
     }
 
     if (0 == strcmp(p_file_name, "auth.html"))
@@ -174,7 +188,8 @@ http_server_handle_req_delete(
         p_remote_ip,
         p_auth_info,
         &ap_ssid,
-        p_extra_header_fields);
+        p_extra_header_fields,
+        NULL);
 
     if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
     {
@@ -292,7 +307,8 @@ http_server_handle_req_post(
         p_remote_ip,
         p_auth_info,
         &ap_ssid,
-        p_extra_header_fields);
+        p_extra_header_fields,
+        NULL);
 
     if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
     {
