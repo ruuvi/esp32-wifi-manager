@@ -46,10 +46,6 @@ http_server_handle_req_check_auth_bearer(
     const http_req_header_t              http_header,
     const http_server_auth_info_t *const p_auth_info)
 {
-    if ('\0' == p_auth_info->auth_api_key[0])
-    {
-        return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
-    }
     uint32_t          len_authorization = 0;
     const char *const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
@@ -65,6 +61,10 @@ http_server_handle_req_check_auth_bearer(
     const char *const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
+    if ('\0' == p_auth_info->auth_api_key[0])
+    {
+        return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
+    }
     if (auth_token_len != strlen(p_auth_info->auth_api_key))
     {
         return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
