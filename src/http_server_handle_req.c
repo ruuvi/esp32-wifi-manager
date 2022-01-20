@@ -105,7 +105,7 @@ http_server_handle_req_get_html_or_json(
     {
         return wifi_manager_cb_on_http_get(p_file_name, flag_access_from_lan, p_resp_auth_check);
     }
-    return http_server_resp_data_in_flash(HTTP_CONENT_TYPE_TEXT_PLAIN, NULL, 0, HTTP_CONENT_ENCODING_NONE, NULL);
+    return http_server_resp_404();
 }
 
 static http_server_resp_t
@@ -207,7 +207,7 @@ http_server_handle_req_get(
                 p_auth_info,
                 &resp_auth_check,
                 p_extra_header_fields);
-            if (HTTP_RESP_CODE_200 != resp_auth_check_for_html_or_json.http_resp_code)
+            if (HTTP_RESP_CODE_404 != resp_auth_check_for_html_or_json.http_resp_code)
             {
                 return resp_auth_check_for_html_or_json;
             }
