@@ -32,7 +32,7 @@ typedef union http_server_auth_t
 } http_server_auth_t;
 
 void
-http_server_auth_clear_info(void);
+http_server_auth_clear_authorized_sessions(void);
 
 http_server_auth_digest_req_t *
 http_server_auth_digest_get_info(void);

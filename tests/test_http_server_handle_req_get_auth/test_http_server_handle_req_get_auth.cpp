@@ -28,7 +28,7 @@ protected:
     SetUp() override
     {
         this->m_idx_random_value = 0;
-        http_server_auth_clear_info();
+        http_server_auth_clear_authorized_sessions();
     }
 
     void

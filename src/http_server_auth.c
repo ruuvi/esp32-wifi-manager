@@ -14,7 +14,7 @@ static http_server_auth_t      g_auth;
 static http_server_auth_info_t g_auth_info;
 
 void
-http_server_auth_clear_info(void)
+http_server_auth_clear_authorized_sessions(void)
 {
     memset(&g_auth, 0, sizeof(g_auth));
 }
@@ -99,9 +99,30 @@ http_server_set_auth(
     {
         return false;
     }
-    g_auth_info.auth_type = auth_type;
-    snprintf(g_auth_info.auth_user, sizeof(g_auth_info.auth_user), "%s", (NULL != p_auth_user) ? p_auth_user : "");
-    snprintf(g_auth_info.auth_pass, sizeof(g_auth_info.auth_pass), "%s", (NULL != p_auth_pass) ? p_auth_pass : "");
+    const char *const p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user : "";
+    const char *const p_auth_pass_safe               = (NULL != p_auth_pass) ? p_auth_pass : "";
+    bool              flag_clear_authorized_sessions = false;
+    if (auth_type != g_auth_info.auth_type)
+    {
+        g_auth_info.auth_type          = auth_type;
+        flag_clear_authorized_sessions = true;
+    }
+    if (0 != strcmp(g_auth_info.auth_user, p_auth_user_safe))
+    {
+        snprintf(g_auth_info.auth_user, sizeof(g_auth_info.auth_user), "%s", p_auth_user_safe);
+        flag_clear_authorized_sessions = true;
+    }
+    if (0 != strcmp(g_auth_info.auth_pass, p_auth_pass_safe))
+    {
+        snprintf(g_auth_info.auth_pass, sizeof(g_auth_info.auth_pass), "%s", p_auth_pass_safe);
+        flag_clear_authorized_sessions = true;
+    }
+
+    if (flag_clear_authorized_sessions)
+    {
+        http_server_auth_clear_authorized_sessions();
+    }
+
     snprintf(
         g_auth_info.auth_api_key,
         sizeof(g_auth_info.auth_api_key),
