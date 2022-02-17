@@ -149,6 +149,10 @@ wifi_manager_generate_ap_config(const struct wifi_settings_t *const p_wifi_setti
 
     snprintf((char *)&ap_config.ap.ssid[0], sizeof(ap_config.ap.ssid), "%s", p_wifi_settings->ap_ssid);
     snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", p_wifi_settings->ap_pwd);
+    if (0 == p_wifi_settings->ap_pwd[0])
+    {
+        ap_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
     return ap_config;
 }
 
