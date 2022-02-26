@@ -292,7 +292,7 @@ http_server_handle_req_delete(
 static const char *
 http_server_json_get_string_val_ptr(const cJSON *const p_json_root, const char *const p_attr_name)
 {
-    const cJSON *const p_json_attr = cJSON_GetObjectItem(p_json_root, p_attr_name);
+    cJSON *const p_json_attr = cJSON_GetObjectItem(p_json_root, p_attr_name);
     if (NULL == p_json_attr)
     {
         return NULL;
@@ -388,14 +388,14 @@ http_server_decrypt(const http_req_body_t http_body, str_buf_t *p_str_buf)
 static bool
 http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_ssid_password_t *const p_info)
 {
-    const cJSON *const p_json_attr_ssid = cJSON_GetObjectItem(p_json_root, "ssid");
+    cJSON *const p_json_attr_ssid = cJSON_GetObjectItem(p_json_root, "ssid");
     if (NULL == p_json_attr_ssid)
     {
         LOG_ERR("connect.json: Can't find attribute 'ssid'");
         return false;
     }
-    const char *       p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
-    const cJSON *const p_json_attr_password = cJSON_GetObjectItem(p_json_root, "password");
+    const char * p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
+    cJSON *const p_json_attr_password = cJSON_GetObjectItem(p_json_root, "password");
     if (NULL == p_json_attr_password)
     {
         LOG_ERR("connect.json: Can't find attribute 'password'");

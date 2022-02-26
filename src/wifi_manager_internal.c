@@ -142,8 +142,8 @@ wifi_manager_generate_ap_config(const struct wifi_settings_t *const p_wifi_setti
             .ssid_hidden     = p_wifi_settings->ap_ssid_hidden,
             .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
             .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
-            .pairwise_cipher = WIFI_CIPHER_TYPE_TKIP_CCMP,
-            .ftm_responder   = false,
+//            .pairwise_cipher = WIFI_CIPHER_TYPE_TKIP_CCMP,
+//            .ftm_responder   = false,
         },
     };
 
