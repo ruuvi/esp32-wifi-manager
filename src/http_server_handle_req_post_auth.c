@@ -31,7 +31,7 @@ http_server_json_get_string_val(
     {
         return false;
     }
-    buf[0]                         = '\0';
+    buf[0]                   = '\0';
     cJSON *const p_json_attr = cJSON_GetObjectItem(p_json_root, p_attr_name);
     if (NULL == p_json_attr)
     {

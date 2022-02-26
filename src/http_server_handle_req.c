@@ -394,7 +394,7 @@ http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_
         LOG_ERR("connect.json: Can't find attribute 'ssid'");
         return false;
     }
-    const char *       p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
+    const char * p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
     cJSON *const p_json_attr_password = cJSON_GetObjectItem(p_json_root, "password");
     if (NULL == p_json_attr_password)
     {
