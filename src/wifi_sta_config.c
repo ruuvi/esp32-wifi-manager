@@ -100,14 +100,6 @@ wifiman_sta_config_transaction(wifiman_sta_config_callback_t cb_func, void *cons
 }
 
 static void
-wifiman_sta_config_safe_transaction(wifiman_sta_config_callback_void_t cb_func, void *const p_param)
-{
-    wifiman_sta_config_t *p_cfg = wifiman_sta_config_lock();
-    cb_func(p_cfg, p_param);
-    wifiman_sta_config_unlock(&p_cfg);
-}
-
-static void
 wifiman_sta_const_config_safe_transaction(wifiman_sta_const_config_callback_void_t cb_func, void *const p_param)
 {
     const wifiman_sta_config_t *p_cfg = wifiman_sta_config_lock();
