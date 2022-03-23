@@ -21,7 +21,7 @@ static const char TAG[] = "wifi_manager";
 
 static const char wifi_manager_nvs_namespace[] = "espwifimgr";
 
-static const wifi_settings_t g_wifi_settings_default = {
+static wifi_settings_t g_wifi_settings_default = {
     .ap_ssid              = DEFAULT_AP_SSID,
     .ap_pwd               = DEFAULT_AP_PASSWORD,
     .ap_channel           = DEFAULT_AP_CHANNEL,
@@ -34,6 +34,25 @@ static const wifi_settings_t g_wifi_settings_default = {
         .ip               = { 0 },
         .netmask          = { 0 },
         .gw               = { 0 },
+    },
+};
+
+static wifi_sta_config_t g_wifi_sta_default_cfg = {
+    .ssid = {0},
+    .password = {0},
+    .scan_method = WIFI_FAST_SCAN,
+    .bssid_set = false,
+    .bssid = {0},
+    .channel = 0,
+    .listen_interval = 0,
+    .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
+    .threshold = {
+        .rssi = 0,
+        .authmode = WIFI_AUTH_OPEN
+    },
+    .pmf_cfg = {
+        .capable = false,
+        .required = false,
     },
 };
 
@@ -53,7 +72,6 @@ typedef void (*wifiman_sta_config_callback_without_param_t)(wifiman_sta_config_t
 static wifiman_sta_config_t g_wifi_sta_config;
 static os_mutex_static_t    g_wifi_sta_config_mutex_mem;
 static os_mutex_t           g_wifi_sta_config_mutex;
-static wifi_ssid_t          g_wifi_ap_ssid;
 
 _Static_assert(
     MAX_SSID_SIZE == sizeof(g_wifi_sta_config.wifi_config_sta.sta.ssid),
@@ -128,35 +146,39 @@ wifiman_sta_config_safe_transaction_without_param(wifiman_sta_config_callback_wi
 static void
 wifiman_sta_config_do_clear(wifiman_sta_config_t *const p_cfg)
 {
-    memset(&p_cfg->wifi_config_sta, 0x00, sizeof(p_cfg->wifi_config_sta));
-    p_cfg->wifi_config_sta.sta.ssid[0]     = '\0';
-    p_cfg->wifi_config_sta.sta.password[0] = '\0';
-
-    p_cfg->wifi_settings = g_wifi_settings_default;
-    snprintf((char *)p_cfg->wifi_settings.ap_ssid, sizeof(p_cfg->wifi_settings.ap_ssid), "%s", g_wifi_ap_ssid.ssid_buf);
-    memset(&p_cfg->wifi_settings.sta_static_ip_config, 0x00, sizeof(esp_netif_ip_info_t));
+    p_cfg->wifi_settings       = g_wifi_settings_default;
+    p_cfg->wifi_config_sta.sta = g_wifi_sta_default_cfg;
 }
 
 static void
-wifiman_sta_config_do_init(wifiman_sta_config_t *const p_cfg, const void *const p_param)
+wifiman_sta_config_do_init(wifiman_sta_config_t *const p_cfg)
 {
-    const wifi_ssid_t *const p_gw_wifi_ssid = p_param;
-    if (NULL != p_gw_wifi_ssid)
-    {
-        g_wifi_ap_ssid = *p_gw_wifi_ssid;
-    }
-    else
-    {
-        g_wifi_ap_ssid.ssid_buf[0] = '\0';
-    }
-
+    LOG_INFO(
+        "wifiman_sta_config_do_init: default AP SSID='%s', default STA SSID='%s'",
+        g_wifi_settings_default.ap_ssid,
+        g_wifi_sta_default_cfg.ssid);
     wifiman_sta_config_do_clear(p_cfg);
 }
 
 void
-wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid)
+wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid, const wifi_sta_config_t *const p_wifi_sta_default_cfg)
 {
-    wifiman_sta_config_safe_transaction_with_const_param(&wifiman_sta_config_do_init, p_gw_wifi_ssid);
+    LOG_INFO(
+        "wifi_sta_config: Init: Set AP SSID: '%s'",
+        (NULL != p_gw_wifi_ssid) ? p_gw_wifi_ssid->ssid_buf : ":NULL:");
+    if (NULL != p_gw_wifi_ssid)
+    {
+        snprintf(
+            (char *)g_wifi_settings_default.ap_ssid,
+            sizeof(g_wifi_settings_default.ap_ssid),
+            "%s",
+            p_gw_wifi_ssid->ssid_buf);
+    }
+    if (NULL != p_wifi_sta_default_cfg)
+    {
+        g_wifi_sta_default_cfg = *p_wifi_sta_default_cfg;
+    }
+    wifiman_sta_config_safe_transaction_without_param(&wifiman_sta_config_do_init);
 }
 
 bool
@@ -182,7 +204,7 @@ wifi_sta_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle,
         else if (ESP_ERR_NVS_NOT_FOUND == err)
         {
             LOG_WARN("NVS namespace '%s' doesn't exist and mode is NVS_READONLY, try to create it", nvs_name);
-            wifiman_sta_config_do_init(p_cfg, NULL);
+            wifiman_sta_config_do_init(p_cfg);
             wifiman_sta_config_do_clear(p_cfg);
             wifiman_sta_config_t cfg = { 0 };
             if (!wifi_sta_config_do_save(p_cfg, &cfg))
@@ -307,7 +329,7 @@ static void
 wifi_sta_config_log(const wifiman_sta_config_t *const p_cfg, const char *const p_prefix)
 {
     LOG_INFO(
-        "%s: ssid:%s password:%s",
+        "%s: SSID:'%s', password:'%s'",
         p_prefix,
         p_cfg->wifi_config_sta.sta.ssid,
         wifi_sta_config_get_sta_password_for_logging(p_cfg));
@@ -371,25 +393,55 @@ wifi_sta_config_do_fetch(wifiman_sta_config_t *const p_cfg, void *const p_param)
     wifiman_sta_config_t *const p_cfg_copy = p_param;
 
     nvs_handle handle = 0;
-    if (!wifi_sta_nvs_open(NVS_READONLY, &handle, p_cfg))
+    if (!wifi_sta_nvs_open((NULL == p_cfg_copy) ? NVS_READONLY : NVS_READWRITE, &handle, p_cfg))
     {
         LOG_ERR("%s failed", "wifi_sta_nvs_open");
         return false;
     }
     memset(&p_cfg->wifi_config_sta, 0x00, sizeof(p_cfg->wifi_config_sta));
+    memset(&p_cfg->wifi_settings, 0x00, sizeof(p_cfg->wifi_settings));
     const bool res = wifi_sta_config_read_by_handle(
         handle,
         (char *)p_cfg->wifi_config_sta.sta.ssid,
         (char *)p_cfg->wifi_config_sta.sta.password,
         &p_cfg->wifi_settings);
 
-    nvs_close(handle);
-
     if (!res)
     {
         LOG_ERR("%s failed", "wifi_sta_config_read_by_handle");
+        nvs_close(handle);
         return false;
     }
+
+#if 0
+    if ('\0' == p_cfg->wifi_settings.ap_ssid[0])
+    {
+        p_cfg->wifi_config_sta.sta = g_wifi_sta_default_cfg;
+        p_cfg->wifi_settings = g_wifi_settings_default;
+        if (NULL != p_cfg_copy)
+        {
+            LOG_INFO(
+                "WiFi config in flash was cleared, use default configuration: WiFi AP: '%s', WiFi Sta SSID: '%s'",
+                p_cfg->wifi_settings.ap_ssid,
+                p_cfg->wifi_config_sta.sta.ssid);
+            const bool res_wr = wifi_sta_config_set_by_handle(
+                handle,
+                (const char *)p_cfg->wifi_config_sta.sta.ssid,
+                (const char *)p_cfg->wifi_config_sta.sta.password,
+                &p_cfg->wifi_settings);
+            (void)wifi_sta_nvs_commit(handle);
+            if (!res_wr)
+            {
+                LOG_ERR("%s failed", "wifi_sta_config_set_by_handle");
+                nvs_close(handle);
+                return false;
+            }
+        }
+    }
+#endif
+
+    nvs_close(handle);
+
     if (NULL != p_cfg_copy)
     {
         *p_cfg_copy = *p_cfg;
@@ -535,7 +587,7 @@ wifi_sta_config_do_get_ap_ssid(const wifiman_sta_config_t *const p_cfg, void *co
     (void)p_cfg;
     wifi_ssid_t *const p_ap_ssid = p_param;
 
-    snprintf(&p_ap_ssid->ssid_buf[0], sizeof(p_ap_ssid->ssid_buf), "%s", (const char *)&g_wifi_ap_ssid.ssid_buf[0]);
+    snprintf(&p_ap_ssid->ssid_buf[0], sizeof(p_ap_ssid->ssid_buf), "%s", (const char *)p_cfg->wifi_settings.ap_ssid);
 }
 
 wifi_ssid_t

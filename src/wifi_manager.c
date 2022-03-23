@@ -77,11 +77,13 @@ wifi_manager_disconnect_wifi(void)
 {
     wifiman_msg_send_cmd_disconnect_sta();
 }
+
 bool
 wifi_manager_start(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
     const wifi_ssid_t *const                   p_gw_wifi_ssid,
+    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks,
     int (*f_rng)(void *, unsigned char *, size_t),
@@ -105,7 +107,13 @@ wifi_manager_start(
         return false;
     }
 
-    if (!wifi_manager_init(flag_start_wifi, flag_start_ap_only, p_gw_wifi_ssid, p_wifi_ant_config, p_callbacks))
+    if (!wifi_manager_init(
+            flag_start_wifi,
+            flag_start_ap_only,
+            p_gw_wifi_ssid,
+            p_wifi_sta_default_cfg,
+            p_wifi_ant_config,
+            p_callbacks))
     {
         xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_IS_WORKING);
         wifi_manager_unlock();
@@ -123,9 +131,11 @@ wifi_manager_check_sta_config(void)
 }
 
 bool
-wifi_manager_clear_sta_config(const wifi_ssid_t *const p_gw_wifi_ssid)
+wifi_manager_clear_sta_config(
+    const wifi_ssid_t *const       p_gw_wifi_ssid,
+    const wifi_sta_config_t *const p_wifi_sta_default_cfg)
 {
-    wifi_sta_config_init(p_gw_wifi_ssid);
+    wifi_sta_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
     return wifi_sta_config_clear();
 }
 

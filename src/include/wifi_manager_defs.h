@@ -35,7 +35,10 @@ Contains the freeRTOS task and all necessary support
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "esp_wifi_types.h"
 #include "esp_type_wrapper.h"
+#include "esp_netif_ip_addr.h"
+#include "esp_netif_types.h"
 #include "http_server.h"
 
 #ifdef __cplusplus
@@ -350,6 +353,22 @@ typedef struct wifi_manager_callbacks_t
     wifi_manager_callback_on_ap_sta_connected_t    cb_on_ap_sta_connected;
     wifi_manager_callback_on_ap_sta_disconnected_t cb_on_ap_sta_disconnected;
 } wifi_manager_callbacks_t;
+
+/**
+ * The actual WiFi settings in use
+ */
+typedef struct wifi_settings_t
+{
+    uint8_t             ap_ssid[MAX_SSID_SIZE];
+    uint8_t             ap_pwd[MAX_PASSWORD_SIZE];
+    uint8_t             ap_channel;
+    uint8_t             ap_ssid_hidden;
+    wifi_bandwidth_t    ap_bandwidth;
+    bool                sta_only;
+    wifi_ps_type_t      sta_power_save;
+    bool                sta_static_ip;
+    esp_netif_ip_info_t sta_static_ip_config;
+} wifi_settings_t;
 
 #ifdef __cplusplus
 }
