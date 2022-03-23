@@ -479,6 +479,7 @@ wifi_manager_init(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
     const wifi_ssid_t *const                   p_gw_wifi_ssid,
+    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks)
 {
@@ -498,7 +499,7 @@ wifi_manager_init(
 
     wifi_manager_set_callbacks(p_callbacks);
 
-    wifi_sta_config_init(p_gw_wifi_ssid);
+    wifi_sta_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
     json_network_info_init();
     sta_ip_safe_init();
 
@@ -533,7 +534,7 @@ wifi_manager_init(
     if (flag_start_wifi)
     {
         const bool is_ssid_configured = wifi_sta_config_fetch();
-        if (is_ssid_configured && (!flag_start_ap_only))
+        if (is_ssid_configured && ((!flag_start_ap_only) || ('\0' != p_wifi_sta_default_cfg->ssid[0])))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
             wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);

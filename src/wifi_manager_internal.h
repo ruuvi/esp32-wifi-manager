@@ -140,6 +140,7 @@ wifi_manager_init(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
     const wifi_ssid_t *const                   p_gw_wifi_ssid,
+    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks);
 

@@ -18,27 +18,11 @@ extern "C" {
 #endif
 
 /**
- * The actual WiFi settings in use
- */
-typedef struct wifi_settings_t
-{
-    uint8_t             ap_ssid[MAX_SSID_SIZE];
-    uint8_t             ap_pwd[MAX_PASSWORD_SIZE];
-    uint8_t             ap_channel;
-    uint8_t             ap_ssid_hidden;
-    wifi_bandwidth_t    ap_bandwidth;
-    bool                sta_only;
-    wifi_ps_type_t      sta_power_save;
-    bool                sta_static_ip;
-    esp_netif_ip_info_t sta_static_ip_config;
-} wifi_settings_t;
-
-/**
  * @brief Clears the current STA wifi config in RAM storage.
  * @param p_gw_wifi_ssid - ptr to wifi_ssid_t with AP SSID.
  */
 void
-wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid);
+wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid, const wifi_sta_config_t *const p_wifi_sta_default_cfg);
 
 /**
  * @brief Clears the current STA wifi config in NVS and RAM storage.
