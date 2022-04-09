@@ -460,7 +460,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
     {
         return http_server_resp_400();
     }
-    LOG_INFO("http_server_netconn_serve: decrypted: %s", decrypted_content.buf);
+    LOG_DBG("http_server_netconn_serve: decrypted: %s", decrypted_content.buf);
     wifi_ssid_password_t login_info = { 0 };
     if (!http_server_parse_json_wifi_ssid_password(decrypted_content.buf, &login_info))
     {
