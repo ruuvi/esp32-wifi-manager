@@ -9,6 +9,8 @@ add_executable(${ProjectId}
         ../../src/include/http_server_resp.h
         ../../src/http_server_auth.c
         ../../src/http_server_auth.h
+        ../../src/http_server_auth_type.c
+        ../../src/include/http_server_auth_type.h
         ../../src/wifiman_sha256.c
         ../../src/wifiman_sha256.h
         $ENV{IDF_PATH}/components/mbedtls/mbedtls/library/sha256.c

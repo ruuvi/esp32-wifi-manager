@@ -110,9 +110,9 @@ http_server_resp_403_auth_deny(const wifi_ssid_t *const p_ap_ssid);
 
 const http_server_resp_auth_json_t *
 http_server_fill_auth_json(
-    const bool               is_successful,
-    const wifi_ssid_t *const p_ap_ssid,
-    const char *const        p_lan_auth_type);
+    const bool                    is_successful,
+    const wifi_ssid_t *const      p_ap_ssid,
+    const http_server_auth_type_e lan_auth_type);
 
 const http_server_resp_auth_json_t *
 http_server_fill_auth_json_bearer_failed(const wifi_ssid_t *const p_ap_ssid);

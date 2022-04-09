@@ -20,7 +20,7 @@ http_server_handle_req_get_auth_allow(const wifi_ssid_t *const p_ap_ssid)
     const http_server_resp_auth_json_t *const p_auth_json   = http_server_fill_auth_json(
         is_successful,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_ALLOW);
+        HTTP_SERVER_AUTH_TYPE_ALLOW);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -32,7 +32,7 @@ http_server_resp_401_auth_basic(
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_BASIC);
+        HTTP_SERVER_AUTH_TYPE_BASIC);
     snprintf(
         p_extra_header_fields->buf,
         sizeof(p_extra_header_fields->buf),
@@ -61,15 +61,15 @@ http_server_handle_req_check_auth_bearer(
     const char *const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
-    if ('\0' == p_auth_info->auth_api_key[0])
+    if ('\0' == p_auth_info->auth_api_key.buf[0])
     {
         return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
     }
-    if (auth_token_len != strlen(p_auth_info->auth_api_key))
+    if (auth_token_len != strlen(p_auth_info->auth_api_key.buf))
     {
         return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
     }
-    if (0 != strncmp(p_auth_token, p_auth_info->auth_api_key, auth_token_len))
+    if (0 != strncmp(p_auth_token, p_auth_info->auth_api_key.buf, auth_token_len))
     {
         return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
     }
@@ -98,11 +98,11 @@ http_server_handle_req_get_auth_basic(
     const char *const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
-    if (auth_token_len != strlen(p_auth_info->auth_pass))
+    if (auth_token_len != strlen(p_auth_info->auth_pass.buf))
     {
         return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
     }
-    if (0 != strncmp(p_auth_token, p_auth_info->auth_pass, auth_token_len))
+    if (0 != strncmp(p_auth_token, p_auth_info->auth_pass.buf, auth_token_len))
     {
         return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
     }
@@ -110,7 +110,7 @@ http_server_handle_req_get_auth_basic(
     const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_BASIC);
+        HTTP_SERVER_AUTH_TYPE_BASIC);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -132,7 +132,7 @@ http_server_handle_req_get_auth_digest(
     {
         return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
     }
-    if (0 != strcmp(p_auth_req->username, p_auth_info->auth_user))
+    if (0 != strcmp(p_auth_req->username, p_auth_info->auth_user.buf))
     {
         return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
     }
@@ -144,7 +144,7 @@ http_server_handle_req_get_auth_digest(
 
     str_buf_t str_buf_response = str_buf_printf_with_alloc(
         "%s:%s:%s:%s:%s:%s",
-        p_auth_info->auth_pass,
+        p_auth_info->auth_pass.buf,
         p_auth_req->nonce,
         p_auth_req->nc,
         p_auth_req->cnonce,
@@ -167,7 +167,7 @@ http_server_handle_req_get_auth_digest(
     const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_DIGEST);
+        HTTP_SERVER_AUTH_TYPE_DIGEST);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -186,10 +186,7 @@ http_server_handle_req_get_auth_ruuvi(
         {
             return http_server_resp_401_auth_ruuvi(p_ap_ssid);
         }
-        else
-        {
-            return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
-        }
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
     }
     const http_server_auth_ruuvi_authorized_session_t *const p_authorized_session
         = http_server_auth_ruuvi_find_authorized_session(&session_id, p_remote_ip);
@@ -200,16 +197,13 @@ http_server_handle_req_get_auth_ruuvi(
         {
             return http_server_resp_401_auth_ruuvi(p_ap_ssid);
         }
-        else
-        {
-            return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
-        }
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
     }
 
     const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_RUUVI);
+        HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 

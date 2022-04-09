@@ -166,7 +166,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", encoded_pass.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
     const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass + string("\r\n");
@@ -208,7 +208,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", encoded_pass.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
     const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
@@ -251,7 +251,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", encoded_pass.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
     const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: unknown ") + encoded_pass;
@@ -295,7 +295,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", encoded_pass.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
     const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass.substr(0, 2);
@@ -339,7 +339,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", encoded_pass.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
     const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic qqqqwwwweeee");
@@ -385,7 +385,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string auth_header
         = string(
@@ -431,7 +431,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string               auth_header         = string(R"()");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -478,7 +478,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string               auth_header         = string(R"(Authorization: unknown)");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -525,7 +525,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string auth_header = string(
         R"(Authorization: Digest username="user1", realm="RuuviGatewayEEFF", nonce="9689933745abb987e2cfae61d46f50c9efe2fbe9cfa6ad9c3ceb3c54fa2a2833", uri="/auth", response="32a8cf9eae6af8a897ed57a2c51f055d", opaque="d3f1a85625217a33bdda63c646418c2be492100d9d1dec34d6e738c3a1766bc4", qop=auth, nc=00000001, cnonce="3e48baed2616a1e9")");
@@ -573,7 +573,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
         "user2",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string auth_header = string(
         R"(Authorization: Digest username="user1", realm="RuuviGatewayEEFF", nonce="9689933745abb987e2cfae61d46f50c9efe2fbe9cfa6ad9c3ceb3c54fa2a2833", uri="/auth", response="32a8cf9eae6af8a897ed57a2c51f055d", opaque="d3f1a85625217a33bdda63c646418c2be492100d9d1dec34d6e738c3a1766bc4", qop=auth, nc=00000001, cnonce="3e48baed2616a1e9")");
@@ -621,7 +621,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -801,7 +801,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -905,7 +905,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1009,7 +1009,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1113,7 +1113,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1217,7 +1217,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1321,7 +1321,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1425,7 +1425,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1529,7 +1529,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1632,7 +1632,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1736,7 +1736,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1839,7 +1839,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
         "user1",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     // ------ GET /auth -------------------------------------------------------------
     {
@@ -1933,8 +1933,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
-    snprintf(auth_info.auth_api_key, sizeof(auth_info.auth_api_key), "%s", bearer_auth_api_key.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
 
     const string               auth_header = string("Authorization: Bearer ") + bearer_auth_api_key + string("\r\n");
     const http_req_header_t    http_header = { auth_header.c_str() };
@@ -1989,8 +1989,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
-    snprintf(auth_info.auth_api_key, sizeof(auth_info.auth_api_key), "%s", bearer_auth_api_key.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
 
     string wrong_api_key = bearer_auth_api_key;
     for (auto &c : wrong_api_key)
@@ -2048,8 +2048,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
-    snprintf(auth_info.auth_api_key, sizeof(auth_info.auth_api_key), "%s", bearer_auth_api_key.c_str());
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
 
     const string            auth_header = string("Authorization: Bearer ") + string("wrong_key_len") + string("\r\n");
     const http_req_header_t http_header = { auth_header.c_str() };
@@ -2104,7 +2104,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string               auth_header = string("Authorization: Bearer ") + bearer_auth_api_key + string("\r\n");
     const http_req_header_t    http_header = { auth_header.c_str() };
@@ -2158,7 +2158,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string               auth_header         = string("Authorization: Bearer ") + string("\r\n");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -2212,7 +2212,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const http_req_header_t    http_header         = { "" };
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
@@ -2265,7 +2265,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
         "",
         "",
     };
-    snprintf(auth_info.auth_pass, sizeof(auth_info.auth_pass), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
 
     const string               auth_header         = string("Authorization: BeareQ qwe") + string("\r\n");
     const http_req_header_t    http_header         = { auth_header.c_str() };

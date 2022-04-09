@@ -12,6 +12,8 @@ add_executable(${ProjectId}
         ../../src/http_server_auth_digest.h
         ../../src/http_server_auth_ruuvi.c
         ../../src/http_server_auth_ruuvi.h
+        ../../src/http_server_auth_type.c
+        ../../src/include/http_server_auth_type.h
         ../../src/http_server_handle_req_delete_auth.c
         ../../src/http_server_handle_req_delete_auth.h
         ../../src/http_server_handle_req_get_auth.c

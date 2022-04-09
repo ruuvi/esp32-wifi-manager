@@ -25,6 +25,7 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/http_server_accept_and_handle_conn.h
             src/http_server_auth.c
             src/http_server_auth.h
+            src/http_server_auth_type.c
             src/http_server_auth_common.h
             src/http_server_auth_digest.c
             src/http_server_auth_digest.h
