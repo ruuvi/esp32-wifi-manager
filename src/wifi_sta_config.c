@@ -27,7 +27,6 @@ static wifi_settings_t g_wifi_settings_default = {
     .ap_channel           = DEFAULT_AP_CHANNEL,
     .ap_ssid_hidden       = DEFAULT_AP_SSID_HIDDEN,
     .ap_bandwidth         = DEFAULT_AP_BANDWIDTH,
-    .sta_only             = DEFAULT_STA_ONLY,
     .sta_power_save       = DEFAULT_STA_POWER_SAVE,
     .sta_static_ip        = 0,
     .sta_static_ip_config = {
@@ -338,7 +337,6 @@ wifi_sta_config_log(const wifiman_sta_config_t *const p_cfg, const char *const p
     LOG_INFO("%s: SoftAP_channel: %i", p_prefix, p_cfg->wifi_settings.ap_channel);
     LOG_INFO("%s: SoftAP_hidden (1 = yes): %i", p_prefix, p_cfg->wifi_settings.ap_ssid_hidden);
     LOG_INFO("%s: SoftAP_bandwidth (1 = 20MHz, 2 = 40MHz): %i", p_prefix, p_cfg->wifi_settings.ap_bandwidth);
-    LOG_INFO("%s: sta_only (0 = APSTA, 1 = STA when connected): %i", p_prefix, p_cfg->wifi_settings.sta_only);
     LOG_INFO("%s: sta_power_save (1 = yes): %i", p_prefix, p_cfg->wifi_settings.sta_power_save);
     LOG_INFO("%s: sta_static_ip (0 = dhcp client, 1 = static ip): %i", p_prefix, p_cfg->wifi_settings.sta_static_ip);
     wifi_ip4_addr_str_t ip_str;
