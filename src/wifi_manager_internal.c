@@ -121,43 +121,41 @@ wifi_manager_cb_on_http_delete(
     return g_wifi_callbacks.cb_on_http_delete(p_path, flag_access_from_lan, p_resp_auth);
 }
 
-static wifi_config_t
-wifi_manager_generate_ap_config(const struct wifi_settings_t *const p_wifi_settings)
+static wifi_ap_config_t
+wifi_manager_generate_ap_config(const struct wifi_settings_ap_t *const p_wifi_settings)
 {
-    wifi_config_t ap_config = {
-        .ap = {
-            .ssid            = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            },
-            .password        = {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            },
-            .ssid_len        = 0,
-            .channel         = p_wifi_settings->ap_channel,
-            .authmode        = WIFI_AUTH_WPA2_PSK,
-            .ssid_hidden     = p_wifi_settings->ap_ssid_hidden,
-            .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
-            .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
+    wifi_ap_config_t ap_config = {
+        .ssid            = {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        },
+        .password        = {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        },
+        .ssid_len        = 0,
+        .channel         = p_wifi_settings->ap_channel,
+        .authmode        = WIFI_AUTH_WPA2_PSK,
+        .ssid_hidden     = p_wifi_settings->ap_ssid_hidden,
+        .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
+        .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
 //            .pairwise_cipher = WIFI_CIPHER_TYPE_TKIP_CCMP,
 //            .ftm_responder   = false,
-        },
     };
 
-    snprintf((char *)&ap_config.ap.ssid[0], sizeof(ap_config.ap.ssid), "%s", p_wifi_settings->ap_ssid);
-    snprintf((char *)&ap_config.ap.password[0], sizeof(ap_config.ap.password), "%s", p_wifi_settings->ap_pwd);
+    snprintf((char *)&ap_config.ssid[0], sizeof(ap_config.ssid), "%s", p_wifi_settings->ap_ssid);
+    snprintf((char *)&ap_config.password[0], sizeof(ap_config.password), "%s", p_wifi_settings->ap_pwd);
     if (0 == p_wifi_settings->ap_pwd[0])
     {
-        ap_config.ap.authmode = WIFI_AUTH_OPEN;
+        ap_config.authmode = WIFI_AUTH_OPEN;
     }
     return ap_config;
 }
 
 static void
-wifi_manager_esp_wifi_configure(const struct wifi_settings_t *const p_wifi_settings)
+wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi_settings)
 {
     esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
     if (ESP_OK != err)
@@ -166,8 +164,10 @@ wifi_manager_esp_wifi_configure(const struct wifi_settings_t *const p_wifi_setti
         return;
     }
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
-    wifi_config_t ap_config = wifi_manager_generate_ap_config(p_wifi_settings);
-    err                     = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+    wifi_config_t ap_config =  {
+        .ap = wifi_manager_generate_ap_config(p_wifi_settings),
+    };
+    err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_config");
@@ -177,12 +177,6 @@ wifi_manager_esp_wifi_configure(const struct wifi_settings_t *const p_wifi_setti
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_bandwidth");
-        return;
-    }
-    err = esp_wifi_set_ps(p_wifi_settings->sta_power_save);
-    if (ESP_OK != err)
-    {
-        LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_ps");
         return;
     }
 }
@@ -217,19 +211,19 @@ wifi_manager_netif_set_default_ip(void)
 }
 
 static void
-wifi_manager_netif_configure(const struct wifi_settings_t *const p_wifi_settings)
+wifi_manager_netif_configure_sta(const struct wifi_settings_sta_t *const p_wifi_settings_sta)
 {
     esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    if (p_wifi_settings->sta_static_ip)
+    if (p_wifi_settings_sta->sta_static_ip)
     {
         wifi_ip4_addr_str_t buf_ip;
         wifi_ip4_addr_str_t buf_gw;
         wifi_ip4_addr_str_t buf_netmask;
         LOG_INFO(
             "Assigning static ip to STA interface. IP: %s , GW: %s , Mask: %s",
-            esp_ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.ip, buf_ip.buf, sizeof(buf_ip.buf)),
-            esp_ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.gw, buf_gw.buf, sizeof(buf_gw.buf)),
-            esp_ip4addr_ntoa(&p_wifi_settings->sta_static_ip_config.netmask, buf_netmask.buf, sizeof(buf_netmask.buf)));
+            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.ip, buf_ip.buf, sizeof(buf_ip.buf)),
+            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.gw, buf_gw.buf, sizeof(buf_gw.buf)),
+            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.netmask, buf_netmask.buf, sizeof(buf_netmask.buf)));
 
         /* stop DHCP client*/
         esp_err_t err = esp_netif_dhcpc_stop(p_netif_sta);
@@ -239,7 +233,7 @@ wifi_manager_netif_configure(const struct wifi_settings_t *const p_wifi_settings
             return;
         }
         /* assign a static IP to the STA network interface */
-        err = esp_netif_set_ip_info(p_netif_sta, &p_wifi_settings->sta_static_ip_config);
+        err = esp_netif_set_ip_info(p_netif_sta, &p_wifi_settings_sta->sta_static_ip_config);
         if (ESP_OK != err)
         {
             LOG_ERR_ESP(err, "%s failed", "esp_netif_set_ip_info");
@@ -267,6 +261,12 @@ wifi_manager_netif_configure(const struct wifi_settings_t *const p_wifi_settings
                 return;
             }
         }
+    }
+    esp_err_t err = esp_wifi_set_ps(p_wifi_settings_sta->sta_power_save);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_ps");
+        return;
     }
 }
 
@@ -431,11 +431,11 @@ wifi_manager_init_start_wifi(
     wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wi-Fi Access Point configuration setup */
     wifi_manager_netif_set_default_ip();
-    const wifi_settings_t wifi_settings = wifi_sta_config_get_wifi_settings();
-    wifi_manager_esp_wifi_configure(&wifi_settings);
+    const wifi_settings_t wifi_settings = wifi_config_get_wifi_settings();
+    wifi_manager_esp_wifi_configure_ap(&wifi_settings.ap);
 
     /* STA - Wifi Station configuration setup */
-    wifi_manager_netif_configure(&wifi_settings);
+    wifi_manager_netif_configure_sta(&wifi_settings.sta);
 
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
     err = esp_wifi_set_mode(WIFI_MODE_STA);
@@ -533,7 +533,7 @@ wifi_manager_init(
 
     if (flag_start_wifi)
     {
-        const bool is_ssid_configured = wifi_sta_config_fetch();
+        const bool is_ssid_configured = wifi_config_fetch();
         if (is_ssid_configured && ((!flag_start_ap_only) || ('\0' != p_wifi_sta_default_cfg->ssid[0])))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");

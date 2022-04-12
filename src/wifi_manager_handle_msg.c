@@ -123,7 +123,9 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
     else
     {
         /* update config to latest and attempt connection */
-        wifi_config_t wifi_config = wifi_sta_config_get_copy();
+        wifi_config_t wifi_config = {
+            .sta = wifi_sta_config_get_copy(),
+        };
         esp_err_t     err         = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
         if (ESP_OK != err)
         {
@@ -235,7 +237,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
         update_reason_code = UPDATE_LOST_CONNECTION;
         wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
     }
-    const wifi_ssid_t ssid = wifi_sta_config_get_ssid();
+    const wifi_ssid_t ssid = wifi_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
     if (!is_connected_to_wifi)
     {
@@ -278,7 +280,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
     /* save wifi config in NVS if it wasn't a restored of a connection */
     if (0 == (event_bits & WIFI_MANAGER_REQUEST_RESTORE_STA_BIT))
     {
-        wifi_sta_config_save();
+        wifi_config_save();
     }
 
     esp_netif_ip_info_t ip_info = { 0 };
@@ -288,7 +290,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
     if (ESP_OK == err)
     {
         /* refresh JSON with the new IP */
-        const wifi_ssid_t ssid = wifi_sta_config_get_ssid();
+        const wifi_ssid_t ssid = wifi_config_sta_get_ssid();
 
         esp_ip4_addr_t           dhcp_ip = { 0 };
         const struct dhcp *const p_dhcp  = netif_dhcp_data((struct netif *)esp_netif_get_netif_impl(p_netif_sta));

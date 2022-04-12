@@ -127,7 +127,7 @@ wifi_manager_start(
 bool
 wifi_manager_check_sta_config(void)
 {
-    return wifi_sta_config_check();
+    return wifi_config_check();
 }
 
 bool
@@ -341,7 +341,7 @@ wifi_manager_is_ap_sta_ip_assigned(void)
 bool
 wifi_manager_is_sta_configured(void)
 {
-    return wifi_sta_config_is_ssid_configured();
+    return wifi_config_sta_is_ssid_configured();
 }
 
 void
