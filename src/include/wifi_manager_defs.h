@@ -359,11 +359,11 @@ typedef struct wifi_manager_callbacks_t
  */
 typedef struct wifi_settings_ap_t
 {
-    uint8_t             ap_ssid[MAX_SSID_SIZE];
-    uint8_t             ap_pwd[MAX_PASSWORD_SIZE];
-    uint8_t             ap_channel;
-    uint8_t             ap_ssid_hidden;
-    wifi_bandwidth_t    ap_bandwidth;
+    uint8_t          ap_ssid[MAX_SSID_SIZE];
+    uint8_t          ap_pwd[MAX_PASSWORD_SIZE];
+    uint8_t          ap_channel;
+    uint8_t          ap_ssid_hidden;
+    wifi_bandwidth_t ap_bandwidth;
 } wifi_settings_ap_t;
 
 typedef struct wifi_settings_sta_t
@@ -375,7 +375,7 @@ typedef struct wifi_settings_sta_t
 
 typedef struct wifi_settings_t
 {
-    wifi_settings_ap_t ap;
+    wifi_settings_ap_t  ap;
     wifi_settings_sta_t sta;
 } wifi_settings_t;
 

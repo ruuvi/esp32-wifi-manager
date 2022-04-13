@@ -126,7 +126,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
         wifi_config_t wifi_config = {
             .sta = wifiman_config_get_copy_sta(),
         };
-        esp_err_t     err         = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+        esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
         if (ESP_OK != err)
         {
             LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_config");

@@ -61,8 +61,8 @@ static wifi_sta_config_t g_wifi_sta_default_cfg = {
 
 typedef struct wifiman_config_t
 {
-    wifi_settings_t  wifi_settings;
-    wifi_sta_config_t   wifi_config_sta;
+    wifi_settings_t   wifi_settings;
+    wifi_sta_config_t wifi_config_sta;
 } wifiman_config_t;
 
 typedef bool (*wifiman_config_callback_t)(wifiman_config_t *const p_cfg, void *const p_param);
@@ -112,8 +112,8 @@ wifiman_const_config_unlock(const wifiman_config_t **pp_cfg)
 static bool
 wifiman_config_transaction(wifiman_config_callback_t cb_func, void *const p_param)
 {
-    wifiman_config_t     *p_cfg = wifiman_config_lock();
-    const bool            res   = cb_func(p_cfg, p_param);
+    wifiman_config_t *p_cfg = wifiman_config_lock();
+    const bool        res   = cb_func(p_cfg, p_param);
     wifiman_config_unlock(&p_cfg);
     return res;
 }
@@ -127,9 +127,7 @@ wifiman_const_config_safe_transaction(wifiman_const_config_callback_void_t cb_fu
 }
 
 static void
-wifiman_config_safe_transaction_with_const_param(
-    wifiman_config_callback_void_cptr_t cb_func,
-    const void *const                       p_param)
+wifiman_config_safe_transaction_with_const_param(wifiman_config_callback_void_cptr_t cb_func, const void *const p_param)
 {
     wifiman_config_t *p_cfg = wifiman_config_lock();
     cb_func(p_cfg, p_param);
@@ -147,7 +145,7 @@ wifiman_config_safe_transaction_without_param(wifiman_config_callback_without_pa
 static void
 wifiman_config_do_clear(wifiman_config_t *const p_cfg)
 {
-    p_cfg->wifi_settings    = g_wifi_settings_default;
+    p_cfg->wifi_settings   = g_wifi_settings_default;
     p_cfg->wifi_config_sta = g_wifi_sta_default_cfg;
 }
 
@@ -309,7 +307,10 @@ wifiman_config_log(const wifiman_config_t *const p_cfg, const char *const p_pref
     LOG_INFO("%s: SoftAP_hidden (1 = yes): %i", p_prefix, p_cfg->wifi_settings.ap.ap_ssid_hidden);
     LOG_INFO("%s: SoftAP_bandwidth (1 = 20MHz, 2 = 40MHz): %i", p_prefix, p_cfg->wifi_settings.ap.ap_bandwidth);
     LOG_INFO("%s: sta_power_save (1 = yes): %i", p_prefix, p_cfg->wifi_settings.sta.sta_power_save);
-    LOG_INFO("%s: sta_static_ip (0 = dhcp client, 1 = static ip): %i", p_prefix, p_cfg->wifi_settings.sta.sta_static_ip);
+    LOG_INFO(
+        "%s: sta_static_ip (0 = dhcp client, 1 = static ip): %i",
+        p_prefix,
+        p_cfg->wifi_settings.sta.sta_static_ip);
     wifi_ip4_addr_str_t ip_str;
     wifi_ip4_addr_str_t gw_str;
     wifi_ip4_addr_str_t netmask_str;

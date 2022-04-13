@@ -74,9 +74,9 @@ wifiman_config_sta_get_ssid(void);
 
 void
 wifiman_config_sta_set_ssid_and_password(
-    const char  *constp_ssid,
+    const char * constp_ssid,
     const size_t ssid_len,
-    const char  *constp_password,
+    const char * constp_password,
     const size_t password_len);
 
 wifi_ssid_t

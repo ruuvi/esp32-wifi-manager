@@ -164,7 +164,7 @@ wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi
         return;
     }
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
-    wifi_config_t ap_config =  {
+    wifi_config_t ap_config = {
         .ap = wifi_manager_generate_ap_config(p_wifi_settings),
     };
     err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
@@ -223,7 +223,10 @@ wifi_manager_netif_configure_sta(const struct wifi_settings_sta_t *const p_wifi_
             "Assigning static ip to STA interface. IP: %s , GW: %s , Mask: %s",
             esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.ip, buf_ip.buf, sizeof(buf_ip.buf)),
             esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.gw, buf_gw.buf, sizeof(buf_gw.buf)),
-            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.netmask, buf_netmask.buf, sizeof(buf_netmask.buf)));
+            esp_ip4addr_ntoa(
+                &p_wifi_settings_sta->sta_static_ip_config.netmask,
+                buf_netmask.buf,
+                sizeof(buf_netmask.buf)));
 
         /* stop DHCP client*/
         esp_err_t err = esp_netif_dhcpc_stop(p_netif_sta);
