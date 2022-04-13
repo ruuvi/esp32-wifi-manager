@@ -59,100 +59,100 @@ static wifi_sta_config_t g_wifi_sta_default_cfg = {
     },
 };
 
-typedef struct wifiman_sta_config_t
+typedef struct wifiman_config_t
 {
     wifi_settings_t  wifi_settings;
     wifi_sta_config_t   wifi_config_sta;
-} wifiman_wifi_config_t;
+} wifiman_config_t;
 
-typedef bool (*wifiman_config_callback_t)(wifiman_wifi_config_t *const p_cfg, void *const p_param);
-typedef void (*wifiman_const_config_callback_void_t)(const wifiman_wifi_config_t *const p_cfg, void *const p_param);
-typedef void (*wifiman_config_callback_void_cptr_t)(wifiman_wifi_config_t *const p_cfg, const void *const p_param);
-typedef void (*wifiman_config_callback_without_param_t)(wifiman_wifi_config_t *const p_cfg);
+typedef bool (*wifiman_config_callback_t)(wifiman_config_t *const p_cfg, void *const p_param);
+typedef void (*wifiman_const_config_callback_void_t)(const wifiman_config_t *const p_cfg, void *const p_param);
+typedef void (*wifiman_config_callback_void_cptr_t)(wifiman_config_t *const p_cfg, const void *const p_param);
+typedef void (*wifiman_config_callback_without_param_t)(wifiman_config_t *const p_cfg);
 
-static wifiman_wifi_config_t g_wifi_config;
-static os_mutex_static_t     g_wifi_config_mutex_mem;
-static os_mutex_t            g_wifi_config_mutex;
+static wifiman_config_t  g_wifiman_config;
+static os_mutex_static_t g_wifiman_config_mutex_mem;
+static os_mutex_t        g_wifiman_config_mutex;
 
 _Static_assert(
-    MAX_SSID_SIZE == sizeof(g_wifi_config.wifi_config_sta.ssid),
-    "sizeof(g_wifi_config.wifi_config_sta.ssid) == MAX_SSID_SIZE");
+    MAX_SSID_SIZE == sizeof(g_wifiman_config.wifi_config_sta.ssid),
+    "sizeof(g_wifiman_config.wifi_config_sta.ssid) == MAX_SSID_SIZE");
 _Static_assert(
-    MAX_PASSWORD_SIZE == sizeof(g_wifi_config.wifi_config_sta.password),
-    "sizeof(g_wifi_config.wifi_config_sta.password) == MAX_PASSWORD_SIZE");
+    MAX_PASSWORD_SIZE == sizeof(g_wifiman_config.wifi_config_sta.password),
+    "sizeof(g_wifiman_config.wifi_config_sta.password) == MAX_PASSWORD_SIZE");
 
 static bool
-wifi_config_do_save(wifiman_wifi_config_t *const p_cfg, void *const p_param);
+wifiman_config_do_save(wifiman_config_t *const p_cfg, void *const p_param);
 
-static wifiman_wifi_config_t *
-wifiman_sta_config_lock(void)
+static wifiman_config_t *
+wifiman_config_lock(void)
 {
-    if (NULL == g_wifi_config_mutex)
+    if (NULL == g_wifiman_config_mutex)
     {
-        g_wifi_config_mutex = os_mutex_create_static(&g_wifi_config_mutex_mem);
+        g_wifiman_config_mutex = os_mutex_create_static(&g_wifiman_config_mutex_mem);
     }
-    os_mutex_lock(g_wifi_config_mutex);
-    return &g_wifi_config;
+    os_mutex_lock(g_wifiman_config_mutex);
+    return &g_wifiman_config;
 }
 
 void
-wifiman_sta_config_unlock(wifiman_wifi_config_t **pp_cfg)
+wifiman_config_unlock(wifiman_config_t **pp_cfg)
 {
     *pp_cfg = NULL;
-    os_mutex_unlock(g_wifi_config_mutex);
+    os_mutex_unlock(g_wifiman_config_mutex);
 }
 
 void
-wifiman_sta_const_config_unlock(const wifiman_wifi_config_t **pp_cfg)
+wifiman_const_config_unlock(const wifiman_config_t **pp_cfg)
 {
     *pp_cfg = NULL;
-    os_mutex_unlock(g_wifi_config_mutex);
+    os_mutex_unlock(g_wifiman_config_mutex);
 }
 
 static bool
 wifiman_config_transaction(wifiman_config_callback_t cb_func, void *const p_param)
 {
-    wifiman_wifi_config_t *p_cfg = wifiman_sta_config_lock();
+    wifiman_config_t     *p_cfg = wifiman_config_lock();
     const bool            res   = cb_func(p_cfg, p_param);
-    wifiman_sta_config_unlock(&p_cfg);
+    wifiman_config_unlock(&p_cfg);
     return res;
 }
 
 static void
-wifiman_sta_const_config_safe_transaction(wifiman_const_config_callback_void_t cb_func, void *const p_param)
+wifiman_const_config_safe_transaction(wifiman_const_config_callback_void_t cb_func, void *const p_param)
 {
-    const wifiman_wifi_config_t *p_cfg = wifiman_sta_config_lock();
+    const wifiman_config_t *p_cfg = wifiman_config_lock();
     cb_func(p_cfg, p_param);
-    wifiman_sta_const_config_unlock(&p_cfg);
+    wifiman_const_config_unlock(&p_cfg);
 }
 
 static void
-wifiman_sta_config_safe_transaction_with_const_param(
+wifiman_config_safe_transaction_with_const_param(
     wifiman_config_callback_void_cptr_t cb_func,
     const void *const                       p_param)
 {
-    wifiman_wifi_config_t *p_cfg = wifiman_sta_config_lock();
+    wifiman_config_t *p_cfg = wifiman_config_lock();
     cb_func(p_cfg, p_param);
-    wifiman_sta_config_unlock(&p_cfg);
+    wifiman_config_unlock(&p_cfg);
 }
 
 static void
-wifiman_sta_config_safe_transaction_without_param(wifiman_config_callback_without_param_t cb_func)
+wifiman_config_safe_transaction_without_param(wifiman_config_callback_without_param_t cb_func)
 {
-    wifiman_wifi_config_t *p_cfg = wifiman_sta_config_lock();
+    wifiman_config_t *p_cfg = wifiman_config_lock();
     cb_func(p_cfg);
-    wifiman_sta_config_unlock(&p_cfg);
+    wifiman_config_unlock(&p_cfg);
 }
 
 static void
-wifiman_config_do_clear(wifiman_wifi_config_t *const p_cfg)
+wifiman_config_do_clear(wifiman_config_t *const p_cfg)
 {
     p_cfg->wifi_settings    = g_wifi_settings_default;
     p_cfg->wifi_config_sta = g_wifi_sta_default_cfg;
 }
 
 static void
-wifiman_config_do_init(wifiman_wifi_config_t *const p_cfg)
+wifiman_config_do_init(wifiman_config_t *const p_cfg)
 {
     LOG_INFO(
         "wifiman_config_do_init: default AP SSID='%s', default STA SSID='%s'",
@@ -162,7 +162,7 @@ wifiman_config_do_init(wifiman_wifi_config_t *const p_cfg)
 }
 
 void
-wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid, const wifi_sta_config_t *const p_wifi_sta_default_cfg)
+wifiman_config_init(const wifi_ssid_t *const p_gw_wifi_ssid, const wifi_sta_config_t *const p_wifi_sta_default_cfg)
 {
     LOG_INFO(
         "wifi_sta_config: Init: Set AP SSID: '%s'",
@@ -179,19 +179,19 @@ wifi_sta_config_init(const wifi_ssid_t *const p_gw_wifi_ssid, const wifi_sta_con
     {
         g_wifi_sta_default_cfg = *p_wifi_sta_default_cfg;
     }
-    wifiman_sta_config_safe_transaction_without_param(&wifiman_config_do_init);
+    wifiman_config_safe_transaction_without_param(&wifiman_config_do_init);
 }
 
 bool
-wifi_sta_config_clear(void)
+wifiman_config_clear(void)
 {
     LOG_INFO("About to clear config in flash");
-    wifiman_sta_config_safe_transaction_without_param(&wifiman_config_do_clear);
-    return wifi_config_save();
+    wifiman_config_safe_transaction_without_param(&wifiman_config_do_clear);
+    return wifiman_config_save();
 }
 
 static bool
-wifi_sta_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle, wifiman_wifi_config_t *const p_cfg)
+wifiman_config_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle, wifiman_config_t *const p_cfg)
 {
     const char *nvs_name = wifi_manager_nvs_namespace;
     esp_err_t   err      = nvs_open(nvs_name, open_mode, p_handle);
@@ -207,8 +207,8 @@ wifi_sta_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle,
             LOG_WARN("NVS namespace '%s' doesn't exist and mode is NVS_READONLY, try to create it", nvs_name);
             wifiman_config_do_init(p_cfg);
             wifiman_config_do_clear(p_cfg);
-            wifiman_wifi_config_t cfg = { 0 };
-            if (!wifi_config_do_save(p_cfg, &cfg))
+            wifiman_config_t cfg = { 0 };
+            if (!wifiman_config_do_save(p_cfg, &cfg))
             {
                 LOG_ERR("Failed to create the wifi-manager settings in NVS");
                 return false;
@@ -232,7 +232,7 @@ wifi_sta_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle,
 }
 
 static bool
-wifi_sta_nvs_set_blob(const nvs_handle_t handle, const char *key, const void *value, const size_t length)
+wifiman_config_nvs_set_blob(const nvs_handle_t handle, const char *key, const void *value, const size_t length)
 {
     const esp_err_t esp_err = nvs_set_blob(handle, key, value, length);
     if (ESP_OK != esp_err)
@@ -244,7 +244,7 @@ wifi_sta_nvs_set_blob(const nvs_handle_t handle, const char *key, const void *va
 }
 
 static bool
-wifi_sta_nvs_get_blob(const nvs_handle_t handle, const char *const key, void *const p_out_buf, size_t length)
+wifiman_config_nvs_get_blob(const nvs_handle_t handle, const char *const key, void *const p_out_buf, size_t length)
 {
     const esp_err_t esp_err = nvs_get_blob(handle, key, p_out_buf, &length);
     if (ESP_OK != esp_err)
@@ -256,7 +256,7 @@ wifi_sta_nvs_get_blob(const nvs_handle_t handle, const char *const key, void *co
 }
 
 static bool
-wifi_sta_nvs_commit(const nvs_handle_t handle)
+wifiman_config_nvs_commit(const nvs_handle_t handle)
 {
     const esp_err_t esp_err = nvs_commit(handle);
     if (ESP_OK != esp_err)
@@ -268,21 +268,21 @@ wifi_sta_nvs_commit(const nvs_handle_t handle)
 }
 
 static bool
-wifi_sta_config_set_by_handle(
+wifiman_config_set_by_handle(
     const nvs_handle             handle,
     const char *const            p_ssid,
     const char *const            p_password,
     const wifi_settings_t *const p_wifi_settings)
 {
-    if (!wifi_sta_nvs_set_blob(handle, "ssid", p_ssid, MAX_SSID_SIZE))
+    if (!wifiman_config_nvs_set_blob(handle, "ssid", p_ssid, MAX_SSID_SIZE))
     {
         return false;
     }
-    if (!wifi_sta_nvs_set_blob(handle, "password", p_password, MAX_PASSWORD_SIZE))
+    if (!wifiman_config_nvs_set_blob(handle, "password", p_password, MAX_PASSWORD_SIZE))
     {
         return false;
     }
-    if (!wifi_sta_nvs_set_blob(handle, "settings", p_wifi_settings, sizeof(*p_wifi_settings)))
+    if (!wifiman_config_nvs_set_blob(handle, "settings", p_wifi_settings, sizeof(*p_wifi_settings)))
     {
         return false;
     }
@@ -290,19 +290,19 @@ wifi_sta_config_set_by_handle(
 }
 
 static const char *
-wifi_sta_config_get_sta_password_for_logging(const wifiman_wifi_config_t *const p_cfg)
+wifiman_config_get_sta_password_for_logging(const wifiman_config_t *const p_cfg)
 {
     return ((LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG) ? (const char *)p_cfg->wifi_config_sta.password : "********");
 }
 
 static void
-wifi_sta_config_log(const wifiman_wifi_config_t *const p_cfg, const char *const p_prefix)
+wifiman_config_log(const wifiman_config_t *const p_cfg, const char *const p_prefix)
 {
     LOG_INFO(
         "%s: SSID:'%s', password:'%s'",
         p_prefix,
         p_cfg->wifi_config_sta.ssid,
-        wifi_sta_config_get_sta_password_for_logging(p_cfg));
+        wifiman_config_get_sta_password_for_logging(p_cfg));
     LOG_INFO("%s: SoftAP_ssid: %s", p_prefix, p_cfg->wifi_settings.ap.ap_ssid);
     LOG_INFO("%s: SoftAP_pwd: %s", p_prefix, p_cfg->wifi_settings.ap.ap_pwd);
     LOG_INFO("%s: SoftAP_channel: %i", p_prefix, p_cfg->wifi_settings.ap.ap_channel);
@@ -320,29 +320,29 @@ wifi_sta_config_log(const wifiman_wifi_config_t *const p_cfg, const char *const 
 }
 
 static bool
-wifi_config_do_save(wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_do_save(wifiman_config_t *const p_cfg, void *const p_param)
 {
-    wifiman_wifi_config_t *const p_cfg_copy = p_param;
+    wifiman_config_t *const p_cfg_copy = p_param;
 
     nvs_handle handle = 0;
-    if (!wifi_sta_nvs_open(NVS_READWRITE, &handle, p_cfg))
+    if (!wifiman_config_nvs_open(NVS_READWRITE, &handle, p_cfg))
     {
-        LOG_ERR("%s failed", "wifi_sta_nvs_open");
+        LOG_ERR("%s failed", "wifiman_config_nvs_open");
         return false;
     }
-    const bool res = wifi_sta_config_set_by_handle(
+    const bool res = wifiman_config_set_by_handle(
         handle,
         (const char *)p_cfg->wifi_config_sta.ssid,
         (const char *)p_cfg->wifi_config_sta.password,
         &p_cfg->wifi_settings);
 
-    (void)wifi_sta_nvs_commit(handle);
+    (void)wifiman_config_nvs_commit(handle);
 
     nvs_close(handle);
 
     if (!res)
     {
-        LOG_ERR("%s failed", "wifi_sta_config_set_by_handle");
+        LOG_ERR("%s failed", "wifiman_config_set_by_handle");
         return false;
     }
 
@@ -351,36 +351,36 @@ wifi_config_do_save(wifiman_wifi_config_t *const p_cfg, void *const p_param)
 }
 
 bool
-wifi_config_save(void)
+wifiman_config_save(void)
 {
     LOG_INFO("About to save config to flash");
 
-    wifiman_wifi_config_t cfg = { 0 };
-    if (!wifiman_config_transaction(&wifi_config_do_save, &cfg))
+    wifiman_config_t cfg = { 0 };
+    if (!wifiman_config_transaction(&wifiman_config_do_save, &cfg))
     {
-        LOG_ERR("%s failed", "wifi_config_do_save");
+        LOG_ERR("%s failed", "wifiman_config_do_save");
         return false;
     }
-    wifi_sta_config_log(&cfg, "wifi_settings_ap");
+    wifiman_config_log(&cfg, "wifi_settings_ap");
     return true;
 }
 
 static bool
-wifi_config_read_by_handle(
+wifiman_config_read_by_handle(
     const nvs_handle       handle,
     char *const            p_ssid,
     char *const            p_password,
     wifi_settings_t *const p_wifi_settings)
 {
-    if (!wifi_sta_nvs_get_blob(handle, "ssid", p_ssid, MAX_SSID_SIZE))
+    if (!wifiman_config_nvs_get_blob(handle, "ssid", p_ssid, MAX_SSID_SIZE))
     {
         return false;
     }
-    if (!wifi_sta_nvs_get_blob(handle, "password", p_password, MAX_PASSWORD_SIZE))
+    if (!wifiman_config_nvs_get_blob(handle, "password", p_password, MAX_PASSWORD_SIZE))
     {
         return false;
     }
-    if (!wifi_sta_nvs_get_blob(handle, "settings", p_wifi_settings, sizeof(*p_wifi_settings)))
+    if (!wifiman_config_nvs_get_blob(handle, "settings", p_wifi_settings, sizeof(*p_wifi_settings)))
     {
         return false;
     }
@@ -388,19 +388,19 @@ wifi_config_read_by_handle(
 }
 
 static bool
-wifi_config_do_fetch(wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_do_fetch(wifiman_config_t *const p_cfg, void *const p_param)
 {
-    wifiman_wifi_config_t *const p_cfg_copy = p_param;
+    wifiman_config_t *const p_cfg_copy = p_param;
 
     nvs_handle handle = 0;
-    if (!wifi_sta_nvs_open((NULL == p_cfg_copy) ? NVS_READONLY : NVS_READWRITE, &handle, p_cfg))
+    if (!wifiman_config_nvs_open((NULL == p_cfg_copy) ? NVS_READONLY : NVS_READWRITE, &handle, p_cfg))
     {
-        LOG_ERR("%s failed", "wifi_sta_nvs_open");
+        LOG_ERR("%s failed", "wifiman_config_nvs_open");
         return false;
     }
     memset(&p_cfg->wifi_config_sta, 0x00, sizeof(p_cfg->wifi_config_sta));
     memset(&p_cfg->wifi_settings, 0x00, sizeof(p_cfg->wifi_settings));
-    const bool res = wifi_config_read_by_handle(
+    const bool res = wifiman_config_read_by_handle(
         handle,
         (char *)p_cfg->wifi_config_sta.ssid,
         (char *)p_cfg->wifi_config_sta.password,
@@ -408,7 +408,7 @@ wifi_config_do_fetch(wifiman_wifi_config_t *const p_cfg, void *const p_param)
 
     if (!res)
     {
-        LOG_ERR("%s failed", "wifi_config_read_by_handle");
+        LOG_ERR("%s failed", "wifiman_config_read_by_handle");
         nvs_close(handle);
         return false;
     }
@@ -450,31 +450,31 @@ wifi_config_do_fetch(wifiman_wifi_config_t *const p_cfg, void *const p_param)
 }
 
 bool
-wifi_config_check(void)
+wifiman_config_check(void)
 {
-    if (!wifiman_config_transaction(&wifi_config_do_fetch, NULL))
+    if (!wifiman_config_transaction(&wifiman_config_do_fetch, NULL))
     {
-        LOG_ERR("%s failed", "wifi_config_do_fetch");
+        LOG_ERR("%s failed", "wifiman_config_do_fetch");
         return false;
     }
     return true;
 }
 
 bool
-wifi_config_fetch(void)
+wifiman_config_fetch(void)
 {
-    wifiman_wifi_config_t cfg = { 0 };
-    if (!wifiman_config_transaction(&wifi_config_do_fetch, &cfg))
+    wifiman_config_t cfg = { 0 };
+    if (!wifiman_config_transaction(&wifiman_config_do_fetch, &cfg))
     {
-        LOG_ERR("%s failed", "wifi_config_do_fetch");
+        LOG_ERR("%s failed", "wifiman_config_do_fetch");
         return false;
     }
-    wifi_sta_config_log(&cfg, "wifi_config_fetch");
-    return wifi_config_sta_is_ssid_configured();
+    wifiman_config_log(&cfg, "wifiman_config_fetch");
+    return wifiman_config_sta_is_ssid_configured();
 }
 
 static void
-wifi_sta_config_do_get_copy(const wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_do_get_copy_sta(const wifiman_config_t *const p_cfg, void *const p_param)
 {
     wifi_sta_config_t *const p_wifi_sta_cfg = p_param;
 
@@ -482,15 +482,15 @@ wifi_sta_config_do_get_copy(const wifiman_wifi_config_t *const p_cfg, void *cons
 }
 
 wifi_sta_config_t
-wifi_sta_config_get_copy(void)
+wifiman_config_get_copy_sta(void)
 {
     wifi_sta_config_t wifi_sta_config = { 0 };
-    wifiman_sta_const_config_safe_transaction(&wifi_sta_config_do_get_copy, &wifi_sta_config);
+    wifiman_const_config_safe_transaction(&wifiman_config_do_get_copy_sta, &wifi_sta_config);
     return wifi_sta_config;
 }
 
 static void
-wifi_config_do_get_wifi_settings(const wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_do_get_wifi_settings(const wifiman_config_t *const p_cfg, void *const p_param)
 {
     wifi_settings_t *const p_settings = p_param;
 
@@ -498,15 +498,15 @@ wifi_config_do_get_wifi_settings(const wifiman_wifi_config_t *const p_cfg, void 
 }
 
 wifi_settings_t
-wifi_config_get_wifi_settings(void)
+wifiman_config_get_wifi_settings(void)
 {
     wifi_settings_t settings = { 0 };
-    wifiman_sta_const_config_safe_transaction(&wifi_config_do_get_wifi_settings, &settings);
+    wifiman_const_config_safe_transaction(&wifiman_config_do_get_wifi_settings, &settings);
     return settings;
 }
 
 static void
-wifi_config_sta_do_check_is_ssid_configured(const wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_sta_do_check_is_ssid_configured(const wifiman_config_t *const p_cfg, void *const p_param)
 {
     bool *const p_flag_ssid_configured = p_param;
 
@@ -514,15 +514,15 @@ wifi_config_sta_do_check_is_ssid_configured(const wifiman_wifi_config_t *const p
 }
 
 bool
-wifi_config_sta_is_ssid_configured(void)
+wifiman_config_sta_is_ssid_configured(void)
 {
     bool flag_is_ssid_configured = false;
-    wifiman_sta_const_config_safe_transaction(&wifi_config_sta_do_check_is_ssid_configured, &flag_is_ssid_configured);
+    wifiman_const_config_safe_transaction(&wifiman_config_sta_do_check_is_ssid_configured, &flag_is_ssid_configured);
     return flag_is_ssid_configured;
 }
 
 static void
-wifi_config_sta_do_get_ssid(const wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_sta_do_get_ssid(const wifiman_config_t *const p_cfg, void *const p_param)
 {
     wifi_ssid_t *const p_ssid = p_param;
 
@@ -530,10 +530,10 @@ wifi_config_sta_do_get_ssid(const wifiman_wifi_config_t *const p_cfg, void *cons
 }
 
 wifi_ssid_t
-wifi_config_sta_get_ssid(void)
+wifiman_config_sta_get_ssid(void)
 {
     wifi_ssid_t ssid = { 0 };
-    wifiman_sta_const_config_safe_transaction(&wifi_config_sta_do_get_ssid, &ssid);
+    wifiman_const_config_safe_transaction(&wifiman_config_sta_do_get_ssid, &ssid);
     return ssid;
 }
 
@@ -546,7 +546,7 @@ typedef struct wifiman_set_ssid_password_t
 } wifiman_set_ssid_password_t;
 
 static void
-wifi_config_sta_do_set_ssid_and_password(wifiman_wifi_config_t *const p_cfg, const void *const p_param)
+wifiman_config_sta_do_set_ssid_and_password(wifiman_config_t *const p_cfg, const void *const p_param)
 {
     const wifiman_set_ssid_password_t *const p_info = p_param;
 
@@ -566,7 +566,7 @@ wifi_config_sta_do_set_ssid_and_password(wifiman_wifi_config_t *const p_cfg, con
 }
 
 void
-wifi_config_sta_set_ssid_and_password(
+wifiman_config_sta_set_ssid_and_password(
     const char *const p_ssid,
     const size_t      ssid_len,
     const char *const p_password,
@@ -578,11 +578,11 @@ wifi_config_sta_set_ssid_and_password(
         .p_password   = p_password,
         .password_len = password_len,
     };
-    wifiman_sta_config_safe_transaction_with_const_param(&wifi_config_sta_do_set_ssid_and_password, &info);
+    wifiman_config_safe_transaction_with_const_param(&wifiman_config_sta_do_set_ssid_and_password, &info);
 }
 
 static void
-wifi_settings_ap_do_get_ssid(const wifiman_wifi_config_t *const p_cfg, void *const p_param)
+wifiman_config_do_get_settings_ap_ssid(const wifiman_config_t *const p_cfg, void *const p_param)
 {
     (void)p_cfg;
     wifi_ssid_t *const p_ap_ssid = p_param;
@@ -591,9 +591,9 @@ wifi_settings_ap_do_get_ssid(const wifiman_wifi_config_t *const p_cfg, void *con
 }
 
 wifi_ssid_t
-wifi_settings_ap_get_ssid(void)
+wifiman_config_get_settings_ap_ssid(void)
 {
     wifi_ssid_t ap_ssid = { 0 };
-    wifiman_sta_const_config_safe_transaction(&wifi_settings_ap_do_get_ssid, &ap_ssid);
+    wifiman_const_config_safe_transaction(&wifiman_config_do_get_settings_ap_ssid, &ap_ssid);
     return ap_ssid;
 }

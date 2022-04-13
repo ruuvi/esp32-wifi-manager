@@ -185,7 +185,7 @@ http_server_handle_req_get(
 
     const char *const p_file_ext = strrchr(p_file_name, '.');
 
-    const wifi_ssid_t ap_ssid = wifi_settings_ap_get_ssid();
+    const wifi_ssid_t ap_ssid = wifiman_config_get_settings_ap_ssid();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
@@ -252,7 +252,7 @@ http_server_handle_req_delete(
     http_header_extra_fields_t *const    p_extra_header_fields)
 {
     LOG_INFO("DELETE /%s", p_file_name);
-    const wifi_ssid_t ap_ssid = wifi_settings_ap_get_ssid();
+    const wifi_ssid_t ap_ssid = wifiman_config_get_settings_ap_ssid();
 
     const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
         flag_access_from_lan,
@@ -478,7 +478,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
     {
         if (login_info.is_password_null)
         {
-            const wifi_ssid_t saved_ssid = wifi_config_sta_get_ssid();
+            const wifi_ssid_t saved_ssid = wifiman_config_sta_get_ssid();
             if (0 == strcmp(saved_ssid.ssid_buf, login_info.ssid))
             {
                 LOG_INFO("POST /connect.json: SSID:%s, PWD: NULL - reconnect to saved WiFi", login_info.ssid);
@@ -488,7 +488,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
                 LOG_WARN(
                     "POST /connect.json: SSID:%s, PWD: NULL - try to connect to WiFi without authentication",
                     login_info.ssid);
-                wifi_config_sta_set_ssid_and_password(login_info.ssid, strlen(login_info.ssid), "", 0);
+                wifiman_config_sta_set_ssid_and_password(login_info.ssid, strlen(login_info.ssid), "", 0);
             }
             LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_connect_async();
@@ -501,7 +501,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
             (printf_int_t)len_password,
             p_password);
         LOG_INFO("POST /connect.json: SSID:%s, PWD: ******** - connect to WiFi", login_info.ssid);
-        wifi_config_sta_set_ssid_and_password(
+        wifiman_config_sta_set_ssid_and_password(
             login_info.ssid,
             strlen(login_info.ssid),
             login_info.password,
@@ -527,7 +527,7 @@ http_server_handle_req_post(
 {
     LOG_INFO("POST /%s", p_file_name);
 
-    const wifi_ssid_t ap_ssid = wifi_settings_ap_get_ssid();
+    const wifi_ssid_t ap_ssid = wifiman_config_get_settings_ap_ssid();
 
     if (0 == strcmp(p_file_name, "auth"))
     {

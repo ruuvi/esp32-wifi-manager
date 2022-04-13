@@ -431,7 +431,7 @@ wifi_manager_init_start_wifi(
     wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wi-Fi Access Point configuration setup */
     wifi_manager_netif_set_default_ip();
-    const wifi_settings_t wifi_settings = wifi_config_get_wifi_settings();
+    const wifi_settings_t wifi_settings = wifiman_config_get_wifi_settings();
     wifi_manager_esp_wifi_configure_ap(&wifi_settings.ap);
 
     /* STA - Wifi Station configuration setup */
@@ -499,7 +499,7 @@ wifi_manager_init(
 
     wifi_manager_set_callbacks(p_callbacks);
 
-    wifi_sta_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
+    wifiman_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
     json_network_info_init();
     sta_ip_safe_init();
 
@@ -533,7 +533,7 @@ wifi_manager_init(
 
     if (flag_start_wifi)
     {
-        const bool is_ssid_configured = wifi_config_fetch();
+        const bool is_ssid_configured = wifiman_config_fetch();
         if (is_ssid_configured && ((!flag_start_ap_only) || ('\0' != p_wifi_sta_default_cfg->ssid[0])))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");

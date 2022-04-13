@@ -127,7 +127,7 @@ wifi_manager_start(
 bool
 wifi_manager_check_sta_config(void)
 {
-    return wifi_config_check();
+    return wifiman_config_check();
 }
 
 bool
@@ -135,8 +135,8 @@ wifi_manager_clear_sta_config(
     const wifi_ssid_t *const       p_gw_wifi_ssid,
     const wifi_sta_config_t *const p_wifi_sta_default_cfg)
 {
-    wifi_sta_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
-    return wifi_sta_config_clear();
+    wifiman_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
+    return wifiman_config_clear();
 }
 
 void
@@ -341,7 +341,7 @@ wifi_manager_is_ap_sta_ip_assigned(void)
 bool
 wifi_manager_is_sta_configured(void)
 {
-    return wifi_config_sta_is_ssid_configured();
+    return wifiman_config_sta_is_ssid_configured();
 }
 
 void
