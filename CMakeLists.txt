@@ -47,6 +47,7 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/sta_ip_unsafe.c
             src/sta_ip_unsafe.h
             src/wifi_manager.c
+            src/wifi_manager_default_config.c
             src/wifi_manager_handle_msg.c
             src/wifi_manager_internal.c
             src/wifi_manager_internal.h
