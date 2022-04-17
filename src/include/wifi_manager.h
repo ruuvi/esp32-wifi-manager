@@ -49,6 +49,18 @@ struct wifi_manager_antenna_config_t
     wifi_ant_config_t      wifi_ant_config;
 };
 
+const wifiman_config_t *
+wifi_manager_default_config_init(const wifiman_wifi_ssid_t *const p_wifi_ssid);
+
+void
+wifi_manager_set_default_config(const wifiman_config_t *const p_wifi_cfg);
+
+bool
+wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg);
+
+bool
+wifi_manager_cfg_blob_erase_if_exist(void);
+
 /**
  * @brief Allocate heap memory for the wifi manager and start the wifi_manager RTOS task.
  */
@@ -56,8 +68,7 @@ bool
 wifi_manager_start(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
-    const wifi_ssid_t *const                   p_gw_wifi_ssid,
-    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
+    const wifiman_config_t *const              p_wifi_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks,
     int (*f_rng)(void *, unsigned char *, size_t),
@@ -74,20 +85,6 @@ wifi_manager_stop_ap(void);
  */
 void
 wifi_manager_start_ap(void);
-
-/**
- * @brief Checks if the current STA wifi config in NVS is valid.
- */
-bool
-wifi_manager_check_sta_config(void);
-
-/**
- * @brief Clears the current STA wifi config in NVS.
- */
-bool
-wifi_manager_clear_sta_config(
-    const wifi_ssid_t *const       p_gw_wifi_ssid,
-    const wifi_sta_config_t *const p_wifi_sta_default_cfg);
 
 /**
  * @brief requests a connection to an access point that will be process in the main task thread.
@@ -143,14 +140,14 @@ wifi_manager_is_sta_configured(void);
 /**
  * @brief Generates the connection status json: ssid and IP addresses.
  * @param update_reason_code - connection status, see update_reason_code_e
- * @param p_ssid - pointer to wifi_ssid_t (WiFi SSID)
+ * @param p_ssid - pointer to wifiman_wifi_ssid_t (WiFi SSID)
  * @param p_ip_info - pointer to esp_netif_ip_info_t
  * @param p_dhcp_ip - pointer to esp_ip4_addr_t with the DHCP server IP address or NULL
  */
 void
 wifi_manager_update_network_connection_info(
     const update_reason_code_e       update_reason_code,
-    const wifi_ssid_t *const         p_ssid,
+    const wifiman_wifi_ssid_t *const p_ssid,
     const esp_netif_ip_info_t *const p_ip_info,
     const esp_ip4_addr_t *const      p_dhcp_ip);
 

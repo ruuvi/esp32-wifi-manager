@@ -42,7 +42,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include <lwip/err.h>
 #include <lwip/dns.h>
 #include <byteswap.h>
-#include "wifi_manager.h"
+#include "wifiman_config.h"
 #include "dns_server.h"
 #include "attribs.h"
 #include "os_task.h"
@@ -352,8 +352,7 @@ dns_server_task(void)
     }
 
     /* Set redirection DNS hijack to the access point IP */
-    esp_ip4_addr_t ip_resolved = { 0 };
-    ip_resolved.addr           = esp_ip4addr_aton(DEFAULT_AP_IP);
+    esp_ip4_addr_t ip_resolved = wifiman_config_ap_get_ip();
 
     LOG_INFO("DNS Server listening on 53/udp");
 

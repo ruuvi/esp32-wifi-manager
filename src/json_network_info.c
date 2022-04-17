@@ -40,9 +40,9 @@ Contains the freeRTOS task and all necessary support
 
 typedef struct json_network_info_update_t
 {
-    const wifi_ssid_t *const        p_ssid;
-    const network_info_str_t *const p_network_info;
-    const update_reason_code_e      update_reason_code;
+    const wifiman_wifi_ssid_t *const p_ssid;
+    const network_info_str_t *const  p_network_info;
+    const update_reason_code_e       update_reason_code;
 } json_network_info_update_t;
 
 typedef struct json_network_info_set_extra_t
@@ -310,9 +310,9 @@ json_network_info_do_update(json_network_info_t *const p_info, const void *const
 
 void
 json_network_info_update(
-    const wifi_ssid_t *const        p_ssid,
-    const network_info_str_t *const p_network_info,
-    const update_reason_code_e      update_reason_code)
+    const wifiman_wifi_ssid_t *const p_ssid,
+    const network_info_str_t *const  p_network_info,
+    const update_reason_code_e       update_reason_code)
 {
     const json_network_info_update_t update_info = {
         .p_ssid             = p_ssid,

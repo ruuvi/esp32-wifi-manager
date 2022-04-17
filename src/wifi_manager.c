@@ -49,10 +49,10 @@ Contains the freeRTOS task and all necessary support
 #include "sta_ip_safe.h"
 #include "ap_ssid.h"
 #include "wifiman_msg.h"
-#include "wifi_sta_config.h"
 #include "http_req.h"
 #include "os_timer.h"
 #include "http_server_ecdh.h"
+#include "wifiman_config.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -82,8 +82,7 @@ bool
 wifi_manager_start(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
-    const wifi_ssid_t *const                   p_gw_wifi_ssid,
-    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
+    const wifiman_config_t *const              p_wifi_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks,
     int (*f_rng)(void *, unsigned char *, size_t),
@@ -107,13 +106,7 @@ wifi_manager_start(
         return false;
     }
 
-    if (!wifi_manager_init(
-            flag_start_wifi,
-            flag_start_ap_only,
-            p_gw_wifi_ssid,
-            p_wifi_sta_default_cfg,
-            p_wifi_ant_config,
-            p_callbacks))
+    if (!wifi_manager_init(flag_start_wifi, flag_start_ap_only, p_wifi_cfg, p_wifi_ant_config, p_callbacks))
     {
         xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_IS_WORKING);
         wifi_manager_unlock();
@@ -124,25 +117,10 @@ wifi_manager_start(
     return true;
 }
 
-bool
-wifi_manager_check_sta_config(void)
-{
-    return wifiman_config_check();
-}
-
-bool
-wifi_manager_clear_sta_config(
-    const wifi_ssid_t *const       p_gw_wifi_ssid,
-    const wifi_sta_config_t *const p_wifi_sta_default_cfg)
-{
-    wifiman_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
-    return wifiman_config_clear();
-}
-
 void
 wifi_manager_update_network_connection_info(
     const update_reason_code_e       update_reason_code,
-    const wifi_ssid_t *const         p_ssid,
+    const wifiman_wifi_ssid_t *const p_ssid,
     const esp_netif_ip_info_t *const p_ip_info,
     const esp_ip4_addr_t *const      p_dhcp_ip)
 {
@@ -348,4 +326,16 @@ void
 wifi_manager_set_extra_info_for_status_json(const char *const p_extra)
 {
     json_network_set_extra_info(p_extra);
+}
+
+const wifiman_config_t *
+wifi_manager_default_config_init(const wifiman_wifi_ssid_t *const p_wifi_ssid)
+{
+    return wifiman_default_config_init(p_wifi_ssid);
+}
+
+void
+wifi_manager_set_default_config(const wifiman_config_t *const p_wifi_cfg)
+{
+    wifiman_default_config_set(p_wifi_cfg);
 }

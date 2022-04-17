@@ -11,6 +11,7 @@
 #include "os_malloc.h"
 #include "str_buf.h"
 #include "wifi_manager.h"
+#include "wifiman_config.h"
 #include "sta_ip.h"
 #include "http_req.h"
 #include "sta_ip_safe.h"
@@ -449,7 +450,8 @@ http_server_netconn_resp_200(
 static void
 http_server_netconn_resp_302(struct netconn *const p_conn)
 {
-    LOG_INFO("Response: status 302 (Found), URL=http://%s/", DEFAULT_AP_IP);
+    const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
+    LOG_INFO("Response: status 302 (Found), URL=http://%s/", ap_ip_str.buf);
     if (!http_server_netconn_printf(
             p_conn,
             false,
@@ -457,7 +459,7 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/\r\n"
             "\r\n",
-            DEFAULT_AP_IP))
+            ap_ip_str.buf))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
         return;
@@ -636,7 +638,8 @@ http_server_netconn_serve(struct netconn *const p_conn)
     LOG_DBG("p_http_header: %s", req_info.http_header.ptr ? req_info.http_header.ptr : "NULL");
     LOG_DBG("p_http_body: %s", req_info.http_body.ptr ? req_info.http_body.ptr : "NULL");
 
-    const bool is_wifi_manager_working = wifi_manager_is_working();
+    const wifiman_ip4_addr_str_t ap_ip_str               = wifiman_config_ap_get_ip_str();
+    const bool                   is_wifi_manager_working = wifi_manager_is_working();
 
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP OR the
      * STA IP */
@@ -647,7 +650,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
     const sta_ip_string_t ip_str = sta_ip_safe_get();
 
     const bool is_access_to_sta_ip = ('\0' != ip_str.buf[0]) && (host_len > 0) && (NULL != strstr(p_host, ip_str.buf));
-    const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, DEFAULT_AP_IP)));
+    const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
 
     LOG_DBG("Host: %.*s, StaticIP: %s", host_len, p_host, ip_str.buf);
 
@@ -657,7 +660,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
         return;
     }
 
-    const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, DEFAULT_AP_IP)) ? true : false;
+    const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
 
     g_http_server_extra_header_fields.buf[0] = '\0';
 

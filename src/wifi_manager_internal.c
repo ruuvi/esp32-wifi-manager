@@ -20,6 +20,7 @@
 #include "sta_ip_safe.h"
 #include "dns_server.h"
 #include "json_access_points.h"
+#include "wifiman_config.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -121,41 +122,8 @@ wifi_manager_cb_on_http_delete(
     return g_wifi_callbacks.cb_on_http_delete(p_path, flag_access_from_lan, p_resp_auth);
 }
 
-static wifi_ap_config_t
-wifi_manager_generate_ap_config(const struct wifi_settings_ap_t *const p_wifi_settings)
-{
-    wifi_ap_config_t ap_config = {
-        .ssid            = {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        },
-        .password        = {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        },
-        .ssid_len        = 0,
-        .channel         = p_wifi_settings->ap_channel,
-        .authmode        = WIFI_AUTH_WPA2_PSK,
-        .ssid_hidden     = p_wifi_settings->ap_ssid_hidden,
-        .max_connection  = DEFAULT_AP_MAX_CONNECTIONS,
-        .beacon_interval = DEFAULT_AP_BEACON_INTERVAL,
-//            .pairwise_cipher = WIFI_CIPHER_TYPE_TKIP_CCMP,
-//            .ftm_responder   = false,
-    };
-
-    snprintf((char *)&ap_config.ssid[0], sizeof(ap_config.ssid), "%s", p_wifi_settings->ap_ssid);
-    snprintf((char *)&ap_config.password[0], sizeof(ap_config.password), "%s", p_wifi_settings->ap_pwd);
-    if (0 == p_wifi_settings->ap_pwd[0])
-    {
-        ap_config.authmode = WIFI_AUTH_OPEN;
-    }
-    return ap_config;
-}
-
 static void
-wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi_settings)
+wifi_manager_esp_wifi_configure_ap(void)
 {
     esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
     if (ESP_OK != err)
@@ -164,8 +132,9 @@ wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi
         return;
     }
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+
     wifi_config_t ap_config = {
-        .ap = wifi_manager_generate_ap_config(p_wifi_settings),
+        .ap = wifiman_config_ap_get_config(),
     };
     err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
     if (ESP_OK != err)
@@ -173,7 +142,9 @@ wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_config");
         return;
     }
-    err = esp_wifi_set_bandwidth(WIFI_IF_AP, p_wifi_settings->ap_bandwidth);
+
+    const wifi_settings_ap_t wifi_ap_settings = wifiman_config_ap_get_settings();
+    err                                       = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_bandwidth");
@@ -184,13 +155,16 @@ wifi_manager_esp_wifi_configure_ap(const struct wifi_settings_ap_t *const p_wifi
 static void
 wifi_manager_netif_set_default_ip(void)
 {
-    LOG_INFO("Set default IP for WiFi AP: %s", DEFAULT_AP_IP);
-    esp_netif_t *const  p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
-    esp_netif_ip_info_t info       = { 0 };
-    info.ip.addr                   = esp_ip4addr_aton(DEFAULT_AP_IP); /* access point is on a static IP */
-    info.gw.addr                   = esp_ip4addr_aton(DEFAULT_AP_GATEWAY);
-    info.netmask.addr              = esp_ip4addr_aton(DEFAULT_AP_NETMASK);
-    esp_err_t err                  = esp_netif_dhcps_stop(p_netif_ap);
+    const wifi_settings_ap_t ap_settings = wifiman_config_ap_get_settings();
+    LOG_INFO("Set default IP for WiFi AP: %s", ap_settings.ap_ip.buf);
+    esp_netif_t *const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+
+    esp_netif_ip_info_t info = { 0 };
+    info.ip.addr             = esp_ip4addr_aton(ap_settings.ap_ip.buf); /* access point is on a static IP */
+    info.gw.addr             = esp_ip4addr_aton(ap_settings.ap_gw.buf);
+    info.netmask.addr        = esp_ip4addr_aton(ap_settings.ap_netmask.buf);
+
+    esp_err_t err = esp_netif_dhcps_stop(p_netif_ap);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_netif_dhcps_stop");
@@ -211,20 +185,21 @@ wifi_manager_netif_set_default_ip(void)
 }
 
 static void
-wifi_manager_netif_configure_sta(const struct wifi_settings_sta_t *const p_wifi_settings_sta)
+wifi_manager_netif_configure_sta(void)
 {
-    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    if (p_wifi_settings_sta->sta_static_ip)
+    const wifi_settings_sta_t wifi_sta_settings = wifiman_config_sta_get_settings();
+    esp_netif_t *const        p_netif_sta       = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    if (wifi_sta_settings.sta_static_ip)
     {
-        wifi_ip4_addr_str_t buf_ip;
-        wifi_ip4_addr_str_t buf_gw;
-        wifi_ip4_addr_str_t buf_netmask;
+        wifiman_ip4_addr_str_t buf_ip;
+        wifiman_ip4_addr_str_t buf_gw;
+        wifiman_ip4_addr_str_t buf_netmask;
         LOG_INFO(
-            "Assigning static ip to STA interface. IP: %s , GW: %s , Mask: %s",
-            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.ip, buf_ip.buf, sizeof(buf_ip.buf)),
-            esp_ip4addr_ntoa(&p_wifi_settings_sta->sta_static_ip_config.gw, buf_gw.buf, sizeof(buf_gw.buf)),
+            "Assigning static IP to STA interface. IP: %s , GW: %s , Mask: %s",
+            esp_ip4addr_ntoa(&wifi_sta_settings.sta_static_ip_config.ip, buf_ip.buf, sizeof(buf_ip.buf)),
+            esp_ip4addr_ntoa(&wifi_sta_settings.sta_static_ip_config.gw, buf_gw.buf, sizeof(buf_gw.buf)),
             esp_ip4addr_ntoa(
-                &p_wifi_settings_sta->sta_static_ip_config.netmask,
+                &wifi_sta_settings.sta_static_ip_config.netmask,
                 buf_netmask.buf,
                 sizeof(buf_netmask.buf)));
 
@@ -236,7 +211,7 @@ wifi_manager_netif_configure_sta(const struct wifi_settings_sta_t *const p_wifi_
             return;
         }
         /* assign a static IP to the STA network interface */
-        err = esp_netif_set_ip_info(p_netif_sta, &p_wifi_settings_sta->sta_static_ip_config);
+        err = esp_netif_set_ip_info(p_netif_sta, &wifi_sta_settings.sta_static_ip_config);
         if (ESP_OK != err)
         {
             LOG_ERR_ESP(err, "%s failed", "esp_netif_set_ip_info");
@@ -265,7 +240,7 @@ wifi_manager_netif_configure_sta(const struct wifi_settings_sta_t *const p_wifi_
             }
         }
     }
-    esp_err_t err = esp_wifi_set_ps(p_wifi_settings_sta->sta_power_save);
+    esp_err_t err = esp_wifi_set_ps(wifi_sta_settings.sta_power_save);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_ps");
@@ -378,7 +353,7 @@ wifi_manager_set_ant_config(const wifi_manager_antenna_config_t *p_wifi_ant_conf
 static bool
 wifi_manager_init_start_wifi(
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifi_ssid_t *const                   p_gw_wifi_ssid)
+    const wifiman_wifi_ssid_t *const           p_gw_wifi_ssid)
 {
     if (!wifiman_msg_init())
     {
@@ -434,11 +409,11 @@ wifi_manager_init_start_wifi(
     wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wi-Fi Access Point configuration setup */
     wifi_manager_netif_set_default_ip();
-    const wifi_settings_t wifi_settings = wifiman_config_get_wifi_settings();
-    wifi_manager_esp_wifi_configure_ap(&wifi_settings.ap);
+
+    wifi_manager_esp_wifi_configure_ap();
 
     /* STA - Wifi Station configuration setup */
-    wifi_manager_netif_configure_sta(&wifi_settings.sta);
+    wifi_manager_netif_configure_sta();
 
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
     err = esp_wifi_set_mode(WIFI_MODE_STA);
@@ -481,8 +456,7 @@ bool
 wifi_manager_init(
     const bool                                 flag_start_wifi,
     const bool                                 flag_start_ap_only,
-    const wifi_ssid_t *const                   p_gw_wifi_ssid,
-    const wifi_sta_config_t *const             p_wifi_sta_default_cfg,
+    const wifiman_config_t *const              p_wifi_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks)
 {
@@ -502,7 +476,7 @@ wifi_manager_init(
 
     wifi_manager_set_callbacks(p_callbacks);
 
-    wifiman_config_init(p_gw_wifi_ssid, p_wifi_sta_default_cfg);
+    wifiman_config_init(p_wifi_cfg);
     json_network_info_init();
     sta_ip_safe_init();
 
@@ -532,12 +506,13 @@ wifi_manager_init(
     http_server_start();
 
     LOG_INFO("WiFi manager init: start WiFi");
-    wifi_manager_init_start_wifi(p_wifi_ant_config, p_gw_wifi_ssid);
+    const wifiman_wifi_ssid_t wifi_ap_ssid = wifiman_config_ap_get_ssid();
+    wifi_manager_init_start_wifi(p_wifi_ant_config, &wifi_ap_ssid);
 
     if (flag_start_wifi)
     {
-        const bool is_ssid_configured = wifiman_config_fetch();
-        if (is_ssid_configured && ((!flag_start_ap_only) || ('\0' != p_wifi_sta_default_cfg->ssid[0])))
+        const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
+        if (is_ssid_configured && (!flag_start_ap_only))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
             wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
@@ -657,6 +632,16 @@ wifi_callback_on_disconnect_sta_cmd(void)
     {
         g_wifi_callbacks.cb_on_disconnect_sta_cmd();
     }
+}
+
+void
+wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
+{
+    if (NULL == g_wifi_callbacks.cb_save_wifi_config)
+    {
+        return;
+    }
+    g_wifi_callbacks.cb_save_wifi_config(p_cfg);
 }
 
 void
