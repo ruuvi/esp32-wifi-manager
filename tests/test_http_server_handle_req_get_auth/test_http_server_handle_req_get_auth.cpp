@@ -97,7 +97,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
         "",
         "",
     };
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
@@ -126,7 +126,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
         "",
         "",
     };
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
@@ -167,7 +167,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass + string("\r\n");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -209,7 +209,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
@@ -252,7 +252,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: unknown ") + encoded_pass;
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -296,7 +296,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass.substr(0, 2);
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -340,7 +340,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic qqqqwwwweeee");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -367,7 +367,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -413,7 +413,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authorization) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -460,7 +460,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_authorization) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -507,7 +507,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":abc");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -555,7 +555,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user2:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -603,7 +603,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -783,7 +783,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -887,7 +887,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -991,7 +991,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1095,7 +1095,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1199,7 +1199,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1303,7 +1303,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1407,7 +1407,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1511,7 +1511,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1614,7 +1614,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quote) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1718,7 +1718,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1821,7 +1821,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1913,7 +1913,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -1969,7 +1969,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_different_api_key) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -2028,7 +2028,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_api_key_len) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -2084,7 +2084,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -2139,7 +2139,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -2193,7 +2193,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
@@ -2246,7 +2246,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // NOLINT
 {
-    const wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
+    const wifiman_wifi_ssid_t                  ap_ssid       = { "RuuviGatewayEEFF" };
     const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),

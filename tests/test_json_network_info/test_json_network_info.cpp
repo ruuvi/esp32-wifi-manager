@@ -218,7 +218,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_empty) // NOLINT
         { "255.255.255.0" },
         { "192.168.0.2" },
     };
-    const wifi_ssid_t ssid = { "" };
+    const wifiman_wifi_ssid_t ssid = { "" };
     json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
@@ -236,7 +236,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_connection_ok) // NOLINT
         { "192.168.0.2" },
     };
 
-    const wifi_ssid_t ssid = { "test_ssid" };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
@@ -260,7 +260,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt) // NOLINT
         { "0" },
         { "" },
     };
-    const wifi_ssid_t ssid = { "test_ssid" };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_FAILED_ATTEMPT);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
@@ -284,7 +284,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt_2) // NOLINT
         { "255.255.255.0" },
         { "192.168.0.2" },
     };
-    const wifi_ssid_t ssid = { "test_ssid" };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_FAILED_ATTEMPT);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
@@ -308,7 +308,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_user_disconnect) // NOLINT
         { "0" },
         { "" },
     };
-    const wifi_ssid_t ssid = { "test_ssid" };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_USER_DISCONNECT);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
@@ -332,7 +332,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_lost_connection) // NOLINT
         { "0" },
         { "" },
     };
-    const wifi_ssid_t ssid = { "test_ssid" };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_LOST_CONNECTION);
     string json_str = json_network_info_get(false);
     ASSERT_EQ(
