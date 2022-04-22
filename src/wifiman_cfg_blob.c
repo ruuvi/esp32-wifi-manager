@@ -13,9 +13,12 @@
 #include "wifi_manager_defs.h"
 #include "wifiman_config.h"
 
-// Warning: Debug log level prints out the passwords as a "plaintext" so accidents won't happen.
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
+
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
+#warning Debug log level prints out the passwords as a "plaintext".
+#endif
 
 #define WIFIMAN_CFG_BLOB_MAX_SSID_SIZE     (32U)
 #define WIFIMAN_CFG_BLOB_MAX_PASSWORD_SIZE (64U)

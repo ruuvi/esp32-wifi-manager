@@ -24,9 +24,12 @@
 #include "http_server_handle_req_delete_auth.h"
 #include "http_server_ecdh.h"
 
-// Warning: Debug log level prints out the passwords as a "plaintext" so accidents won't happen.
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
+
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
+#warning Debug log level prints out the passwords as a "plaintext".
+#endif
 
 static const char TAG[] = "http_server";
 
