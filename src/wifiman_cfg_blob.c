@@ -143,10 +143,7 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
             p_cfg->wifi_settings_ap.ap_bandwidth = wifi_settings.ap_bandwidth;
             break;
         default:
-            LOG_WARN(
-                "%s: Unknown ap_bandwidth=%d, force set to WIFI_BW_HT20",
-                __func__,
-                wifi_settings.ap_bandwidth);
+            LOG_WARN("%s: Unknown ap_bandwidth=%d, force set to WIFI_BW_HT20", __func__, wifi_settings.ap_bandwidth);
             p_cfg->wifi_settings_ap.ap_bandwidth = WIFI_BW_HT20;
             break;
     }
@@ -173,7 +170,7 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
             p_cfg->wifi_settings_sta.sta_power_save = WIFI_PS_NONE;
             break;
     }
-    p_cfg->wifi_settings_sta.sta_static_ip = !!wifi_settings.sta_static_ip;
+    p_cfg->wifi_settings_sta.sta_static_ip        = !!wifi_settings.sta_static_ip;
     p_cfg->wifi_settings_sta.sta_static_ip_config = wifi_settings.sta_static_ip_config;
 
     return true;
