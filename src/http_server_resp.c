@@ -266,9 +266,9 @@ http_server_login_session_init(
 
 const http_server_resp_auth_json_t *
 http_server_fill_auth_json(
-    const bool               is_successful,
-    const wifi_ssid_t *const p_ap_ssid,
-    const char *const        p_lan_auth_type)
+    const bool                       is_successful,
+    const wifiman_wifi_ssid_t *const p_ap_ssid,
+    const http_server_auth_type_e    lan_auth_type)
 {
     snprintf(
         g_auth_json.buf,
@@ -276,12 +276,12 @@ http_server_fill_auth_json(
         "{\"success\": %s, \"gateway_name\": \"%s\", \"lan_auth_type\": \"%s\"}",
         is_successful ? "true" : "false",
         p_ap_ssid->ssid_buf,
-        p_lan_auth_type);
+        http_server_auth_type_to_str(lan_auth_type, false));
     return &g_auth_json;
 }
 
 const http_server_resp_auth_json_t *
-http_server_fill_auth_json_bearer_failed(const wifi_ssid_t *const p_ap_ssid)
+http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t *const p_ap_ssid)
 {
     snprintf(
         g_auth_json.buf,
@@ -294,7 +294,7 @@ http_server_fill_auth_json_bearer_failed(const wifi_ssid_t *const p_ap_ssid)
 
 http_server_resp_t
 http_server_resp_401_auth_digest(
-    const wifi_ssid_t *const          p_ap_ssid,
+    const wifiman_wifi_ssid_t *const  p_ap_ssid,
     http_header_extra_fields_t *const p_extra_header_fields)
 {
     uint8_t nonce_random[HTTP_SERVER_AUTH_DIGEST_RANDOM_SIZE];
@@ -314,7 +314,7 @@ http_server_resp_401_auth_digest(
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_DIGEST);
+        HTTP_SERVER_AUTH_TYPE_DIGEST);
     snprintf(
         p_extra_header_fields->buf,
         sizeof(p_extra_header_fields->buf),
@@ -327,7 +327,7 @@ http_server_resp_401_auth_digest(
 
 static void
 http_server_resp_auth_ruuvi_prep_www_authenticate_header(
-    const wifi_ssid_t *const                            p_ap_ssid,
+    const wifiman_wifi_ssid_t *const                    p_ap_ssid,
     const http_server_auth_ruuvi_login_session_t *const p_login_session,
     http_header_extra_fields_t *const                   p_extra_header_fields)
 {
@@ -348,7 +348,7 @@ http_server_resp_auth_ruuvi_prep_www_authenticate_header(
 http_server_resp_t
 http_server_resp_401_auth_ruuvi_with_new_session_id(
     const sta_ip_string_t *const      p_remote_ip,
-    const wifi_ssid_t *const          p_ap_ssid,
+    const wifiman_wifi_ssid_t *const  p_ap_ssid,
     http_header_extra_fields_t *const p_extra_header_fields)
 {
     http_server_auth_ruuvi_t *const               p_auth_info     = http_server_auth_ruuvi_get_info();
@@ -366,26 +366,26 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_RUUVI);
+        HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_401_json(p_auth_json);
 }
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifi_ssid_t *const p_ap_ssid)
+http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid)
 {
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_RUUVI);
+        HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_401_json(p_auth_json);
 }
 
 http_server_resp_t
-http_server_resp_403_auth_deny(const wifi_ssid_t *const p_ap_ssid)
+http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t *const p_ap_ssid)
 {
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_STR_DENY);
+        HTTP_SERVER_AUTH_TYPE_DENY);
     return http_server_resp_403_json(p_auth_json);
 }

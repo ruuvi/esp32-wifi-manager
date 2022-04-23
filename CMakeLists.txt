@@ -25,6 +25,7 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/http_server_accept_and_handle_conn.h
             src/http_server_auth.c
             src/http_server_auth.h
+            src/http_server_auth_type.c
             src/http_server_auth_common.h
             src/http_server_auth_digest.c
             src/http_server_auth_digest.h
@@ -46,11 +47,13 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/sta_ip_unsafe.c
             src/sta_ip_unsafe.h
             src/wifi_manager.c
+            src/wifi_manager_default_config.c
             src/wifi_manager_handle_msg.c
             src/wifi_manager_internal.c
             src/wifi_manager_internal.h
-            src/wifi_sta_config.c
-            src/wifi_sta_config.h
+            src/wifiman_cfg_blob.c
+            src/wifiman_config.c
+            src/wifiman_config.h
             src/wifiman_msg.c
             src/wifiman_msg.h
             src/wifiman_md5.c

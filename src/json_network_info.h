@@ -45,7 +45,7 @@ extern "C" {
 
 typedef struct json_network_info_t
 {
-    wifi_ssid_t          ssid;
+    wifiman_wifi_ssid_t  ssid;
     network_info_str_t   network_info;
     update_reason_code_e update_reason_code;
     bool                 is_ssid_null;
@@ -217,7 +217,7 @@ json_network_info_do_generate_internal(
  */
 void
 json_network_info_update(
-    const wifi_ssid_t *        p_ssid,
+    const wifiman_wifi_ssid_t *p_ssid,
     const network_info_str_t * p_network_info,
     const update_reason_code_e update_reason_code);
 

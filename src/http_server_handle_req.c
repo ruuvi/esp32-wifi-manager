@@ -11,11 +11,10 @@
 #include "str_buf.h"
 #include "os_malloc.h"
 #include "cJSON.h"
-#include "mbedtls/sha256.h"
 #include "wifi_manager.h"
 #include "wifi_manager_internal.h"
 #include "wifiman_msg.h"
-#include "wifi_sta_config.h"
+#include "wifiman_config.h"
 #include "json_access_points.h"
 #include "json_network_info.h"
 #include "http_server.h"
@@ -25,9 +24,12 @@
 #include "http_server_handle_req_delete_auth.h"
 #include "http_server_ecdh.h"
 
-// Warning: Debug log level prints out the passwords as a "plaintext" so accidents won't happen.
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
+
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
+#warning Debug log level prints out the passwords as a "plaintext".
+#endif
 
 static const char TAG[] = "http_server";
 
@@ -39,10 +41,10 @@ typedef struct http_server_gen_resp_status_json_param_t
 
 typedef struct wifi_ssid_password_t
 {
-    bool is_ssid_null;
-    bool is_password_null;
-    char ssid[MAX_SSID_SIZE];
-    char password[MAX_PASSWORD_SIZE];
+    bool                    is_ssid_null;
+    bool                    is_password_null;
+    wifiman_wifi_ssid_t     ssid;
+    wifiman_wifi_password_t password;
 } wifi_ssid_password_t;
 
 static http_server_resp_status_json_t g_resp_status_json;
@@ -149,7 +151,7 @@ static http_server_resp_t
 http_server_handle_req_get_path_without_extension(
     const char *const                    p_file_name,
     const http_server_auth_info_t *const p_auth_info,
-    const wifi_ssid_t *const             p_ap_ssid,
+    const wifiman_wifi_ssid_t *const     p_ap_ssid,
     const http_server_resp_t *const      p_resp_auth_check,
     const http_server_auth_api_key_e     access_by_api_key,
     http_header_extra_fields_t *const    p_extra_header_fields)
@@ -185,7 +187,7 @@ http_server_handle_req_get(
 
     const char *const p_file_ext = strrchr(p_file_name, '.');
 
-    const wifi_ssid_t ap_ssid = wifi_sta_config_get_ap_ssid();
+    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
@@ -252,7 +254,7 @@ http_server_handle_req_delete(
     http_header_extra_fields_t *const    p_extra_header_fields)
 {
     LOG_INFO("DELETE /%s", p_file_name);
-    const wifi_ssid_t ap_ssid = wifi_sta_config_get_ap_ssid();
+    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
     const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
         flag_access_from_lan,
@@ -405,8 +407,8 @@ http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_
 
     if (NULL == p_ssid)
     {
-        p_info->is_ssid_null = true;
-        p_info->ssid[0]      = '\0';
+        p_info->is_ssid_null     = true;
+        p_info->ssid.ssid_buf[0] = '\0';
     }
     else
     {
@@ -416,13 +418,13 @@ http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_
             LOG_ERR("connect.json: SSID is too long");
             return false;
         }
-        snprintf(p_info->ssid, sizeof(p_info->ssid), "%s", p_ssid);
+        (void)snprintf(p_info->ssid.ssid_buf, sizeof(p_info->ssid.ssid_buf), "%s", p_ssid);
     }
 
     if (NULL == p_password)
     {
-        p_info->is_password_null = true;
-        p_info->password[0]      = '\0';
+        p_info->is_password_null         = true;
+        p_info->password.password_buf[0] = '\0';
     }
     else
     {
@@ -432,7 +434,7 @@ http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_
             LOG_ERR("connect.json: password is too long");
             return false;
         }
-        snprintf(p_info->password, sizeof(p_info->password), "%s", p_password);
+        (void)snprintf(p_info->password.password_buf, sizeof(p_info->password.password_buf), "%s", p_password);
     }
     return true;
 }
@@ -460,7 +462,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
     {
         return http_server_resp_400();
     }
-    LOG_INFO("http_server_netconn_serve: decrypted: %s", decrypted_content.buf);
+    LOG_DBG("http_server_netconn_serve: decrypted: %s", decrypted_content.buf);
     wifi_ssid_password_t login_info = { 0 };
     if (!http_server_parse_json_wifi_ssid_password(decrypted_content.buf, &login_info))
     {
@@ -478,17 +480,17 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
     {
         if (login_info.is_password_null)
         {
-            const wifi_ssid_t saved_ssid = wifi_sta_config_get_ssid();
-            if (0 == strcmp(saved_ssid.ssid_buf, login_info.ssid))
+            const wifiman_wifi_ssid_t saved_ssid = wifiman_config_sta_get_ssid();
+            if (0 == strcmp(saved_ssid.ssid_buf, login_info.ssid.ssid_buf))
             {
-                LOG_INFO("POST /connect.json: SSID:%s, PWD: NULL - reconnect to saved WiFi", login_info.ssid);
+                LOG_INFO("POST /connect.json: SSID:%s, PWD: NULL - reconnect to saved WiFi", login_info.ssid.ssid_buf);
             }
             else
             {
                 LOG_WARN(
                     "POST /connect.json: SSID:%s, PWD: NULL - try to connect to WiFi without authentication",
-                    login_info.ssid);
-                wifi_sta_config_set_ssid_and_password(login_info.ssid, strlen(login_info.ssid), "", 0);
+                    login_info.ssid.ssid_buf);
+                wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
             }
             LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_connect_async();
@@ -500,12 +502,8 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
             p_ssid,
             (printf_int_t)len_password,
             p_password);
-        LOG_INFO("POST /connect.json: SSID:%s, PWD: ******** - connect to WiFi", login_info.ssid);
-        wifi_sta_config_set_ssid_and_password(
-            login_info.ssid,
-            strlen(login_info.ssid),
-            login_info.password,
-            strlen(login_info.password));
+        LOG_INFO("POST /connect.json: SSID:%s, PWD: ******** - connect to WiFi", login_info.ssid.ssid_buf);
+        wifiman_config_sta_set_ssid_and_password(&login_info.ssid, &login_info.password);
 
         LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
         wifi_manager_connect_async();
@@ -527,7 +525,7 @@ http_server_handle_req_post(
 {
     LOG_INFO("POST /%s", p_file_name);
 
-    const wifi_ssid_t ap_ssid = wifi_sta_config_get_ap_ssid();
+    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
     if (0 == strcmp(p_file_name, "auth"))
     {

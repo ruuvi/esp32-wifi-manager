@@ -30,7 +30,7 @@ http_server_handle_req_check_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t *const         p_remote_ip,
     const http_server_auth_info_t *const p_auth_info,
-    const wifi_ssid_t *const             p_ap_ssid,
+    const wifiman_wifi_ssid_t *const     p_ap_ssid,
     http_header_extra_fields_t *const    p_extra_header_fields,
     http_server_auth_api_key_e *const    p_allow_access_by_api_key);
 
@@ -40,7 +40,7 @@ http_server_handle_req_get_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t *const         p_remote_ip,
     const http_server_auth_info_t *const p_auth_info,
-    const wifi_ssid_t *const             p_ap_ssid,
+    const wifiman_wifi_ssid_t *const     p_ap_ssid,
     http_header_extra_fields_t *const    p_extra_header_fields);
 
 #ifdef __cplusplus

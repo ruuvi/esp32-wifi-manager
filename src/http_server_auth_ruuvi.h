@@ -9,6 +9,7 @@
 #define ESP32_WIFI_MANAGER_HTTP_SERVER_AUTH_RUUVI_H
 
 #include "http_server_auth_common.h"
+#include "http_server_auth_type.h"
 #include "wifiman_sha256.h"
 #include "http_req.h"
 #include "sta_ip.h"
@@ -28,8 +29,8 @@ extern "C" {
 
 typedef struct http_server_auth_ruuvi_req_t
 {
-    char username[HTTP_SERVER_MAX_AUTH_USER_LEN];
-    char password[HTTP_SERVER_MAX_AUTH_PASS_LEN];
+    http_server_auth_user_t username;
+    http_server_auth_pass_t password;
 } http_server_auth_ruuvi_req_t;
 
 typedef struct http_server_auth_ruuvi_session_id_t

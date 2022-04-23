@@ -55,66 +55,28 @@ http_server_strnstr(const char *const p_haystack, const char *const p_needle, co
 
 bool
 http_server_set_auth(
-    const char *const p_auth_type,
-    const char *const p_auth_user,
-    const char *const p_auth_pass,
-    const char *const p_auth_api_key)
+    const http_server_auth_type_e           auth_type,
+    const http_server_auth_user_t *const    p_auth_user,
+    const http_server_auth_pass_t *const    p_auth_pass,
+    const http_server_auth_api_key_t *const p_auth_api_key)
 {
-    http_server_auth_type_e auth_type = HTTP_SERVER_AUTH_TYPE_DENY;
-    if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_DENY, p_auth_type))
+    http_server_auth_info_t *const p_auth_info                    = &g_auth_info;
+    const char *const              p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user->buf : "";
+    const char *const              p_auth_pass_safe               = (NULL != p_auth_pass) ? p_auth_pass->buf : "";
+    bool                           flag_clear_authorized_sessions = false;
+    if (auth_type != p_auth_info->auth_type)
     {
-        auth_type = HTTP_SERVER_AUTH_TYPE_DENY;
-    }
-    else if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_ALLOW, p_auth_type))
-    {
-        auth_type = HTTP_SERVER_AUTH_TYPE_ALLOW;
-    }
-    else if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_BASIC, p_auth_type))
-    {
-        auth_type = HTTP_SERVER_AUTH_TYPE_BASIC;
-    }
-    else if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_DIGEST, p_auth_type))
-    {
-        auth_type = HTTP_SERVER_AUTH_TYPE_DIGEST;
-    }
-    else if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_RUUVI, p_auth_type))
-    {
-        auth_type = HTTP_SERVER_AUTH_TYPE_RUUVI;
-    }
-    else
-    {
-        // MISRA C:2012, 15.7 - All if...else if constructs shall be terminated with an else statement
-        auth_type = HTTP_SERVER_AUTH_TYPE_DENY;
-    }
-
-    if ((NULL != p_auth_user) && (strlen(p_auth_user) >= sizeof(g_auth_info.auth_user)))
-    {
-        return false;
-    }
-    if ((NULL != p_auth_pass) && (strlen(p_auth_pass) >= sizeof(g_auth_info.auth_pass)))
-    {
-        return false;
-    }
-    if ((NULL != p_auth_api_key) && (strlen(p_auth_api_key) >= sizeof(g_auth_info.auth_api_key)))
-    {
-        return false;
-    }
-    const char *const p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user : "";
-    const char *const p_auth_pass_safe               = (NULL != p_auth_pass) ? p_auth_pass : "";
-    bool              flag_clear_authorized_sessions = false;
-    if (auth_type != g_auth_info.auth_type)
-    {
-        g_auth_info.auth_type          = auth_type;
+        p_auth_info->auth_type         = auth_type;
         flag_clear_authorized_sessions = true;
     }
-    if (0 != strcmp(g_auth_info.auth_user, p_auth_user_safe))
+    if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_user_safe))
     {
-        snprintf(g_auth_info.auth_user, sizeof(g_auth_info.auth_user), "%s", p_auth_user_safe);
+        snprintf(p_auth_info->auth_user.buf, sizeof(p_auth_info->auth_user.buf), "%s", p_auth_user_safe);
         flag_clear_authorized_sessions = true;
     }
-    if (0 != strcmp(g_auth_info.auth_pass, p_auth_pass_safe))
+    if (0 != strcmp(p_auth_info->auth_pass.buf, p_auth_pass_safe))
     {
-        snprintf(g_auth_info.auth_pass, sizeof(g_auth_info.auth_pass), "%s", p_auth_pass_safe);
+        snprintf(p_auth_info->auth_pass.buf, sizeof(p_auth_info->auth_pass.buf), "%s", p_auth_pass_safe);
         flag_clear_authorized_sessions = true;
     }
 
@@ -124,10 +86,10 @@ http_server_set_auth(
     }
 
     snprintf(
-        g_auth_info.auth_api_key,
-        sizeof(g_auth_info.auth_api_key),
+        p_auth_info->auth_api_key.buf,
+        sizeof(p_auth_info->auth_api_key.buf),
         "%s",
-        (NULL != p_auth_api_key) ? p_auth_api_key : "");
+        (NULL != p_auth_api_key) ? p_auth_api_key->buf : "");
     return true;
 }
 

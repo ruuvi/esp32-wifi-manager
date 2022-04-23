@@ -76,7 +76,7 @@ typedef enum http_server_sig_e
 } http_server_sig_e;
 
 #define HTTP_SERVER_SIG_FIRST (HTTP_SERVER_SIG_STOP)
-#define HTTP_SERVER_SIG_LAST  (HTTP_SERVER_SIG_USER_REQ_1)
+#define HTTP_SERVER_SIG_LAST  (HTTP_SERVER_SIG_USER_REQ_2)
 
 #define HTTP_SERVER_ACCEPT_TIMEOUT_MS (1 * 1000)
 
