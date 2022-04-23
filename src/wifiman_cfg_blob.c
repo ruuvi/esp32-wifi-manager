@@ -134,9 +134,22 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
     *p_cfg = *wifiman_default_config_get();
 
     p_cfg->wifi_config_ap.channel     = wifi_settings.ap_channel;
-    p_cfg->wifi_config_ap.ssid_hidden = wifi_settings.ap_ssid_hidden;
+    p_cfg->wifi_config_ap.ssid_hidden = (0 != wifi_settings.ap_ssid_hidden) ? 1 : 0;
 
-    p_cfg->wifi_settings_ap.ap_bandwidth = wifi_settings.ap_bandwidth;
+    switch (wifi_settings.ap_bandwidth)
+    {
+        case WIFI_BW_HT20:
+        case WIFI_BW_HT40:
+            p_cfg->wifi_settings_ap.ap_bandwidth = wifi_settings.ap_bandwidth;
+            break;
+        default:
+            LOG_WARN(
+                "%s: Unknown ap_bandwidth=%d, force set to WIFI_BW_HT20",
+                __func__,
+                wifi_settings.ap_bandwidth);
+            p_cfg->wifi_settings_ap.ap_bandwidth = WIFI_BW_HT20;
+            break;
+    }
 
     (void)snprintf((char *)p_cfg->wifi_config_sta.ssid, sizeof(p_cfg->wifi_config_sta.ssid), "%s", sta_ssid.ssid_buf);
     (void)snprintf(
@@ -145,11 +158,23 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
         "%s",
         sta_password.password_buf);
 
-    p_cfg->wifi_settings_sta = (wifi_settings_sta_t) {
-        .sta_power_save       = wifi_settings.sta_power_save,
-        .sta_static_ip        = wifi_settings.sta_power_save,
-        .sta_static_ip_config = wifi_settings.sta_static_ip_config,
-    };
+    switch (wifi_settings.sta_power_save)
+    {
+        case WIFI_PS_NONE:
+        case WIFI_PS_MIN_MODEM:
+        case WIFI_PS_MAX_MODEM:
+            p_cfg->wifi_settings_sta.sta_power_save = wifi_settings.sta_power_save;
+            break;
+        default:
+            LOG_WARN(
+                "%s: Unknown sta_power_save=%d, force set to WIFI_PS_NONE",
+                __func__,
+                wifi_settings.sta_power_save);
+            p_cfg->wifi_settings_sta.sta_power_save = WIFI_PS_NONE;
+            break;
+    }
+    p_cfg->wifi_settings_sta.sta_static_ip = !!wifi_settings.sta_static_ip;
+    p_cfg->wifi_settings_sta.sta_static_ip_config = wifi_settings.sta_static_ip_config;
 
     return true;
 }
