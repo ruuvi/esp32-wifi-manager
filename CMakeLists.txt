@@ -52,6 +52,8 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             src/wifi_manager_internal.c
             src/wifi_manager_internal.h
             src/wifiman_cfg_blob.c
+            src/wifiman_cfg_blob_convert.c
+            src/wifiman_cfg_blob_convert.h
             src/wifiman_config.c
             src/wifiman_config.h
             src/wifiman_msg.c
