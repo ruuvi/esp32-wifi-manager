@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef uint8_t wifiman_disconnection_reason_t;
+typedef wifi_err_reason_t wifiman_disconnection_reason_t;
 
 bool
 wifiman_msg_init(void);

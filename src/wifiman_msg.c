@@ -147,6 +147,7 @@ wifiman_msg_send_cmd_disconnect_eth(void)
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
+    LOG_INFO("Send msg: ORDER_DISCONNECT_ETH");
     return wifiman_msg_send(ORDER_DISCONNECT_ETH, msg_param);
 }
 
@@ -156,6 +157,7 @@ wifiman_msg_send_cmd_disconnect_sta(void)
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
+    LOG_INFO("Send msg: ORDER_DISCONNECT_STA");
     return wifiman_msg_send(ORDER_DISCONNECT_STA, msg_param);
 }
 

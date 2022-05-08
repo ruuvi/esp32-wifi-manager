@@ -134,10 +134,12 @@ wifi_manager_update_network_connection_info(
     {
         if (NULL == p_ssid)
         {
+            LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_ETH_CONNECTED_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_ETH_CONNECTED_BIT);
         }
         else
         {
+            LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_WIFI_CONNECTED_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT);
         }
         if (NULL != p_ip_info)
@@ -162,6 +164,7 @@ wifi_manager_update_network_connection_info(
     else
     {
         sta_ip_safe_reset();
+        LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_WIFI_CONNECTED_BIT | WIFI_MANAGER_ETH_CONNECTED_BIT");
         xEventGroupClearBits(
             g_p_wifi_manager_event_group,
             WIFI_MANAGER_WIFI_CONNECTED_BIT | WIFI_MANAGER_ETH_CONNECTED_BIT);
@@ -179,6 +182,7 @@ wifi_manager_connect_async(void)
     wifi_manager_lock();
     json_network_info_clear();
     wifi_manager_unlock();
+    LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_USER", __func__);
     wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
 }
 
