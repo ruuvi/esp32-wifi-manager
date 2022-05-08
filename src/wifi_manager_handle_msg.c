@@ -226,8 +226,9 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
     const EventBits_t event_bits = xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
 
     LOG_INFO(
-        "MESSAGE: EVENT_STA_DISCONNECTED with Reason code: %d, event_bits=0x%04x",
+        "MESSAGE: EVENT_STA_DISCONNECTED with Reason code: %d (%s), event_bits=0x%04x",
         (printf_uint_t)reason,
+        wifiman_disconnection_reason_to_str(reason),
         (printf_uint_t)event_bits);
     LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_SCAN_BIT");
 
