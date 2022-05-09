@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-typedef uint8_t wifiman_disconnection_reason_t;
+typedef wifi_err_reason_t wifiman_disconnection_reason_t;
 
 bool
 wifiman_msg_init(void);
@@ -36,6 +36,9 @@ wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t *p_param);
 
 wifiman_disconnection_reason_t
 wifiman_conv_param_to_reason(const wifiman_msg_param_t *p_param);
+
+const char *
+wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason);
 
 bool
 wifiman_msg_send_cmd_connect_eth(void);

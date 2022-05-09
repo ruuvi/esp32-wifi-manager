@@ -131,6 +131,7 @@ wifi_manager_esp_wifi_configure_ap(void)
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_mode");
         return;
     }
+    LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
 
     wifi_config_t ap_config = {
@@ -277,6 +278,7 @@ wifi_manager_event_handler(
                 break;
             case WIFI_EVENT_AP_START:
                 LOG_INFO("WIFI_EVENT_AP_START");
+                LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_STARTED_BIT");
                 xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STARTED_BIT);
                 break;
             case WIFI_EVENT_AP_STOP:
@@ -302,7 +304,11 @@ wifi_manager_event_handler(
                 LOG_INFO("WIFI_EVENT_STA_CONNECTED");
                 break;
             case WIFI_EVENT_STA_DISCONNECTED:
-                LOG_INFO("WIFI_EVENT_STA_DISCONNECTED");
+                LOG_INFO(
+                    "WIFI_EVENT_STA_DISCONNECTED, reason=%d (%s)",
+                    ((const wifi_event_sta_disconnected_t *)p_event_data)->reason,
+                    wifiman_disconnection_reason_to_str(((const wifi_event_sta_disconnected_t *)p_event_data)->reason));
+
                 wifiman_msg_send_ev_disconnected(((const wifi_event_sta_disconnected_t *)p_event_data)->reason);
                 break;
             default:
@@ -422,6 +428,7 @@ wifi_manager_init_start_wifi(
         LOG_ERR("%s failed", "esp_wifi_set_mode");
         return false;
     }
+    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
 
     err = esp_wifi_start();
@@ -515,6 +522,7 @@ wifi_manager_init(
         if (is_ssid_configured && (!flag_start_ap_only))
         {
             LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
+            LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
             wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
         }
         else
@@ -647,6 +655,7 @@ wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
 void
 wifi_manger_notify_scan_done(void)
 {
+    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_SCAN_BIT");
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
     if (NULL != g_p_scan_sync_sema)
     {
