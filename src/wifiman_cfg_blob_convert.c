@@ -15,6 +15,8 @@
 #warning Debug log level prints out the passwords as a "plaintext".
 #endif
 
+#define WIFI_MAX_AP_CHANNEL (14)
+
 static const char TAG[] = "wifi_manager";
 
 void
@@ -24,7 +26,7 @@ wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman
 
     *p_cfg_dst = *p_cfg_default;
 
-    if (p_cfg_blob_src->wifi_settings.ap_channel <= 14)
+    if (p_cfg_blob_src->wifi_settings.ap_channel <= WIFI_MAX_AP_CHANNEL)
     {
         p_cfg_dst->wifi_config_ap.channel = p_cfg_blob_src->wifi_settings.ap_channel;
     }
