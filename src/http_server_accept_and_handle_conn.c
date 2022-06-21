@@ -626,14 +626,17 @@ http_server_netconn_serve(struct netconn *const p_conn)
     }
 
     LOG_INFO(
-        "Request from %s to %s: %s %s",
+        "Request from %s to %s: %s %s%s%s",
         remote_ip_str.buf,
         local_ip_str.buf,
-        req_info.http_cmd.ptr ? req_info.http_cmd.ptr : "NULL",
-        req_info.http_uri.ptr ? req_info.http_uri.ptr : "NULL");
+        (NULL != req_info.http_cmd.ptr) ? req_info.http_cmd.ptr : "NULL",
+        (NULL != req_info.http_uri.ptr) ? req_info.http_uri.ptr : "NULL",
+        (NULL != req_info.http_uri_params.ptr) ? "?" : "",
+        (NULL != req_info.http_uri_params.ptr) ? req_info.http_uri_params.ptr : "");
 
     LOG_DBG("p_http_cmd: %s", req_info.http_cmd.ptr ? req_info.http_cmd.ptr : "NULL");
     LOG_DBG("p_http_uri: %s", req_info.http_uri.ptr ? req_info.http_uri.ptr : "NULL");
+    LOG_DBG("p_http_uri_params: %s", req_info.http_uri_params.ptr ? req_info.http_uri_params.ptr : "NULL");
     LOG_DBG("p_http_ver: %s", req_info.http_ver.ptr ? req_info.http_ver.ptr : "NULL");
     LOG_DBG("p_http_header: %s", req_info.http_header.ptr ? req_info.http_header.ptr : "NULL");
     LOG_DBG("p_http_body: %s", req_info.http_body.ptr ? req_info.http_body.ptr : "NULL");

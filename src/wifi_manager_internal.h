@@ -113,18 +113,21 @@ wifi_manager_cb_on_user_req(const http_server_user_req_code_e req_code);
 http_server_resp_t
 wifi_manager_cb_on_http_get(
     const char *const               p_path,
+    const char *const               p_uri_params,
     const bool                      flag_access_from_lan,
     const http_server_resp_t *const p_resp_auth);
 
 http_server_resp_t
 wifi_manager_cb_on_http_post(
     const char *const     p_path,
+    const char *const     p_uri_params,
     const http_req_body_t http_body,
     const bool            flag_access_from_lan);
 
 http_server_resp_t
 wifi_manager_cb_on_http_delete(
     const char *const               p_path,
+    const char *const               p_uri_params,
     const bool                      flag_access_from_lan,
     const http_server_resp_t *const p_resp_auth);
 
