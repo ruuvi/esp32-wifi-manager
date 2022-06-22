@@ -21,11 +21,12 @@ extern "C" {
 
 typedef enum http_server_auth_type_e
 {
-    HTTP_SERVER_AUTH_TYPE_ALLOW  = 0,
-    HTTP_SERVER_AUTH_TYPE_BASIC  = 1,
-    HTTP_SERVER_AUTH_TYPE_DIGEST = 2,
-    HTTP_SERVER_AUTH_TYPE_RUUVI  = 3,
-    HTTP_SERVER_AUTH_TYPE_DENY   = 4,
+    HTTP_SERVER_AUTH_TYPE_ALLOW   = 0,
+    HTTP_SERVER_AUTH_TYPE_BASIC   = 1,
+    HTTP_SERVER_AUTH_TYPE_DIGEST  = 2,
+    HTTP_SERVER_AUTH_TYPE_RUUVI   = 3,
+    HTTP_SERVER_AUTH_TYPE_DENY    = 4,
+    HTTP_SERVER_AUTH_TYPE_DEFAULT = 5,
 } http_server_auth_type_e;
 
 typedef struct http_server_auth_type_str_t
@@ -49,10 +50,10 @@ typedef struct http_server_auth_api_key_t
 } http_server_auth_api_key_t;
 
 http_server_auth_type_e
-http_server_auth_type_from_str(const char *const p_auth_type, bool *const p_flag_default);
+http_server_auth_type_from_str(const char *const p_auth_type);
 
 const char *
-http_server_auth_type_to_str(const http_server_auth_type_e auth_type, const bool flag_use_default_auth);
+http_server_auth_type_to_str(const http_server_auth_type_e auth_type);
 
 bool
 http_server_set_auth(

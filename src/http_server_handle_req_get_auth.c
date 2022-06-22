@@ -177,6 +177,7 @@ http_server_handle_req_get_auth_ruuvi(
     const sta_ip_string_t *const      p_remote_ip,
     const wifiman_wifi_ssid_t *const  p_ap_ssid,
     const bool                        flag_check,
+    const bool                        flag_auth_default,
     http_header_extra_fields_t *const p_extra_header_fields)
 {
     http_server_auth_ruuvi_session_id_t session_id = { 0 };
@@ -184,9 +185,13 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_ap_ssid);
+            return http_server_resp_401_auth_ruuvi(p_ap_ssid, flag_auth_default);
         }
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_ap_ssid,
+            p_extra_header_fields,
+            flag_auth_default);
     }
     const http_server_auth_ruuvi_authorized_session_t *const p_authorized_session
         = http_server_auth_ruuvi_find_authorized_session(&session_id, p_remote_ip);
@@ -195,15 +200,19 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_ap_ssid);
+            return http_server_resp_401_auth_ruuvi(p_ap_ssid, flag_auth_default);
         }
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(p_remote_ip, p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_ap_ssid,
+            p_extra_header_fields,
+            flag_auth_default);
     }
 
     const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_RUUVI);
+        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -241,9 +250,18 @@ http_server_handle_req_get_or_check_auth(
                 p_remote_ip,
                 p_ap_ssid,
                 flag_check,
+                false,
                 p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DENY:
             return http_server_handle_req_get_auth_deny(p_ap_ssid);
+        case HTTP_SERVER_AUTH_TYPE_DEFAULT:
+            return http_server_handle_req_get_auth_ruuvi(
+                http_header,
+                p_remote_ip,
+                p_ap_ssid,
+                flag_check,
+                true,
+                p_extra_header_fields);
     }
     return http_server_resp_503();
 }

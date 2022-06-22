@@ -276,7 +276,7 @@ http_server_fill_auth_json(
         "{\"success\": %s, \"gateway_name\": \"%s\", \"lan_auth_type\": \"%s\"}",
         is_successful ? "true" : "false",
         p_ap_ssid->ssid_buf,
-        http_server_auth_type_to_str(lan_auth_type, false));
+        http_server_auth_type_to_str(lan_auth_type));
     return &g_auth_json;
 }
 
@@ -349,7 +349,8 @@ http_server_resp_t
 http_server_resp_401_auth_ruuvi_with_new_session_id(
     const sta_ip_string_t *const      p_remote_ip,
     const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields)
+    http_header_extra_fields_t *const p_extra_header_fields,
+    const bool                        flag_auth_default)
 {
     http_server_auth_ruuvi_t *const               p_auth_info     = http_server_auth_ruuvi_get_info();
     http_server_auth_ruuvi_login_session_t *const p_login_session = &p_auth_info->login_session;
@@ -366,17 +367,17 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_RUUVI);
+        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_401_json(p_auth_json);
 }
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid)
+http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid, const bool flag_auth_default)
 {
     const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
-        HTTP_SERVER_AUTH_TYPE_RUUVI);
+        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_401_json(p_auth_json);
 }
 

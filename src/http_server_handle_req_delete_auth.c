@@ -15,21 +15,26 @@ http_server_handle_req_delete_auth(
     const http_server_auth_info_t *const p_auth_info,
     const wifiman_wifi_ssid_t *const     p_ap_ssid)
 {
-    if (HTTP_SERVER_AUTH_TYPE_RUUVI != p_auth_info->auth_type)
+    if ((HTTP_SERVER_AUTH_TYPE_RUUVI != p_auth_info->auth_type)
+        && (HTTP_SERVER_AUTH_TYPE_DEFAULT != p_auth_info->auth_type))
     {
         return http_server_resp_503();
     }
     http_server_auth_ruuvi_session_id_t session_id = { 0 };
     if (!http_server_auth_ruuvi_get_session_id_from_cookies(http_header, &session_id))
     {
-        return http_server_resp_401_auth_ruuvi(p_ap_ssid);
+        return http_server_resp_401_auth_ruuvi(
+            p_ap_ssid,
+            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
     }
     http_server_auth_ruuvi_authorized_session_t *const p_authorized_session
         = http_server_auth_ruuvi_find_authorized_session(&session_id, p_remote_ip);
 
     if (NULL == p_authorized_session)
     {
-        return http_server_resp_401_auth_ruuvi(p_ap_ssid);
+        return http_server_resp_401_auth_ruuvi(
+            p_ap_ssid,
+            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
     }
 
     p_authorized_session->session_id.buf[0] = '\0';

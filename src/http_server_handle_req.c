@@ -78,6 +78,7 @@ http_server_handle_req_get_html_or_json(
     if ((HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code) && (0 != strcmp(p_file_name, "auth.html")))
     {
         if ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+            || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type)
             || (HTTP_SERVER_AUTH_TYPE_DENY == p_auth_info->auth_type))
         {
             snprintf(
@@ -132,7 +133,8 @@ http_server_handle_req_get_path_without_extension_api_key_not_used(
 {
     if (HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code)
     {
-        if (HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+        if ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+            || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type))
         {
             snprintf(
                 p_extra_header_fields->buf,
