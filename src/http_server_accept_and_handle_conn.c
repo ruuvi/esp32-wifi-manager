@@ -158,7 +158,7 @@ http_server_netconn_write(
         offset += bytes_written;
         if (!http_server_sema_send_wait_timeout(p_conn->send_timeout))
         {
-            LOG_ERR("netconn_write_partly failed: send timeout");
+            LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
             return false;
         }
     } while (offset != buf_len);
@@ -716,7 +716,7 @@ http_server_accept_and_handle_conn(struct netconn *const p_conn)
         }
         else
         {
-            const int_fast32_t timeout_ms = 1500;
+            const int_fast32_t timeout_ms = 2500;
             netconn_set_recvtimeout(p_new_conn, timeout_ms);
             netconn_set_sendtimeout(p_new_conn, timeout_ms);
             const os_delta_ticks_t t0 = xTaskGetTickCount();
