@@ -280,11 +280,13 @@ typedef void (*wifi_manager_http_cb_on_user_req_t)(const http_server_user_req_co
 
 typedef http_server_resp_t (*wifi_manager_http_callback_t)(
     const char *const               p_path,
+    const char *const               p_uri_params,
     const bool                      flag_access_from_lan,
     const http_server_resp_t *const p_resp_auth);
 
 typedef http_server_resp_t (*wifi_manager_http_cb_on_post_t)(
     const char *const p_path,
+    const char *const p_uri_params,
     const char *const p_body,
     const bool        flag_access_from_lan);
 

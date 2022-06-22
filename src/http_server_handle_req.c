@@ -118,7 +118,7 @@ http_server_handle_req_get_html_or_json(
     }
     if (0 == strcmp(p_file_name, "auth.html"))
     {
-        return wifi_manager_cb_on_http_get(p_file_name, flag_access_from_lan, p_resp_auth_check);
+        return wifi_manager_cb_on_http_get(p_file_name, NULL, flag_access_from_lan, p_resp_auth_check);
     }
     return http_server_resp_404();
 }
@@ -175,6 +175,7 @@ http_server_handle_req_get_path_without_extension(
 static http_server_resp_t
 http_server_handle_req_get(
     const char *const                    p_file_name_unchecked,
+    const char *const                    p_uri_params,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const sta_ip_string_t *const         p_remote_ip,
@@ -241,7 +242,7 @@ http_server_handle_req_get(
             return resp_auth_check_with_api_key;
         }
     }
-    return wifi_manager_cb_on_http_get(p_file_name, flag_access_from_lan, NULL);
+    return wifi_manager_cb_on_http_get(p_file_name, p_uri_params, flag_access_from_lan, NULL);
 }
 
 static http_server_resp_t
@@ -288,7 +289,7 @@ http_server_handle_req_delete(
         }
         return http_server_resp_200_json("{}");
     }
-    return wifi_manager_cb_on_http_delete(p_file_name, flag_access_from_lan, NULL);
+    return wifi_manager_cb_on_http_delete(p_file_name, NULL, flag_access_from_lan, NULL);
 }
 
 static const char *
@@ -497,11 +498,9 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
             return http_server_resp_200_json("{}");
         }
         LOG_DBG(
-            "POST /connect.json: SSID:%.*s, PWD: %.*s - connect to WiFi",
-            (printf_int_t)len_ssid,
-            p_ssid,
-            (printf_int_t)len_password,
-            p_password);
+            "POST /connect.json: SSID:%s, PWD: %s - connect to WiFi",
+            login_info.ssid.ssid_buf,
+            login_info.password.password_buf);
         LOG_INFO("POST /connect.json: SSID:%s, PWD: ******** - connect to WiFi", login_info.ssid.ssid_buf);
         wifiman_config_sta_set_ssid_and_password(&login_info.ssid, &login_info.password);
 
@@ -557,7 +556,7 @@ http_server_handle_req_post(
     {
         return http_server_handle_req_post_connect_json(http_body);
     }
-    return wifi_manager_cb_on_http_post(p_file_name, http_body, flag_access_from_lan);
+    return wifi_manager_cb_on_http_post(p_file_name, NULL, http_body, flag_access_from_lan);
 }
 
 http_server_resp_t
@@ -581,6 +580,7 @@ http_server_handle_req(
     {
         const http_server_resp_t resp = http_server_handle_req_get(
             path,
+            p_req_info->http_uri_params.ptr,
             flag_access_from_lan,
             p_req_info->http_header,
             p_remote_ip,
