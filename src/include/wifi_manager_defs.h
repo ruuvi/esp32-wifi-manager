@@ -216,14 +216,16 @@ typedef struct network_info_str_t
 
 typedef enum http_resp_code_e
 {
-    HTTP_RESP_CODE_200 = 200,
-    HTTP_RESP_CODE_302 = 302,
-    HTTP_RESP_CODE_400 = 400,
-    HTTP_RESP_CODE_401 = 401,
-    HTTP_RESP_CODE_403 = 403,
-    HTTP_RESP_CODE_404 = 404,
-    HTTP_RESP_CODE_503 = 503,
-    HTTP_RESP_CODE_504 = 504,
+    HTTP_RESP_CODE_200 = 200, // OK
+    HTTP_RESP_CODE_301 = 301, // Moved Permanently
+    HTTP_RESP_CODE_302 = 302, // Found
+    HTTP_RESP_CODE_400 = 400, // Bad Request
+    HTTP_RESP_CODE_401 = 401, // Unauthorized
+    HTTP_RESP_CODE_403 = 403, // Forbidden
+    HTTP_RESP_CODE_404 = 404, // Not Found
+    HTTP_RESP_CODE_502 = 502, // Bad Gateway
+    HTTP_RESP_CODE_503 = 503, // Service Unavailable
+    HTTP_RESP_CODE_504 = 504, // Gateway Timeout
 } http_resp_code_e;
 
 typedef enum http_content_type_e
