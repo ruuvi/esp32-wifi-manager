@@ -286,7 +286,7 @@ http_server_handle_req_delete(
         }
         else
         {
-            /* request a disconnection from Wi-Fi and forget about it */
+            /* request a disconnection from Wi-Fi */
             wifi_manager_disconnect_wifi();
         }
         return http_server_resp_200_json("{}");

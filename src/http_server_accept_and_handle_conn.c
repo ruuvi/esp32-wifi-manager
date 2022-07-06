@@ -467,6 +467,29 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
 }
 
 static void
+http_server_netconn_resp_301_auth_html(
+    struct netconn *const                   p_conn,
+    const sta_ip_string_t *const            p_ip_str,
+    const http_header_extra_fields_t *const p_extra_header_fields)
+{
+    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_ip_str->buf);
+    if (!http_server_netconn_printf(
+            p_conn,
+            false,
+            "HTTP/1.1 301 Moved Permanently\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "Location: http://%s/auth.html\r\n"
+            "%s"
+            "\r\n",
+            p_ip_str->buf,
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
 http_server_netconn_resp_302_auth_html(
     struct netconn *const                   p_conn,
     const sta_ip_string_t *const            p_ip_str,
@@ -520,6 +543,12 @@ http_server_netconn_resp_404(struct netconn *const p_conn)
 }
 
 static void
+http_server_netconn_resp_502(struct netconn *const p_conn)
+{
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
+}
+
+static void
 http_server_netconn_resp_503(struct netconn *const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
@@ -542,6 +571,9 @@ http_server_netconn_resp(
         case HTTP_RESP_CODE_200:
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
+        case HTTP_RESP_CODE_301:
+            http_server_netconn_resp_301_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            return;
         case HTTP_RESP_CODE_302:
             http_server_netconn_resp_302_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
             return;
@@ -556,6 +588,9 @@ http_server_netconn_resp(
             return;
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn);
+            return;
+        case HTTP_RESP_CODE_502:
+            http_server_netconn_resp_502(p_conn);
             return;
         case HTTP_RESP_CODE_503:
             http_server_netconn_resp_503(p_conn);
