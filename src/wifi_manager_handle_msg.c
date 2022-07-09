@@ -90,6 +90,7 @@ static void
 wifi_handle_cmd_connect_eth(void)
 {
     LOG_INFO("MESSAGE: ORDER_CONNECT_ETH");
+    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
     wifi_callback_on_connect_eth_cmd();
 }
 
@@ -110,6 +111,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
                 "MESSAGE: ORDER_CONNECT_STA: CONNECTION_REQUEST_USER, event_bits=0x%04x",
                 (printf_uint_t)event_bits);
             LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_STA_CONNECT_BIT");
+            xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
             break;
         case CONNECTION_REQUEST_AUTO_RECONNECT:
