@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "os_mutex.h"
+#include "os_task.h"
 #include "sta_ip_safe.h"
 #include "esp_log_wrapper.hpp"
 
@@ -141,6 +142,12 @@ os_task_get_name(void)
 {
     static const char g_task_name[] = "main";
     return const_cast<char *>(g_task_name);
+}
+
+os_task_priority_t
+os_task_get_priority(void)
+{
+    return 0;
 }
 
 unsigned int
