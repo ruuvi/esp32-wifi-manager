@@ -676,29 +676,27 @@ http_server_netconn_serve(struct netconn *const p_conn)
     LOG_DBG("p_http_header: %s", req_info.http_header.ptr ? req_info.http_header.ptr : "NULL");
     LOG_DBG("p_http_body: %s", req_info.http_body.ptr ? req_info.http_body.ptr : "NULL");
 
-    const wifiman_ip4_addr_str_t ap_ip_str               = wifiman_config_ap_get_ip_str();
-    const bool                   is_wifi_manager_working = wifi_manager_is_working();
+    const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
 
-    /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP OR the
-     * STA IP */
+    /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
     uint32_t    host_len = 0;
     const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
 
     /* determine if Host is from the STA IP address */
     const sta_ip_string_t ip_str = sta_ip_safe_get();
 
-    const bool is_access_to_sta_ip = ('\0' != ip_str.buf[0]) && (host_len > 0) && (NULL != strstr(p_host, ip_str.buf));
-    const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
-
     LOG_DBG("Host: %.*s, StaticIP: %s", host_len, p_host, ip_str.buf);
 
-    if (is_wifi_manager_working && (!is_request_to_ap_ip) && (!is_access_to_sta_ip))
-    {
-        http_server_netconn_resp_302(p_conn);
-        return;
-    }
-
     const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
+    if (!flag_access_from_lan)
+    {
+        const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
+        if (!is_request_to_ap_ip)
+        {
+            http_server_netconn_resp_302(p_conn);
+            return;
+        }
+    }
 
     g_http_server_extra_header_fields.buf[0] = '\0';
 
