@@ -265,8 +265,8 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
     {
         LOG_INFO("lost connection");
         update_reason_code = UPDATE_LOST_CONNECTION;
-        LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_AUTO_RECONNECT", __func__);
-        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
+        LOG_INFO("%s: activate reconnection after timeout", __func__);
+        wifi_manager_start_timer_reconnect_sta_after_timeout();
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
@@ -394,6 +394,8 @@ static void
 wifi_handle_cmd_disconnect_sta(void)
 {
     LOG_INFO("MESSAGE: ORDER_DISCONNECT_STA");
+
+    wifi_manager_stop_timer_reconnect_sta_after_timeout();
 
     const EventBits_t event_bits = xEventGroupSetBits(
         g_p_wifi_manager_event_group,

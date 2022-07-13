@@ -32,6 +32,9 @@ static wifi_manager_callbacks_t g_wifi_callbacks;
 static os_timer_one_shot_without_arg_t *g_p_wifi_scan_timer;
 static os_timer_one_shot_static_t       g_wifi_scan_timer_mem;
 
+static os_timer_one_shot_cptr_without_arg_t *g_p_wifi_manager_timer_reconnect_sta;
+static os_timer_one_shot_static_t            g_wifi_manager_timer_reconnect_sta_mem;
+
 static os_sema_t        g_p_scan_sync_sema;
 static os_sema_static_t g_scan_sync_sema_mem;
 
@@ -262,6 +265,14 @@ wifi_scan_next_timer_handler(os_timer_one_shot_without_arg_t *const p_timer)
     wifiman_msg_send_ev_scan_next();
 }
 
+static void
+wifi_manager_timer_cb_reconnect(const os_timer_one_shot_cptr_without_arg_t *const p_timer)
+{
+    (void)p_timer;
+    LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_AUTO_RECONNECT", __func__);
+    wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
+}
+
 void
 wifi_manager_event_handler(
     ATTR_UNUSED void *     p_ctx,
@@ -487,6 +498,12 @@ wifi_manager_init(
         pdMS_TO_TICKS(WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS),
         &wifi_scan_next_timer_handler);
 
+    g_p_wifi_manager_timer_reconnect_sta = os_timer_one_shot_cptr_without_arg_create_static(
+        &g_wifi_manager_timer_reconnect_sta_mem,
+        "wifi:reconnect",
+        pdMS_TO_TICKS(1000U),
+        &wifi_manager_timer_cb_reconnect);
+
     wifi_manager_set_callbacks(p_callbacks);
 
     wifiman_config_init(p_wifi_cfg);
@@ -552,6 +569,12 @@ void
 wifi_manager_scan_timer_start(void)
 {
     os_timer_one_shot_without_arg_start(g_p_wifi_scan_timer);
+}
+
+void
+wifi_manager_scan_timer_stop(void)
+{
+    os_timer_one_shot_without_arg_stop(g_p_wifi_scan_timer);
 }
 
 static const char *
@@ -668,4 +691,16 @@ wifi_manger_notify_scan_done(void)
         LOG_INFO("NOTIFY: wifi scan done");
         os_sema_signal(g_p_scan_sync_sema);
     }
+}
+
+void
+wifi_manager_start_timer_reconnect_sta_after_timeout(void)
+{
+    os_timer_one_shot_cptr_without_arg_start(g_p_wifi_manager_timer_reconnect_sta);
+}
+
+void
+wifi_manager_stop_timer_reconnect_sta_after_timeout(void)
+{
+    os_timer_one_shot_cptr_without_arg_stop(g_p_wifi_manager_timer_reconnect_sta);
 }

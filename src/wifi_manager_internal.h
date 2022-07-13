@@ -149,6 +149,9 @@ void
 wifi_manager_scan_timer_start(void);
 
 void
+wifi_manager_scan_timer_stop(void);
+
+void
 wifi_callback_on_connect_eth_cmd(void);
 
 void
@@ -168,6 +171,12 @@ wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg);
 
 void
 wifi_manger_notify_scan_done(void);
+
+void
+wifi_manager_start_timer_reconnect_sta_after_timeout(void);
+
+void
+wifi_manager_stop_timer_reconnect_sta_after_timeout(void);
 
 #ifdef __cplusplus
 }

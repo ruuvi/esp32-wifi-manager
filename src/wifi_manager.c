@@ -250,6 +250,9 @@ wifi_manager_task(void)
     LOG_INFO("TaskWatchdog: Delete timer");
     os_timer_periodic_cptr_without_arg_delete(&g_p_wifi_manager_timer_task_watchdog);
 
+    wifi_manager_stop_timer_reconnect_sta_after_timeout();
+    wifi_manager_scan_timer_stop();
+
     // Do not delete gh_wifi_json_mutex
     // Do not delete g_p_wifi_manager_event_group
     xEventGroupClearBits(
