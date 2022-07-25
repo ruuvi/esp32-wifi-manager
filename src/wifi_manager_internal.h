@@ -155,10 +155,19 @@ void
 wifi_callback_on_connect_eth_cmd(void);
 
 void
+wifi_callback_on_ap_activated(void);
+
+void
+wifi_callback_on_ap_deactivated(void);
+
+void
 wifi_callback_on_ap_sta_connected(void);
 
 void
 wifi_callback_on_ap_sta_disconnected(void);
+
+void
+wifi_callback_on_ap_sta_ip_assigned(void);
 
 void
 wifi_callback_on_disconnect_eth_cmd(void);
@@ -168,6 +177,9 @@ wifi_callback_on_disconnect_sta_cmd(void);
 
 void
 wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg);
+
+void
+wifi_manager_cb_on_request_status_json(void);
 
 void
 wifi_manger_notify_scan_done(void);

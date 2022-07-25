@@ -636,6 +636,24 @@ wifi_callback_on_connect_eth_cmd(void)
 }
 
 void
+wifi_callback_on_ap_activated(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_activated)
+    {
+        g_wifi_callbacks.cb_on_ap_activated();
+    }
+}
+
+void
+wifi_callback_on_ap_deactivated(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_deactivated)
+    {
+        g_wifi_callbacks.cb_on_ap_deactivated();
+    }
+}
+
+void
 wifi_callback_on_ap_sta_connected(void)
 {
     if (NULL != g_wifi_callbacks.cb_on_ap_sta_connected)
@@ -650,6 +668,15 @@ wifi_callback_on_ap_sta_disconnected(void)
     if (NULL != g_wifi_callbacks.cb_on_ap_sta_disconnected)
     {
         g_wifi_callbacks.cb_on_ap_sta_disconnected();
+    }
+}
+
+void
+wifi_callback_on_ap_sta_ip_assigned(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_sta_ip_assigned)
+    {
+        g_wifi_callbacks.cb_on_ap_sta_ip_assigned();
     }
 }
 
@@ -679,6 +706,16 @@ wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
         return;
     }
     g_wifi_callbacks.cb_save_wifi_config(p_cfg);
+}
+
+void
+wifi_manager_cb_on_request_status_json(void)
+{
+    if (NULL == g_wifi_callbacks.cb_on_request_status_json)
+    {
+        return;
+    }
+    g_wifi_callbacks.cb_on_request_status_json();
 }
 
 void

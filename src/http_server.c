@@ -103,9 +103,6 @@ static os_signal_t *      g_p_http_server_sig;
 static os_sema_t          g_p_http_server_sema_send;
 static os_sema_static_t   g_http_server_sema_send_mem;
 struct netconn *          g_p_conn_listen;
-static os_delta_ticks_t   g_timestamp_last_http_status_request;
-static bool               g_is_ap_sta_ip_assigned;
-static bool               g_http_server_disable_ap_stopping_by_timeout;
 
 static os_timer_sig_periodic_t *      g_p_http_server_timer_sig_watchdog_feed;
 static os_timer_sig_periodic_static_t g_http_server_timer_sig_watchdog_feed_mem;
@@ -149,12 +146,6 @@ http_server_sema_send_wait_timeout(const uint32_t send_timeout_ms)
     return os_sema_wait_with_timeout(
         g_p_http_server_sema_send,
         (0 != send_timeout_ms) ? pdMS_TO_TICKS(send_timeout_ms) : OS_DELTA_TICKS_INFINITE);
-}
-
-void
-http_server_disable_ap_stopping_by_timeout(void)
-{
-    g_http_server_disable_ap_stopping_by_timeout = true;
 }
 
 void
@@ -260,135 +251,6 @@ http_server_sig_unregister_cur_thread(void)
     os_mutex_lock(g_http_server_mutex);
     os_signal_unregister_cur_thread(g_p_http_server_sig);
     os_mutex_unlock(g_http_server_mutex);
-}
-
-void
-http_server_update_last_http_status_request(void)
-{
-    g_timestamp_last_http_status_request = xTaskGetTickCount();
-}
-
-static bool
-http_server_is_status_json_timeout_expired(const uint32_t timeout_ms)
-{
-    if ((xTaskGetTickCount() - g_timestamp_last_http_status_request) > OS_DELTA_MS_TO_TICKS(timeout_ms))
-    {
-        return true;
-    }
-    return false;
-}
-
-void
-http_server_on_ap_sta_connected(void)
-{
-    g_is_ap_sta_ip_assigned = false;
-    http_server_update_last_http_status_request();
-    LOG_DBG("http_server_on_ap_sta_connected: %lu", (printf_ulong_t)g_timestamp_last_http_status_request);
-}
-
-void
-http_server_on_ap_sta_disconnected(void)
-{
-    g_is_ap_sta_ip_assigned = false;
-    http_server_update_last_http_status_request();
-    LOG_DBG("http_server_on_ap_sta_disconnected: %lu", (printf_ulong_t)g_timestamp_last_http_status_request);
-}
-
-void
-http_server_on_ap_sta_ip_assigned(void)
-{
-    g_is_ap_sta_ip_assigned = true;
-    http_server_update_last_http_status_request();
-    LOG_DBG("http_server_on_ap_sta_ip_assigned: %lu", (printf_ulong_t)g_timestamp_last_http_status_request);
-}
-
-static bool
-http_server_check_if_configuring_complete_wifi(
-    bool *const            p_is_network_connected,
-    bool *const            p_is_ap_sta_ip_assigned,
-    const os_delta_ticks_t time_for_processing_request)
-{
-    if (!*p_is_network_connected)
-    {
-        *p_is_network_connected = true;
-        http_server_update_last_http_status_request();
-    }
-    if ((!*p_is_ap_sta_ip_assigned) && wifi_manager_is_ap_sta_ip_assigned())
-    {
-        *p_is_ap_sta_ip_assigned = true;
-        http_server_update_last_http_status_request();
-    }
-    else if ((*p_is_ap_sta_ip_assigned) && (!wifi_manager_is_ap_sta_ip_assigned()))
-    {
-        *p_is_ap_sta_ip_assigned = false;
-        http_server_update_last_http_status_request();
-    }
-    else
-    {
-        // MISRA C:2012, 15.7 - All if...else if constructs shall be terminated with an else statement
-    }
-    if (*p_is_ap_sta_ip_assigned)
-    {
-        const uint32_t timeout_ms = HTTP_SERVER_STATUS_JSON_REQUEST_TIMEOUT_MS;
-        if ((!g_http_server_disable_ap_stopping_by_timeout)
-            && http_server_is_status_json_timeout_expired(timeout_ms + time_for_processing_request))
-        {
-            LOG_INFO("There are no HTTP requests for status.json while AP_STA is connected for %u ms", timeout_ms);
-            return true;
-        }
-    }
-    else
-    {
-        const uint32_t timeout_ms = HTTP_SERVER_STA_AP_TIMEOUT_MS;
-        if ((!g_http_server_disable_ap_stopping_by_timeout)
-            && http_server_is_status_json_timeout_expired(timeout_ms + time_for_processing_request))
-        {
-            LOG_INFO("There are no HTTP requests for status.json while AP_STA is not connected for %u ms", timeout_ms);
-            return true;
-        }
-    }
-    return false;
-}
-
-static bool
-http_server_check_if_configuring_complete_ethernet(
-    bool *const            p_is_network_connected,
-    const os_delta_ticks_t time_for_processing_request)
-{
-    if (!*p_is_network_connected)
-    {
-        *p_is_network_connected = true;
-        http_server_update_last_http_status_request();
-    }
-    if ((!g_http_server_disable_ap_stopping_by_timeout)
-        && http_server_is_status_json_timeout_expired(
-            HTTP_SERVER_STATUS_JSON_REQUEST_TIMEOUT_MS + time_for_processing_request))
-    {
-        LOG_INFO("There are no HTTP requests for status.json for %u ms", HTTP_SERVER_STATUS_JSON_REQUEST_TIMEOUT_MS);
-        return true;
-    }
-    return false;
-}
-
-static bool
-http_server_check_if_configuring_complete(const os_delta_ticks_t time_for_processing_request)
-{
-    static bool g_is_network_connected = false;
-
-    if (wifi_manager_is_connected_to_wifi())
-    {
-        return http_server_check_if_configuring_complete_wifi(
-            &g_is_network_connected,
-            &g_is_ap_sta_ip_assigned,
-            time_for_processing_request);
-    }
-    if (wifi_manager_is_connected_to_ethernet())
-    {
-        return http_server_check_if_configuring_complete_ethernet(&g_is_network_connected, time_for_processing_request);
-    }
-    g_is_network_connected  = false;
-    g_is_ap_sta_ip_assigned = false;
-    return false;
 }
 
 static void
@@ -548,14 +410,8 @@ http_server_task(void)
             }
         }
 
-        const os_delta_ticks_t time_for_processing_request = http_server_accept_and_handle_conn(p_conn);
+        (void)http_server_accept_and_handle_conn(p_conn);
 
-        if (wifi_manager_is_ap_active() && http_server_check_if_configuring_complete(time_for_processing_request)
-            && wifi_manager_is_connected_to_wifi_or_ethernet())
-        {
-            LOG_INFO("Stop WiFi AP");
-            wifi_manager_stop_ap();
-        }
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. */
     }
     LOG_INFO("Stop HTTP-Server");
