@@ -682,13 +682,22 @@ http_server_netconn_serve(struct netconn *const p_conn)
     uint32_t    host_len = 0;
     const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
 
-    /* determine if Host is from the STA IP address */
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
     const sta_ip_string_t ip_str = sta_ip_safe_get();
-
     LOG_DBG("Host: %.*s, StaticIP: %s", host_len, p_host, ip_str.buf);
+#endif
 
     const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
-    if (!flag_access_from_lan)
+    if (flag_access_from_lan)
+    {
+        if (wifi_manager_is_ap_active())
+        {
+            LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
+            http_server_netconn_resp_503(p_conn);
+            return;
+        }
+    }
+    else
     {
         const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
         if (!is_request_to_ap_ip)
