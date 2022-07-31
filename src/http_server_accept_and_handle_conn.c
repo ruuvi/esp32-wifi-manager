@@ -469,10 +469,10 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
 static void
 http_server_netconn_resp_301_auth_html(
     struct netconn *const                   p_conn,
-    const sta_ip_string_t *const            p_ip_str,
+    const char *const                       p_hostname,
     const http_header_extra_fields_t *const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_ip_str->buf);
+    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
@@ -481,7 +481,7 @@ http_server_netconn_resp_301_auth_html(
             "Location: http://%s/auth.html\r\n"
             "%s"
             "\r\n",
-            p_ip_str->buf,
+            p_hostname,
             (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
@@ -492,10 +492,10 @@ http_server_netconn_resp_301_auth_html(
 static void
 http_server_netconn_resp_302_auth_html(
     struct netconn *const                   p_conn,
-    const sta_ip_string_t *const            p_ip_str,
+    const char *const                       p_hostname,
     const http_header_extra_fields_t *const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_ip_str->buf);
+    LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
@@ -504,7 +504,7 @@ http_server_netconn_resp_302_auth_html(
             "Location: http://%s/auth.html\r\n"
             "%s"
             "\r\n",
-            p_ip_str->buf,
+            p_hostname,
             (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
@@ -561,10 +561,7 @@ http_server_netconn_resp_504(struct netconn *const p_conn)
 }
 
 static void
-http_server_netconn_resp(
-    struct netconn *const        p_conn,
-    http_server_resp_t *const    p_resp,
-    const sta_ip_string_t *const p_local_ip_str)
+http_server_netconn_resp(struct netconn *const p_conn, http_server_resp_t *const p_resp, const char *const p_hostname)
 {
     switch (p_resp->http_resp_code)
     {
@@ -572,10 +569,10 @@ http_server_netconn_resp(
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_301:
-            http_server_netconn_resp_301_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            http_server_netconn_resp_301_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_302:
-            http_server_netconn_resp_302_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            http_server_netconn_resp_302_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_400:
             http_server_netconn_resp_400(p_conn);
@@ -660,10 +657,15 @@ http_server_netconn_serve(struct netconn *const p_conn)
         return;
     }
 
+    uint32_t          host_len = 0;
+    const char *const p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
+
     LOG_INFO(
-        "Request from %s to %s: %s %s%s%s",
+        "Request from %s to %s (Host: %.*s): %s %s%s%s",
         remote_ip_str.buf,
         local_ip_str.buf,
+        host_len,
+        (NULL != p_host) ? p_host : "",
         (NULL != req_info.http_cmd.ptr) ? req_info.http_cmd.ptr : "NULL",
         (NULL != req_info.http_uri.ptr) ? req_info.http_uri.ptr : "NULL",
         (NULL != req_info.http_uri_params.ptr) ? "?" : "",
@@ -679,14 +681,6 @@ http_server_netconn_serve(struct netconn *const p_conn)
     const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
 
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
-    uint32_t    host_len = 0;
-    const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
-
-    /* determine if Host is from the STA IP address */
-    const sta_ip_string_t ip_str = sta_ip_safe_get();
-
-    LOG_DBG("Host: %.*s, StaticIP: %s", host_len, p_host, ip_str.buf);
-
     const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
     if (!flag_access_from_lan)
     {
@@ -724,7 +718,13 @@ http_server_netconn_serve(struct netconn *const p_conn)
             LOG_INFO("Json resp: code=%u, content_len=%lu", resp.http_resp_code, (printf_ulong_t)content_len);
         }
     }
-    http_server_netconn_resp(p_conn, &resp, &local_ip_str);
+
+    str_buf_t hostname = ((NULL != p_host) && (0 != host_len)) ? str_buf_printf_with_alloc("%.*s", host_len, p_host)
+                                                               : str_buf_printf_with_alloc("%s", local_ip_str.buf);
+
+    http_server_netconn_resp(p_conn, &resp, hostname.buf);
+
+    str_buf_free_buf(&hostname);
 }
 
 os_delta_ticks_t
