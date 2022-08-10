@@ -170,6 +170,7 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
 bool
 wifiman_msg_send_cmd_task_watchdog_feed(void)
 {
+    LOG_DBG("Send: ORDER_TASK_WATCHDOG_FEED");
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
@@ -209,6 +210,7 @@ wifiman_msg_send_cmd_connect_sta(const connection_request_made_by_code_e conn_re
     const wifiman_msg_param_t msg_param = {
         .val = conn_req_code,
     };
+    LOG_INFO("Send msg: ORDER_CONNECT_STA, conn_req_code=%d", (printf_int_t)conn_req_code);
     return wifiman_msg_send(ORDER_CONNECT_STA, msg_param);
 }
 
