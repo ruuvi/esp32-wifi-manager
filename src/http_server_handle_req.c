@@ -23,6 +23,7 @@
 #include "http_server_handle_req_post_auth.h"
 #include "http_server_handle_req_delete_auth.h"
 #include "http_server_ecdh.h"
+#include "dns_server.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -280,6 +281,7 @@ http_server_handle_req_delete(
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         LOG_INFO("http_server_netconn_serve: DELETE /connect.json");
+        dns_server_stop();
         if (wifi_manager_is_connected_to_ethernet())
         {
             wifi_manager_disconnect_eth();
@@ -496,7 +498,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
                 wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
             }
             LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
-            wifi_manager_connect_async();
+            wifi_manager_start_timer_reconnect_sta_after_timeout();
             return http_server_resp_200_json("{}");
         }
         LOG_DBG(
