@@ -176,7 +176,6 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
     return wifiman_msg_send_with_timeout(code, msg_param, portMAX_DELAY);
 }
 
-
 static bool
 wifiman_msg_try_send_without_waiting(const message_code_e code, const wifiman_msg_param_t msg_param)
 {
