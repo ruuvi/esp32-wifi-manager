@@ -143,7 +143,10 @@ wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason)
 }
 
 static bool
-wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
+wifiman_msg_send_with_timeout(
+    const message_code_e      code,
+    const wifiman_msg_param_t msg_param,
+    const TickType_t          timeout_ticks)
 {
     const queue_message msg = {
         .code      = code,
@@ -157,7 +160,7 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
         wifi_manager_unlock();
         return false;
     }
-    if (pdTRUE != xQueueSend(gh_wifiman_msg_queue, &msg, portMAX_DELAY))
+    if (pdTRUE != xQueueSend(gh_wifiman_msg_queue, &msg, timeout_ticks))
     {
         LOG_ERR("%s failed", "xQueueSend");
         wifi_manager_unlock();
@@ -167,6 +170,20 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
     return true;
 }
 
+static bool
+wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
+{
+    return wifiman_msg_send_with_timeout(code, msg_param, portMAX_DELAY);
+}
+
+
+static bool
+wifiman_msg_try_send_without_waiting(const message_code_e code, const wifiman_msg_param_t msg_param)
+{
+    const TickType_t timeout_ticks = 0;
+    return wifiman_msg_send_with_timeout(code, msg_param, timeout_ticks);
+}
+
 bool
 wifiman_msg_send_cmd_task_watchdog_feed(void)
 {
@@ -174,7 +191,7 @@ wifiman_msg_send_cmd_task_watchdog_feed(void)
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
-    return wifiman_msg_send(ORDER_TASK_WATCHDOG_FEED, msg_param);
+    return wifiman_msg_try_send_without_waiting(ORDER_TASK_WATCHDOG_FEED, msg_param);
 }
 
 bool
