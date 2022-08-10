@@ -123,6 +123,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
             LOG_INFO(
                 "MESSAGE: ORDER_CONNECT_STA: CONNECTION_REQUEST_RESTORE_CONNECTION, event_bits=0x%04x",
                 (printf_uint_t)event_bits);
+            LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
             break;
         default:
@@ -135,9 +136,10 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
 
     if (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT))
     {
+        LOG_WARN("%s: Already connected to WiFi, first need to disconnect, then reconnect", __func__);
+        LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
+        xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
         wifiman_msg_send_cmd_disconnect_sta();
-        LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_AUTO_RECONNECT", __func__);
-        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
     }
     else
     {
@@ -235,14 +237,21 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
         (printf_uint_t)reason,
         wifiman_disconnection_reason_to_str(reason),
         (printf_uint_t)event_bits);
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_SCAN_BIT");
 
     /* if a DISCONNECT message is posted while a scan is in progress this scan will NEVER end, causing scan
      * to never work again. For this reason SCAN_BIT is cleared too */
     const bool is_connected_to_wifi = (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT)) ? true : false;
 
-    update_reason_code_e update_reason_code = UPDATE_LOST_CONNECTION;
-    if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
+    bool                 flag_need_to_reconnect = false;
+    update_reason_code_e update_reason_code     = UPDATE_LOST_CONNECTION;
+    if ((WIFI_MANAGER_REQUEST_STA_CONNECT_BIT | WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)
+        == (event_bits & (WIFI_MANAGER_REQUEST_STA_CONNECT_BIT | WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)))
+    {
+        LOG_INFO("User requested to disconnect from WiFi before connecting to a new one");
+        update_reason_code     = UPDATE_USER_DISCONNECT;
+        flag_need_to_reconnect = true;
+    }
+    else if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
     {
         LOG_INFO("A user-initiated connection to WiFi AP has failed (maybe because of wrong password)");
         /* there are no retries when it's a user requested connection by design. This avoids a user
@@ -270,6 +279,10 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
+    if (flag_need_to_reconnect)
+    {
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+    }
     if (!is_connected_to_wifi)
     {
         return false;
@@ -419,6 +432,10 @@ wifi_handle_cmd_disconnect_sta(void)
         LOG_INFO("Got a command to disconnect from WiFi AP, but we are not currently connected");
         LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_REQUEST_DISCONNECT_BIT");
         xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
+        if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
+        {
+            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+        }
     }
 }
 
@@ -510,6 +527,7 @@ wifi_handle_ev_scan_done(void)
 static void
 wifi_manager_wdt_task_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
@@ -522,6 +540,7 @@ wifi_manager_recv_and_handle_msg(void)
 {
     bool          flag_terminate = false;
     queue_message msg            = { 0 };
+    LOG_DBG("wifiman_msg_recv");
     if (!wifiman_msg_recv(&msg))
     {
         LOG_ERR("%s failed", "wifiman_msg_recv");
@@ -534,6 +553,7 @@ wifi_manager_recv_and_handle_msg(void)
         vTaskDelay(delay_ms / portTICK_PERIOD_MS);
         return flag_terminate;
     }
+    LOG_DBG("wifiman_msg_recv: msg.code=%d", (printf_int_t)msg.code);
     bool flag_do_not_call_cb = false;
     switch (msg.code)
     {
@@ -593,6 +613,8 @@ wifi_manager_recv_and_handle_msg(void)
         default:
             break;
     }
+    //    LOG_DBG("Handled request msg.code=%d", (printf_int_t)msg.code);
+    LOG_DBG("Request processed: msg.code=%d", (printf_int_t)msg.code);
     if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
     {
         (*g_wifi_cb_ptr_arr[msg.code])(NULL);

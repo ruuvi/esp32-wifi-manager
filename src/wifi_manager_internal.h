@@ -55,6 +55,8 @@ extern "C" {
 #define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL (1U)
 #define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_NUM_CHANNELS  (13U)
 
+#define WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS (pdMS_TO_TICKS(1000))
+
 typedef struct wifi_manager_antenna_config_t wifi_manager_antenna_config_t;
 
 typedef struct wifi_manager_scan_info_t

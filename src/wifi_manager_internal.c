@@ -608,7 +608,7 @@ wifi_manager_scan_sync(void)
     }
     wifi_manager_unlock();
 
-    while (!os_sema_wait_with_timeout(g_p_scan_sync_sema, pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U)))
+    while (!os_sema_wait_with_timeout(g_p_scan_sync_sema, WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS))
     {
         const esp_err_t err = esp_task_wdt_reset();
         if (ESP_OK != err)
