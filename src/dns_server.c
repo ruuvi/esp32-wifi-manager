@@ -51,6 +51,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include "os_signal.h"
 #include "os_mutex.h"
 #include "os_timer_sig.h"
+#include "wifi_manager_internal.h"
 
 typedef enum dns_server_sig_e
 {
@@ -361,7 +362,7 @@ dns_server_task(void)
         "dns:wdog",
         g_p_dns_server_sig,
         dns_server_conv_to_sig_num(DNS_SERVER_SIG_TASK_WATCHDOG_FEED),
-        pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U));
+        WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS);
 
     dns_server_wdt_add_and_start();
 

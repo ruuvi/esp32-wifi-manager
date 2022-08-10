@@ -227,7 +227,7 @@ wifi_manager_task(void)
     g_p_wifi_manager_timer_task_watchdog = os_timer_periodic_cptr_without_arg_create_static(
         &g_wifi_manager_timer_task_watchdog_mem,
         "wifi:wdog",
-        pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U),
+        WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS,
         &wifi_manager_timer_cb_task_watchdog_feed);
 
     wifi_manager_wdt_add_and_start();
