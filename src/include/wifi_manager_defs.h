@@ -330,13 +330,22 @@ typedef struct wifi_settings_sta_t
     esp_netif_ip_info_t sta_static_ip_config;
 } wifi_settings_sta_t;
 
-struct wifiman_config_t
+typedef struct wifiman_config_ap_t
 {
     wifi_ap_config_t   wifi_config_ap;
     wifi_settings_ap_t wifi_settings_ap;
+} wifiman_config_ap_t;
 
+typedef struct wifiman_config_sta_t
+{
     wifi_sta_config_t   wifi_config_sta;
     wifi_settings_sta_t wifi_settings_sta;
+} wifiman_config_sta_t;
+
+struct wifiman_config_t
+{
+    wifiman_config_ap_t  ap;
+    wifiman_config_sta_t sta;
 };
 
 #ifdef __cplusplus
