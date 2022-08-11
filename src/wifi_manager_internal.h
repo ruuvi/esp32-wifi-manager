@@ -169,7 +169,7 @@ void
 wifi_callback_on_disconnect_sta_cmd(void);
 
 void
-wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg);
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t *const p_cfg_sta);
 
 void
 wifi_manger_notify_scan_done(void);

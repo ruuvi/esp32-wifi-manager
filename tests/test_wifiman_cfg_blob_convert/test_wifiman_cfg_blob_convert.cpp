@@ -99,7 +99,7 @@ esp_ip4addr_aton(const char *addr)
 }
 
 void
-wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t *const p_cfg_sta)
 {
 }
 
@@ -136,7 +136,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_empty) // NOLINT
         vector<uint8_t>({ 0, 0, 0, 0, 0, 0 }),
         std::vector<uint8_t>(
             cfg.sta.wifi_config_sta.bssid,
-            cfg.sta.wifi_config_sta.bssid + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
+            cfg.sta.wifi_config_sta.bssid
+                + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.channel);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.listen_interval);
     ASSERT_EQ(WIFI_CONNECT_AP_BY_SIGNAL, cfg.sta.wifi_config_sta.sort_method);
@@ -200,7 +201,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_default) // NOLINT
         vector<uint8_t>({ 0, 0, 0, 0, 0, 0 }),
         std::vector<uint8_t>(
             cfg.sta.wifi_config_sta.bssid,
-            cfg.sta.wifi_config_sta.bssid + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
+            cfg.sta.wifi_config_sta.bssid
+                + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.channel);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.listen_interval);
     ASSERT_EQ(WIFI_CONNECT_AP_BY_SIGNAL, cfg.sta.wifi_config_sta.sort_method);
@@ -262,7 +264,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_non_default) // NOLINT
         vector<uint8_t>({ 0, 0, 0, 0, 0, 0 }),
         std::vector<uint8_t>(
             cfg.sta.wifi_config_sta.bssid,
-            cfg.sta.wifi_config_sta.bssid + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
+            cfg.sta.wifi_config_sta.bssid
+                + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.channel);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.listen_interval);
     ASSERT_EQ(WIFI_CONNECT_AP_BY_SIGNAL, cfg.sta.wifi_config_sta.sort_method);
@@ -324,7 +327,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_invalid) // NOLINT
         vector<uint8_t>({ 0, 0, 0, 0, 0, 0 }),
         std::vector<uint8_t>(
             cfg.sta.wifi_config_sta.bssid,
-            cfg.sta.wifi_config_sta.bssid + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
+            cfg.sta.wifi_config_sta.bssid
+                + sizeof(cfg.sta.wifi_config_sta.bssid) / sizeof(cfg.sta.wifi_config_sta.bssid[0])));
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.channel);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.listen_interval);
     ASSERT_EQ(WIFI_CONNECT_AP_BY_SIGNAL, cfg.sta.wifi_config_sta.sort_method);

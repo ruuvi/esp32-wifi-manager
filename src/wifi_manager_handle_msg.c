@@ -328,7 +328,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
     /* save wifi config in NVS if it wasn't a restored of a connection */
     if (0 == (event_bits & WIFI_MANAGER_REQUEST_RESTORE_STA_BIT))
     {
-        wifiman_config_save();
+        wifiman_config_sta_save();
     }
 
     esp_netif_ip_info_t ip_info = { 0 };
