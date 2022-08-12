@@ -672,13 +672,13 @@ wifi_callback_on_disconnect_sta_cmd(void)
 }
 
 void
-wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t *const p_cfg_sta)
 {
-    if (NULL == g_wifi_callbacks.cb_save_wifi_config)
+    if (NULL == g_wifi_callbacks.cb_save_wifi_config_sta)
     {
         return;
     }
-    g_wifi_callbacks.cb_save_wifi_config(p_cfg);
+    g_wifi_callbacks.cb_save_wifi_config_sta(p_cfg_sta);
 }
 
 void

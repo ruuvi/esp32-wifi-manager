@@ -74,6 +74,9 @@ wifi_manager_start(
     int (*f_rng)(void *, unsigned char *, size_t),
     void *p_rng);
 
+void
+wifi_manager_set_config_ap(const wifiman_config_ap_t *const p_wifi_cfg_ap);
+
 /**
  * @brief Stop WiFi access-point
  */

@@ -28,38 +28,38 @@ wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman
 
     if (p_cfg_blob_src->wifi_settings.ap_channel <= WIFI_MAX_AP_CHANNEL)
     {
-        p_cfg_dst->wifi_config_ap.channel = p_cfg_blob_src->wifi_settings.ap_channel;
+        p_cfg_dst->ap.wifi_config_ap.channel = p_cfg_blob_src->wifi_settings.ap_channel;
     }
     else
     {
-        LOG_WARN("%s: Unknown ap_channel=%d, force set to 0", __func__, p_cfg_blob_src->wifi_settings.ap_channel);
-        p_cfg_dst->wifi_config_ap.channel = 0;
+        LOG_WARN("%s: Unknown ap_channel=%d, force set to 1", __func__, p_cfg_blob_src->wifi_settings.ap_channel);
+        p_cfg_dst->ap.wifi_config_ap.channel = 1;
     }
-    p_cfg_dst->wifi_config_ap.ssid_hidden = (0 != p_cfg_blob_src->wifi_settings.ap_ssid_hidden) ? 1 : 0;
+    p_cfg_dst->ap.wifi_config_ap.ssid_hidden = (0 != p_cfg_blob_src->wifi_settings.ap_ssid_hidden) ? 1 : 0;
 
     switch (p_cfg_blob_src->wifi_settings.ap_bandwidth)
     {
         case WIFI_BW_HT20:
         case WIFI_BW_HT40:
-            p_cfg_dst->wifi_settings_ap.ap_bandwidth = p_cfg_blob_src->wifi_settings.ap_bandwidth;
+            p_cfg_dst->ap.wifi_settings_ap.ap_bandwidth = p_cfg_blob_src->wifi_settings.ap_bandwidth;
             break;
         default:
             LOG_WARN(
                 "%s: Unknown ap_bandwidth=%d, force set to WIFI_BW_HT20",
                 __func__,
                 p_cfg_blob_src->wifi_settings.ap_bandwidth);
-            p_cfg_dst->wifi_settings_ap.ap_bandwidth = p_cfg_default->wifi_settings_ap.ap_bandwidth;
+            p_cfg_dst->ap.wifi_settings_ap.ap_bandwidth = p_cfg_default->ap.wifi_settings_ap.ap_bandwidth;
             break;
     }
 
     (void)snprintf(
-        (char *)p_cfg_dst->wifi_config_sta.ssid,
-        sizeof(p_cfg_dst->wifi_config_sta.ssid),
+        (char *)p_cfg_dst->sta.wifi_config_sta.ssid,
+        sizeof(p_cfg_dst->sta.wifi_config_sta.ssid),
         "%s",
         p_cfg_blob_src->sta_ssid.ssid_buf);
     (void)snprintf(
-        (char *)p_cfg_dst->wifi_config_sta.password,
-        sizeof(p_cfg_dst->wifi_config_sta.password),
+        (char *)p_cfg_dst->sta.wifi_config_sta.password,
+        sizeof(p_cfg_dst->sta.wifi_config_sta.password),
         "%s",
         p_cfg_blob_src->sta_password.password_buf);
 
@@ -68,16 +68,16 @@ wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman
         case WIFI_PS_NONE:
         case WIFI_PS_MIN_MODEM:
         case WIFI_PS_MAX_MODEM:
-            p_cfg_dst->wifi_settings_sta.sta_power_save = p_cfg_blob_src->wifi_settings.sta_power_save;
+            p_cfg_dst->sta.wifi_settings_sta.sta_power_save = p_cfg_blob_src->wifi_settings.sta_power_save;
             break;
         default:
             LOG_WARN(
                 "%s: Unknown sta_power_save=%d, force set to WIFI_PS_NONE",
                 __func__,
                 p_cfg_blob_src->wifi_settings.sta_power_save);
-            p_cfg_dst->wifi_settings_sta.sta_power_save = p_cfg_dst->wifi_settings_sta.sta_power_save;
+            p_cfg_dst->sta.wifi_settings_sta.sta_power_save = p_cfg_dst->sta.wifi_settings_sta.sta_power_save;
             break;
     }
-    p_cfg_dst->wifi_settings_sta.sta_static_ip        = !!p_cfg_blob_src->wifi_settings.sta_static_ip;
-    p_cfg_dst->wifi_settings_sta.sta_static_ip_config = p_cfg_blob_src->wifi_settings.sta_static_ip_config;
+    p_cfg_dst->sta.wifi_settings_sta.sta_static_ip        = !!p_cfg_blob_src->wifi_settings.sta_static_ip;
+    p_cfg_dst->sta.wifi_settings_sta.sta_static_ip_config = p_cfg_blob_src->wifi_settings.sta_static_ip_config;
 }

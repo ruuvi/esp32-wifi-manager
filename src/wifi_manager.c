@@ -118,6 +118,12 @@ wifi_manager_start(
 }
 
 void
+wifi_manager_set_config_ap(const wifiman_config_ap_t *const p_wifi_cfg_ap)
+{
+    wifiman_config_ap_set(p_wifi_cfg_ap);
+}
+
+void
 wifi_manager_update_network_connection_info(
     const update_reason_code_e       update_reason_code,
     const wifiman_wifi_ssid_t *const p_ssid,
