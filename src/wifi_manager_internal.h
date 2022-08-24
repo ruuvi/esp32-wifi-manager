@@ -180,6 +180,9 @@ wifi_manager_start_timer_reconnect_sta_after_timeout(void);
 void
 wifi_manager_stop_timer_reconnect_sta_after_timeout(void);
 
+bool
+wifi_man_set_wdog_feed_flag(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -608,6 +608,7 @@ wifi_manager_recv_and_handle_msg(void)
             wifi_handle_ev_ap_sta_ip_assigned();
             break;
         case ORDER_TASK_WATCHDOG_FEED:
+            wifiman_msg_clear_flag_wdog_feed_active();
             wifi_manager_wdt_task_reset();
             break;
         default:
