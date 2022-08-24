@@ -9,10 +9,13 @@
 #include "wifi_manager_defs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "log.h"
 #include "wifi_manager_internal.h"
 
+#define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
+#include "log.h"
+
 static QueueHandle_t gh_wifiman_msg_queue;
+static bool          g_wifiman_msg_flag_wdog_feed_active;
 
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "wifi_manager";
@@ -183,14 +186,33 @@ wifiman_msg_try_send_without_waiting(const message_code_e code, const wifiman_ms
     return wifiman_msg_send_with_timeout(code, msg_param, timeout_ticks);
 }
 
-bool
+void
+wifiman_msg_clear_flag_wdog_feed_active(void)
+{
+    wifi_manager_lock();
+    g_wifiman_msg_flag_wdog_feed_active = false;
+    wifi_manager_unlock();
+}
+
+void
 wifiman_msg_send_cmd_task_watchdog_feed(void)
 {
     LOG_DBG("Send: ORDER_TASK_WATCHDOG_FEED");
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
-    return wifiman_msg_try_send_without_waiting(ORDER_TASK_WATCHDOG_FEED, msg_param);
+
+    wifi_manager_lock();
+    if (!g_wifiman_msg_flag_wdog_feed_active)
+    {
+        g_wifiman_msg_flag_wdog_feed_active = true;
+        (void)wifiman_msg_try_send_without_waiting(ORDER_TASK_WATCHDOG_FEED, msg_param);
+    }
+    else
+    {
+        LOG_WARN("Previous task watchdog feed command is not handled yet");
+    }
+    wifi_manager_unlock();
 }
 
 bool
