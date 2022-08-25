@@ -129,10 +129,11 @@ TEST_F(TestHttpServerResp, resp_data_in_flash_html) // NOLINT
         nullptr,
         strlen(html_content),
         HTTP_CONENT_ENCODING_NONE,
-        reinterpret_cast<const uint8_t *>(html_content));
+        reinterpret_cast<const uint8_t *>(html_content),
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FLASH_MEM, resp.content_location);
-    ASSERT_FALSE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(3, resp.content_len);
@@ -150,10 +151,11 @@ TEST_F(TestHttpServerResp, resp_data_in_flash_js_gzipped_with_param) // NOLINT
         param_str,
         strlen(js_content),
         HTTP_CONENT_ENCODING_GZIP,
-        reinterpret_cast<const uint8_t *>(js_content));
+        reinterpret_cast<const uint8_t *>(js_content),
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FLASH_MEM, resp.content_location);
-    ASSERT_FALSE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_JAVASCRIPT, resp.content_type);
     ASSERT_EQ(param_str, resp.p_content_type_param);
     ASSERT_EQ(3, resp.content_len);
@@ -268,7 +270,8 @@ TEST_F(TestHttpServerResp, resp_data_from_file_css_gzipped) // NOLINT
         nullptr,
         strlen(p_content),
         HTTP_CONENT_ENCODING_GZIP,
-        sock);
+        sock,
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FATFS, resp.content_location);
     ASSERT_EQ(HTTP_CONENT_TYPE_TEXT_CSS, resp.content_type);
@@ -289,7 +292,8 @@ TEST_F(TestHttpServerResp, resp_data_from_file_png) // NOLINT
         nullptr,
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
-        sock);
+        sock,
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FATFS, resp.content_location);
     ASSERT_EQ(HTTP_CONENT_TYPE_IMAGE_PNG, resp.content_type);
@@ -310,7 +314,8 @@ TEST_F(TestHttpServerResp, resp_data_from_file_svg) // NOLINT
         nullptr,
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
-        sock);
+        sock,
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FATFS, resp.content_location);
     ASSERT_EQ(HTTP_CONENT_TYPE_IMAGE_SVG_XML, resp.content_type);
@@ -331,7 +336,8 @@ TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
         nullptr,
         strlen(p_content),
         HTTP_CONENT_ENCODING_NONE,
-        sock);
+        sock,
+        true);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_FATFS, resp.content_location);
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_OCTET_STREAM, resp.content_type);
