@@ -147,7 +147,14 @@ http_server_handle_req_get_path_without_extension_api_key_not_used(
         }
         return *p_resp_auth_check;
     }
-    return http_server_resp_data_in_flash(HTTP_CONENT_TYPE_TEXT_PLAIN, NULL, 0, HTTP_CONENT_ENCODING_NONE, NULL);
+    const bool flag_no_cache = true;
+    return http_server_resp_data_in_flash(
+        HTTP_CONENT_TYPE_TEXT_PLAIN,
+        NULL,
+        0,
+        HTTP_CONENT_ENCODING_NONE,
+        NULL,
+        flag_no_cache);
 }
 
 static http_server_resp_t
@@ -172,7 +179,14 @@ http_server_handle_req_get_path_without_extension(
         case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
             return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_ap_ssid));
     }
-    return http_server_resp_data_in_flash(HTTP_CONENT_TYPE_TEXT_PLAIN, NULL, 0, HTTP_CONENT_ENCODING_NONE, NULL);
+    const bool flag_no_cache = true;
+    return http_server_resp_data_in_flash(
+        HTTP_CONENT_TYPE_TEXT_PLAIN,
+        NULL,
+        0,
+        HTTP_CONENT_ENCODING_NONE,
+        NULL,
+        flag_no_cache);
 }
 
 static http_server_resp_t

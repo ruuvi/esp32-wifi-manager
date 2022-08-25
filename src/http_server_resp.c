@@ -132,12 +132,13 @@ http_server_resp_data_in_flash(
     const char *                  p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf)
+    const uint8_t *               p_buf,
+    const bool                    flag_no_cache)
 {
     const http_server_resp_t resp = {
         .http_resp_code       = HTTP_RESP_CODE_200,
         .content_location     = HTTP_CONTENT_LOCATION_FLASH_MEM,
-        .flag_no_cache        = false,
+        .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = false,
         .content_type         = content_type,
         .p_content_type_param = p_content_type_param,
@@ -215,12 +216,13 @@ http_server_resp_data_from_file(
     const char *                  p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const socket_t                fd)
+    const socket_t                fd,
+    const bool                    flag_no_cache)
 {
     const http_server_resp_t resp = {
         .http_resp_code       = http_resp_code,
         .content_location     = HTTP_CONTENT_LOCATION_FATFS,
-        .flag_no_cache        = false,
+        .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = false,
         .content_type         = content_type,
         .p_content_type_param = p_content_type_param,

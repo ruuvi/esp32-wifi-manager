@@ -60,7 +60,8 @@ http_server_resp_data_in_flash(
     const char *                  p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf);
+    const uint8_t *               p_buf,
+    const bool                    flag_no_cache);
 
 http_server_resp_t
 http_server_resp_data_in_static_mem(
@@ -89,7 +90,8 @@ http_server_resp_data_from_file(
     const char *                  p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const socket_t                fd);
+    const socket_t                fd,
+    const bool                    flag_no_cache);
 
 http_server_resp_t
 http_server_resp_401_auth_digest(
