@@ -407,6 +407,7 @@ http_server_task_wdt_add_and_start(void)
 static void
 http_server_task_wdt_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {

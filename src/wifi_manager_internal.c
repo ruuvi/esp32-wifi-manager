@@ -457,7 +457,7 @@ wifi_manager_init_start_wifi(
 
     esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
-    LOG_INFO("Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
+    LOG_INFO("### Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
     err = esp_netif_set_hostname(p_netif_sta, p_gw_wifi_ssid->ssid_buf);
     if (ESP_OK != err)
     {
