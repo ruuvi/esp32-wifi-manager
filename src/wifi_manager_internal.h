@@ -141,8 +141,7 @@ wifi_manager_generate_access_points_json(void);
 
 bool
 wifi_manager_init(
-    const bool                                 flag_start_wifi,
-    const bool                                 flag_start_ap_only,
+    const bool                                 flag_connect_sta,
     const wifiman_config_t *const              p_wifi_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks);

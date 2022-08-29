@@ -140,9 +140,6 @@ wifi_manager_esp_wifi_configure_ap(void)
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_mode");
         return;
     }
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
-
     wifi_config_t ap_config = {
         .ap = wifiman_config_ap_get_config(),
     };
@@ -154,7 +151,8 @@ wifi_manager_esp_wifi_configure_ap(void)
     }
 
     const wifi_settings_ap_t wifi_ap_settings = wifiman_config_ap_get_settings();
-    err                                       = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
+
+    err = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_bandwidth");
@@ -445,8 +443,6 @@ wifi_manager_init_start_wifi(
         LOG_ERR("%s failed", "esp_wifi_set_mode");
         return false;
     }
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
 
     err = esp_wifi_start();
     if (ESP_OK != err)
@@ -457,7 +453,7 @@ wifi_manager_init_start_wifi(
 
     esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
-    LOG_INFO("Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
+    LOG_INFO("### Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
     err = esp_netif_set_hostname(p_netif_sta, p_gw_wifi_ssid->ssid_buf);
     if (ESP_OK != err)
     {
@@ -478,8 +474,7 @@ wifi_manager_init_start_wifi(
 
 bool
 wifi_manager_init(
-    const bool                                 flag_start_wifi,
-    const bool                                 flag_start_ap_only,
+    const bool                                 flag_connect_sta,
     const wifiman_config_t *const              p_wifi_cfg,
     const wifi_manager_antenna_config_t *const p_wifi_ant_config,
     const wifi_manager_callbacks_t *const      p_callbacks)
@@ -535,31 +530,22 @@ wifi_manager_init(
     http_server_init();
     http_server_start();
 
-    LOG_INFO("WiFi manager init: start WiFi");
+    LOG_INFO("WiFi manager init: Start Wi-Fi task");
     const wifiman_wifi_ssid_t wifi_ap_ssid = wifiman_config_ap_get_ssid();
     wifi_manager_init_start_wifi(p_wifi_ant_config, &wifi_ap_ssid);
 
-    if (flag_start_wifi)
+    if (flag_connect_sta)
     {
         const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
-        if (is_ssid_configured && (!flag_start_ap_only))
+        if (is_ssid_configured)
         {
-            LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
+            LOG_INFO("WiFi manager init: Wi-Fi connection is requested and SSID is configured, try to connect");
             LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
             wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
         }
         else
         {
-            /* no Wi-Fi saved: start soft AP! This is what should happen during a first run */
-            if (flag_start_ap_only)
-            {
-                LOG_INFO("Force start WiFi hotspot on startup.");
-            }
-            else
-            {
-                LOG_INFO("No saved wifi found on startup. Starting access point.");
-            }
-            wifiman_msg_send_cmd_start_ap();
+            LOG_WARN("WiFi manager init: Wi-Fi connection is requested, but no SSID is configured");
         }
     }
     return true;

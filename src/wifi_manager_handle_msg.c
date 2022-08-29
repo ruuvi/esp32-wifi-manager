@@ -294,7 +294,12 @@ static void
 wifi_handle_cmd_start_ap(void)
 {
     LOG_INFO("MESSAGE: ORDER_START_AP");
-    esp_wifi_set_mode(WIFI_MODE_APSTA);
+    LOG_INFO("### Configure WiFi mode: AP and Station");
+    const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "esp_wifi_set_mode failed");
+    }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
 }
@@ -303,7 +308,7 @@ static void
 wifi_handle_cmd_stop_ap(void)
 {
     LOG_INFO("MESSAGE: ORDER_STOP_AP");
-    LOG_INFO("Configure WiFi mode: Station");
+    LOG_INFO("### Configure WiFi mode: Station");
     const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (ESP_OK != err)
     {

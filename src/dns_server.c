@@ -101,7 +101,7 @@ dns_server_init(void)
 bool
 dns_server_start(void)
 {
-    LOG_INFO("Start DNS-Server");
+    LOG_INFO("### Start DNS-Server");
     assert(NULL != g_dns_server_mutex);
 
     const uint32_t stack_depth = 3072U;
@@ -125,7 +125,7 @@ dns_server_stop(void)
     os_mutex_lock(g_dns_server_mutex);
     if (os_signal_is_any_thread_registered(g_p_dns_server_sig))
     {
-        LOG_INFO("Send request to stop DNS-Server");
+        LOG_INFO("### Send request to stop DNS-Server");
         if (!os_signal_send(g_p_dns_server_sig, dns_server_conv_to_sig_num(DNS_SERVER_SIG_STOP)))
         {
             LOG_ERR("Failed to send DNS-Server stop request");
@@ -266,6 +266,7 @@ dns_server_wdt_add_and_start(void)
 static void
 dns_server_task_wdt_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
@@ -383,7 +384,7 @@ dns_server_task(void)
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. DNS daemon should not be taxing on the
                         system */
     }
-    LOG_INFO("Stop DNS Server");
+    LOG_INFO("### Stop DNS Server");
 
     LOG_INFO("TaskWatchdog: Unregister current thread");
     esp_task_wdt_delete(xTaskGetCurrentTaskHandle());
