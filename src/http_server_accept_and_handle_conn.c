@@ -441,7 +441,7 @@ http_server_netconn_resp_with_content(
     if (!http_server_netconn_printf(
             p_conn,
             true,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "%s"
             "Content-type: %s; charset=utf-8%s%s\r\n"
@@ -478,7 +478,7 @@ http_server_netconn_resp_without_content(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Content-Length: 0\r\n"
             "\r\n",
@@ -507,7 +507,7 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/\r\n"
             "\r\n",
@@ -528,7 +528,7 @@ http_server_netconn_resp_301_auth_html(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 301 Moved Permanently\r\n"
+            "HTTP/1.0 301 Moved Permanently\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
@@ -551,7 +551,7 @@ http_server_netconn_resp_302_auth_html(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
