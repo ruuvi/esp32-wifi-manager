@@ -126,6 +126,49 @@ http_server_recv_and_handle(
     return true;
 }
 
+static const char *
+conv_lwip_err_to_str(const err_enum_t err)
+{
+    switch (err)
+    {
+        case ERR_OK:
+            return "No error";
+        case ERR_MEM:
+            return "Out of memory error";
+        case ERR_BUF:
+            return "Buffer error";
+        case ERR_TIMEOUT:
+            return "Timeout";
+        case ERR_RTE:
+            return "Routing problem";
+        case ERR_INPROGRESS:
+            return "Operation in progress";
+        case ERR_VAL:
+            return "Illegal value";
+        case ERR_WOULDBLOCK:
+            return "Operation would block";
+        case ERR_USE:
+            return "Address in use";
+        case ERR_ALREADY:
+            return "Already connecting";
+        case ERR_ISCONN:
+            return "Conn already established";
+        case ERR_CONN:
+            return "Not connected";
+        case ERR_IF:
+            return "Low-level netif error";
+        case ERR_ABRT:
+            return "Connection aborted";
+        case ERR_RST:
+            return "Connection reset";
+        case ERR_CLSD:
+            return "Connection closed";
+        case ERR_ARG:
+            return "Illegal argument";
+    }
+    return "Unknown error";
+}
+
 static bool
 http_server_netconn_write(
     struct netconn *const p_conn,
@@ -152,9 +195,18 @@ http_server_netconn_write(
             &bytes_written);
         if (ESP_OK != err)
         {
-            LOG_ERR_ESP(err, "netconn_write_partly failed");
+            LOG_ERR_ESP(
+                err,
+                "netconn_write_partly failed (%s), offset=%u, size=%u",
+                conv_lwip_err_to_str(err),
+                (printf_uint_t)offset,
+                (printf_uint_t)(buf_len - offset));
             return false;
         }
+        LOG_DBG(
+            "netconn_write_partly: offset=%u, bytes_written=%u",
+            (printf_uint_t)offset,
+            (printf_uint_t)bytes_written);
         offset += bytes_written;
         if (!http_server_sema_send_wait_timeout(p_conn->send_timeout))
         {
@@ -389,7 +441,7 @@ http_server_netconn_resp_with_content(
     if (!http_server_netconn_printf(
             p_conn,
             true,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "%s"
             "Content-type: %s; charset=utf-8%s%s\r\n"
@@ -426,7 +478,7 @@ http_server_netconn_resp_without_content(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Content-Length: 0\r\n"
             "\r\n",
@@ -455,7 +507,7 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/\r\n"
             "\r\n",
@@ -476,7 +528,7 @@ http_server_netconn_resp_301_auth_html(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 301 Moved Permanently\r\n"
+            "HTTP/1.0 301 Moved Permanently\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
@@ -499,7 +551,7 @@ http_server_netconn_resp_302_auth_html(
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
@@ -646,7 +698,13 @@ http_server_netconn_serve(struct netconn *const p_conn)
         LOG_WARN("The connection was closed by the client side");
         return;
     }
-    LOG_DBG("Request from %s to %s: %s", remote_ip_str.buf, local_ip_str.buf, req_buf);
+    LOG_DBG(
+        "Request from %s:%u to %s:%u: %s",
+        remote_ip_str.buf,
+        p_tcp->remote_port,
+        local_ip_str.buf,
+        p_tcp->local_port,
+        req_buf);
 
     const http_req_info_t req_info = http_req_parse(req_buf);
 
@@ -762,7 +820,7 @@ http_server_accept_and_handle_conn(struct netconn *const p_conn)
             const err_t err_close = netconn_close(p_new_conn);
             if (ESP_OK != err_close)
             {
-                LOG_ERR_ESP(err_close, "%s failed", "netconn_close");
+                LOG_ERR_ESP(err_close, "%s failed (%s)", "netconn_close", conv_lwip_err_to_str(err_close));
             }
             LOG_DBG("call netconn_delete");
             const err_t err_delete = netconn_delete(p_new_conn);
