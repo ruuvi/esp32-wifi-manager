@@ -19,6 +19,12 @@
 #warning Debug log level prints out the passwords as a "plaintext".
 #endif
 
+#define WIFIMAN_CFG_BLOB_KEY_STA_SSID     "ssid"
+#define WIFIMAN_CFG_BLOB_KEY_STA_PASSWORD "password"
+#define WIFIMAN_CFG_BLOB_KEY_SETTINGS     "settings"
+
+#define WIFIMAN_CFG_DEPRECATED_BLOB "deprecated_blob"
+
 static const char TAG[] = "wifi_manager";
 
 static const char wifi_manager_nvs_namespace[] = "espwifimgr";
@@ -62,15 +68,23 @@ wifiman_config_nvs_get_blob(const nvs_handle_t handle, const char *const key, vo
 static bool
 wifiman_cfg_blob_read_by_handle(const nvs_handle handle, wifiman_cfg_blob_t *const p_blob)
 {
-    if (!wifiman_config_nvs_get_blob(handle, "ssid", p_blob->sta_ssid.ssid_buf, MAX_SSID_SIZE))
+    if (!wifiman_config_nvs_get_blob(handle, WIFIMAN_CFG_BLOB_KEY_STA_SSID, p_blob->sta_ssid.ssid_buf, MAX_SSID_SIZE))
     {
         return false;
     }
-    if (!wifiman_config_nvs_get_blob(handle, "password", p_blob->sta_password.password_buf, MAX_PASSWORD_SIZE))
+    if (!wifiman_config_nvs_get_blob(
+            handle,
+            WIFIMAN_CFG_BLOB_KEY_STA_PASSWORD,
+            p_blob->sta_password.password_buf,
+            MAX_PASSWORD_SIZE))
     {
         return false;
     }
-    if (!wifiman_config_nvs_get_blob(handle, "settings", &p_blob->wifi_settings, sizeof(p_blob->wifi_settings)))
+    if (!wifiman_config_nvs_get_blob(
+            handle,
+            WIFIMAN_CFG_BLOB_KEY_SETTINGS,
+            &p_blob->wifi_settings,
+            sizeof(p_blob->wifi_settings)))
     {
         return false;
     }
@@ -98,13 +112,18 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
         return false;
     }
 
+    if (0 == strcmp((char *)&cfg_blob.wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    {
+        return false;
+    }
+
     wifiman_cfg_blob_convert(&cfg_blob, p_cfg);
 
     return true;
 }
 
 bool
-wifi_manager_cfg_blob_erase_if_exist(void)
+wifi_manager_cfg_blob_mark_deprecated(void)
 {
     nvs_handle handle = 0;
     if (!wifiman_config_nvs_open(NVS_READWRITE, &handle))
@@ -112,14 +131,37 @@ wifi_manager_cfg_blob_erase_if_exist(void)
         return false;
     }
 
-    LOG_INFO("Erase deprecated wifi_cfg BLOB");
+    LOG_INFO("Mark wifi_cfg BLOB as deprecated");
+    /*
+     * If we completely remove all keys from 'wifi_manager_nvs_namespace',
+     * then after a rollback to v1.11.x the NVS storage will be considered damaged
+     * and whole configuration will be erased.
+     * To prevent the configuration loss we should keep all keys in NVS, but mark this data as deprecated.
+     * The field 'ap_ssid' are not used in firmware versions smaller than v1.12.0,
+     * so we can use this field as a flag to indicate that BLOB is deprecated in v1.12.x and in later versions.
+     */
+
+    wifiman_cfg_blob_wifi_settings_t wifi_settings = { 0 };
+    if (!wifiman_config_nvs_get_blob(handle, WIFIMAN_CFG_BLOB_KEY_SETTINGS, &wifi_settings, sizeof(wifi_settings)))
+    {
+        nvs_close(handle);
+        return false;
+    }
+
+    if (0 == strcmp((char *)&wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    {
+        nvs_close(handle);
+        return false;
+    }
+
+    (void)snprintf((char *)&wifi_settings.ap_ssid[0], sizeof(wifi_settings.ap_ssid), "%s", WIFIMAN_CFG_DEPRECATED_BLOB);
 
     bool res = true;
-
-    esp_err_t err = nvs_erase_all(handle);
+    // TODO: in future versions we can completely remove this deprecated BLOB with nvs_erase_all
+    esp_err_t err = nvs_set_blob(handle, WIFIMAN_CFG_BLOB_KEY_SETTINGS, &wifi_settings, sizeof(wifi_settings));
     if (ESP_OK != err)
     {
-        LOG_ERR_ESP(err, "%s failed", "nvs_erase_all");
+        LOG_ERR_ESP(err, "%s failed", "nvs_set_blob");
         res = false;
     }
     err = nvs_commit(handle);

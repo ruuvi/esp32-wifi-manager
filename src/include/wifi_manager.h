@@ -59,7 +59,7 @@ bool
 wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg);
 
 bool
-wifi_manager_cfg_blob_erase_if_exist(void);
+wifi_manager_cfg_blob_mark_deprecated(void);
 
 /**
  * @brief Allocate heap memory for the wifi manager and start the wifi_manager RTOS task.
