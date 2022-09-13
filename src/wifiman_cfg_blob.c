@@ -112,7 +112,7 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
         return false;
     }
 
-    if (0 == strcmp((char*)&cfg_blob.wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    if (0 == strcmp((char *)&cfg_blob.wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
     {
         return false;
     }
@@ -148,7 +148,7 @@ wifi_manager_cfg_blob_mark_deprecated(void)
         return false;
     }
 
-    if (0 == strcmp((char*)&wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    if (0 == strcmp((char *)&wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
     {
         nvs_close(handle);
         return false;
