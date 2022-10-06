@@ -6,6 +6,7 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
+#include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
 #include "os_malloc.h"
@@ -212,6 +213,12 @@ http_server_netconn_write(
         {
             LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
             return false;
+        }
+        LOG_DBG("Feed watchdog");
+        const esp_err_t err_wdt = esp_task_wdt_reset();
+        if (ESP_OK != err_wdt)
+        {
+            LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
         }
     } while (offset != buf_len);
     return true;
