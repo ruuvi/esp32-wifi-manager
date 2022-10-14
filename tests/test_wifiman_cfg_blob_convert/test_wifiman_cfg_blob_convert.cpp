@@ -18,7 +18,7 @@
 using namespace std;
 
 class TestWifiManCfgBlobConvert;
-static TestWifiManCfgBlobConvert *g_pTestClass;
+static TestWifiManCfgBlobConvert* g_pTestClass;
 
 /*** Google-test class implementation *********************************************************************************/
 
@@ -57,11 +57,11 @@ TestWifiManCfgBlobConvert::~TestWifiManCfgBlobConvert() = default;
 
 extern "C" {
 
-const char *
+const char*
 os_task_get_name(void)
 {
     static const char g_task_name[] = "main";
-    return const_cast<char *>(g_task_name);
+    return const_cast<char*>(g_task_name);
 }
 
 os_task_priority_t
@@ -71,13 +71,13 @@ os_task_get_priority(void)
 }
 
 os_mutex_t
-os_mutex_create_static(os_mutex_static_t *const p_mutex_static)
+os_mutex_create_static(os_mutex_static_t* const p_mutex_static)
 {
     return reinterpret_cast<os_mutex_t>(p_mutex_static);
 }
 
 void
-os_mutex_delete(os_mutex_t *const ph_mutex)
+os_mutex_delete(os_mutex_t* const ph_mutex)
 {
     *ph_mutex = nullptr;
 }
@@ -93,13 +93,13 @@ os_mutex_unlock(os_mutex_t const h_mutex)
 }
 
 uint32_t
-esp_ip4addr_aton(const char *addr)
+esp_ip4addr_aton(const char* addr)
 {
     return ipaddr_addr(addr);
 }
 
 void
-wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t *const p_cfg_sta)
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t* const p_cfg_sta)
 {
 }
 
@@ -114,8 +114,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_empty) // NOLINT
     const wifiman_cfg_blob_t cfg_blob = { 0 };
     wifiman_config_t         cfg      = { 0 };
     wifiman_cfg_blob_convert(&cfg_blob, &cfg);
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.password)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.channel);
     ASSERT_EQ(WIFI_AUTH_OPEN, cfg.ap.wifi_config_ap.authmode);
@@ -128,8 +128,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_empty) // NOLINT
     ASSERT_EQ(string("10.10.0.1"), string(cfg.ap.wifi_settings_ap.ap_gw.buf));
     ASSERT_EQ(string("255.255.255.0"), string(cfg.ap.wifi_settings_ap.ap_netmask.buf));
 
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.password)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.password)));
     ASSERT_EQ(WIFI_FAST_SCAN, cfg.sta.wifi_config_sta.scan_method);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.bssid_set);
     ASSERT_EQ(
@@ -179,8 +179,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_default) // NOLINT
     };
     wifiman_config_t cfg = { 0 };
     wifiman_cfg_blob_convert(&cfg_blob, &cfg);
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.password)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.channel);
     ASSERT_EQ(WIFI_AUTH_OPEN, cfg.ap.wifi_config_ap.authmode);
@@ -193,8 +193,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_default) // NOLINT
     ASSERT_EQ(string("10.10.0.1"), string(cfg.ap.wifi_settings_ap.ap_gw.buf));
     ASSERT_EQ(string("255.255.255.0"), string(cfg.ap.wifi_settings_ap.ap_netmask.buf));
 
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.password)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.password)));
     ASSERT_EQ(WIFI_FAST_SCAN, cfg.sta.wifi_config_sta.scan_method);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.bssid_set);
     ASSERT_EQ(
@@ -242,8 +242,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_non_default) // NOLINT
     };
     wifiman_config_t cfg = { 0 };
     wifiman_cfg_blob_convert(&cfg_blob, &cfg);
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.password)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(14, cfg.ap.wifi_config_ap.channel);
     ASSERT_EQ(WIFI_AUTH_OPEN, cfg.ap.wifi_config_ap.authmode);
@@ -256,8 +256,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_non_default) // NOLINT
     ASSERT_EQ(string("10.10.0.1"), string(cfg.ap.wifi_settings_ap.ap_gw.buf));
     ASSERT_EQ(string("255.255.255.0"), string(cfg.ap.wifi_settings_ap.ap_netmask.buf));
 
-    ASSERT_EQ(string("sta_ssid1"), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.ssid)));
-    ASSERT_EQ(string("sta_pass1"), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.password)));
+    ASSERT_EQ(string("sta_ssid1"), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.ssid)));
+    ASSERT_EQ(string("sta_pass1"), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.password)));
     ASSERT_EQ(WIFI_FAST_SCAN, cfg.sta.wifi_config_sta.scan_method);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.bssid_set);
     ASSERT_EQ(
@@ -305,8 +305,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_invalid) // NOLINT
     };
     wifiman_config_t cfg = { 0 };
     wifiman_cfg_blob_convert(&cfg_blob, &cfg);
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string(""), string(reinterpret_cast<const char *>(cfg.ap.wifi_config_ap.password)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
+    ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(1, cfg.ap.wifi_config_ap.channel); // force set to 1
     ASSERT_EQ(WIFI_AUTH_OPEN, cfg.ap.wifi_config_ap.authmode);
@@ -319,8 +319,8 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_invalid) // NOLINT
     ASSERT_EQ(string("10.10.0.1"), string(cfg.ap.wifi_settings_ap.ap_gw.buf));
     ASSERT_EQ(string("255.255.255.0"), string(cfg.ap.wifi_settings_ap.ap_netmask.buf));
 
-    ASSERT_EQ(string("sta_ssid1"), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.ssid)));
-    ASSERT_EQ(string("sta_pass1"), string(reinterpret_cast<const char *>(cfg.sta.wifi_config_sta.password)));
+    ASSERT_EQ(string("sta_ssid1"), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.ssid)));
+    ASSERT_EQ(string("sta_pass1"), string(reinterpret_cast<const char*>(cfg.sta.wifi_config_sta.password)));
     ASSERT_EQ(WIFI_FAST_SCAN, cfg.sta.wifi_config_sta.scan_method);
     ASSERT_EQ(0, cfg.sta.wifi_config_sta.bssid_set);
     ASSERT_EQ(

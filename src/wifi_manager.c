@@ -63,7 +63,7 @@ static const char TAG[] = "wifi_manager";
 EventGroupHandle_t        g_p_wifi_manager_event_group;
 static StaticEventGroup_t g_wifi_manager_event_group_mem;
 
-static os_timer_periodic_cptr_without_arg_t *g_p_wifi_manager_timer_task_watchdog;
+static os_timer_periodic_cptr_without_arg_t* g_p_wifi_manager_timer_task_watchdog;
 static os_timer_periodic_static_t            g_wifi_manager_timer_task_watchdog_mem;
 
 void
@@ -81,11 +81,11 @@ wifi_manager_disconnect_wifi(void)
 bool
 wifi_manager_start(
     const bool                                 flag_connect_sta,
-    const wifiman_config_t *const              p_wifi_cfg,
-    const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifi_manager_callbacks_t *const      p_callbacks,
-    int (*f_rng)(void *, unsigned char *, size_t),
-    void *p_rng)
+    const wifiman_config_t* const              p_wifi_cfg,
+    const wifi_manager_antenna_config_t* const p_wifi_ant_config,
+    const wifi_manager_callbacks_t* const      p_callbacks,
+    int (*f_rng)(void*, unsigned char*, size_t),
+    void* p_rng)
 {
     wifi_manager_init_mutex();
     wifi_manager_lock();
@@ -117,7 +117,7 @@ wifi_manager_start(
 }
 
 void
-wifi_manager_set_config_ap(const wifiman_config_ap_t *const p_wifi_cfg_ap)
+wifi_manager_set_config_ap(const wifiman_config_ap_t* const p_wifi_cfg_ap)
 {
     wifiman_config_ap_set(p_wifi_cfg_ap);
 }
@@ -125,9 +125,9 @@ wifi_manager_set_config_ap(const wifiman_config_ap_t *const p_wifi_cfg_ap)
 void
 wifi_manager_update_network_connection_info(
     const update_reason_code_e       update_reason_code,
-    const wifiman_wifi_ssid_t *const p_ssid,
-    const esp_netif_ip_info_t *const p_ip_info,
-    const esp_ip4_addr_t *const      p_dhcp_ip)
+    const wifiman_wifi_ssid_t* const p_ssid,
+    const esp_netif_ip_info_t* const p_ip_info,
+    const esp_ip4_addr_t* const      p_dhcp_ip)
 {
     network_info_str_t ip_info_str = {
         .ip      = { "0" },
@@ -206,7 +206,7 @@ wifi_manager_start_ap(void)
 }
 
 static void
-wifi_manager_timer_cb_task_watchdog_feed(const os_timer_periodic_cptr_without_arg_t *const p_timer)
+wifi_manager_timer_cb_task_watchdog_feed(const os_timer_periodic_cptr_without_arg_t* const p_timer)
 {
     (void)p_timer;
     wifiman_msg_send_cmd_task_watchdog_feed();
@@ -282,10 +282,10 @@ wifi_manager_task(void)
 
     wifiman_msg_deinit();
 
-    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     esp_netif_action_stop(p_netif_sta, NULL, 0, NULL);
 
-    esp_netif_t *const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    esp_netif_t* const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
     esp_netif_action_stop(p_netif_ap, NULL, 0, NULL);
 
     wifi_manager_unlock();
@@ -335,7 +335,7 @@ wifi_manager_is_sta_configured(void)
 }
 
 void
-wifi_manager_set_extra_info_for_status_json(const char *const p_extra)
+wifi_manager_set_extra_info_for_status_json(const char* const p_extra)
 {
     json_network_set_extra_info(p_extra);
 }

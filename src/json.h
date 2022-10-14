@@ -46,7 +46,7 @@ extern "C" {
  * output_buffer)
  */
 bool
-json_print_escaped_string(str_buf_t *p_str_buf, const char *p_input_str);
+json_print_escaped_string(str_buf_t* p_str_buf, const char* p_input_str);
 
 #ifdef __cplusplus
 }

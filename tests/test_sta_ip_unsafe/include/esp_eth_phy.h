@@ -46,7 +46,7 @@ struct esp_eth_phy_s
      *      - ESP_ERR_INVALID_ARG: set mediator for Ethernet PHY instance failed because of some invalid arguments
      *
      */
-    esp_err_t (*set_mediator)(esp_eth_phy_t *phy, esp_eth_mediator_t *mediator);
+    esp_err_t (*set_mediator)(esp_eth_phy_t* phy, esp_eth_mediator_t* mediator);
 
     /**
      * @brief Software Reset Ethernet PHY
@@ -58,7 +58,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: reset Ethernet PHY failed because some error occurred
      *
      */
-    esp_err_t (*reset)(esp_eth_phy_t *phy);
+    esp_err_t (*reset)(esp_eth_phy_t* phy);
 
     /**
      * @brief Hardware Reset Ethernet PHY
@@ -72,7 +72,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: reset Ethernet PHY failed because some error occurred
      *
      */
-    esp_err_t (*reset_hw)(esp_eth_phy_t *phy);
+    esp_err_t (*reset_hw)(esp_eth_phy_t* phy);
 
     /**
      * @brief Initialize Ethernet PHY
@@ -84,7 +84,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: initialize Ethernet PHY failed because some error occurred
      *
      */
-    esp_err_t (*init)(esp_eth_phy_t *phy);
+    esp_err_t (*init)(esp_eth_phy_t* phy);
 
     /**
      * @brief Deinitialize Ethernet PHY
@@ -96,7 +96,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: deinitialize Ethernet PHY failed because some error occurred
      *
      */
-    esp_err_t (*deinit)(esp_eth_phy_t *phy);
+    esp_err_t (*deinit)(esp_eth_phy_t* phy);
 
     /**
      * @brief Start auto negotiation
@@ -108,7 +108,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: restart auto negotiation failed because some error occurred
      *
      */
-    esp_err_t (*negotiate)(esp_eth_phy_t *phy);
+    esp_err_t (*negotiate)(esp_eth_phy_t* phy);
 
     /**
      * @brief Get Ethernet PHY link status
@@ -120,7 +120,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: get Ethernet PHY link status failed because some error occurred
      *
      */
-    esp_err_t (*get_link)(esp_eth_phy_t *phy);
+    esp_err_t (*get_link)(esp_eth_phy_t* phy);
 
     /**
      * @brief Power control of Ethernet PHY
@@ -133,7 +133,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: control Ethernet PHY power failed because some error occurred
      *
      */
-    esp_err_t (*pwrctl)(esp_eth_phy_t *phy, bool enable);
+    esp_err_t (*pwrctl)(esp_eth_phy_t* phy, bool enable);
 
     /**
      * @brief Set PHY chip address
@@ -146,7 +146,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: set Ethernet PHY address failed because some error occurred
      *
      */
-    esp_err_t (*set_addr)(esp_eth_phy_t *phy, uint32_t addr);
+    esp_err_t (*set_addr)(esp_eth_phy_t* phy, uint32_t addr);
 
     /**
      * @brief Get PHY chip address
@@ -159,7 +159,7 @@ struct esp_eth_phy_s
      *      - ESP_ERR_INVALID_ARG: get Ethernet PHY address failed because of invalid argument
      *
      */
-    esp_err_t (*get_addr)(esp_eth_phy_t *phy, uint32_t *addr);
+    esp_err_t (*get_addr)(esp_eth_phy_t* phy, uint32_t* addr);
 
     /**
      * @brief Advertise pause function supported by MAC layer
@@ -172,7 +172,7 @@ struct esp_eth_phy_s
      *      - ESP_ERR_INVALID_ARG: Advertise pause ability failed because of invalid argument
      *
      */
-    esp_err_t (*advertise_pause_ability)(esp_eth_phy_t *phy, uint32_t ability);
+    esp_err_t (*advertise_pause_ability)(esp_eth_phy_t* phy, uint32_t ability);
 
     /**
      * @brief Free memory of Ethernet PHY instance
@@ -184,7 +184,7 @@ struct esp_eth_phy_s
      *      - ESP_FAIL: free PHY instance failed because some error occurred
      *
      */
-    esp_err_t (*del)(esp_eth_phy_t *phy);
+    esp_err_t (*del)(esp_eth_phy_t* phy);
 };
 
 /**
@@ -217,8 +217,8 @@ typedef struct
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_ip101(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_ip101(const eth_phy_config_t* config);
 
 /**
  * @brief Create a PHY instance of RTL8201
@@ -229,8 +229,8 @@ esp_eth_phy_new_ip101(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_rtl8201(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_rtl8201(const eth_phy_config_t* config);
 
 /**
  * @brief Create a PHY instance of LAN8720
@@ -241,8 +241,8 @@ esp_eth_phy_new_rtl8201(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_lan8720(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_lan8720(const eth_phy_config_t* config);
 
 /**
  * @brief Create a PHY instance of DP83848
@@ -253,8 +253,8 @@ esp_eth_phy_new_lan8720(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_dp83848(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_dp83848(const eth_phy_config_t* config);
 
 /**
  * @brief Create a PHY instance of KSZ8041
@@ -265,8 +265,8 @@ esp_eth_phy_new_dp83848(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_ksz8041(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_ksz8041(const eth_phy_config_t* config);
 
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
 /**
@@ -278,8 +278,8 @@ esp_eth_phy_new_ksz8041(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_dm9051(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_dm9051(const eth_phy_config_t* config);
 #endif
 
 #if CONFIG_ETH_SPI_ETHERNET_W5500
@@ -292,8 +292,8 @@ esp_eth_phy_new_dm9051(const eth_phy_config_t *config);
  *      - instance: create PHY instance successfully
  *      - NULL: create PHY instance failed because some error occurred
  */
-esp_eth_phy_t *
-esp_eth_phy_new_w5500(const eth_phy_config_t *config);
+esp_eth_phy_t*
+esp_eth_phy_new_w5500(const eth_phy_config_t* config);
 #endif
 #ifdef __cplusplus
 }

@@ -20,9 +20,9 @@
 static const char TAG[] = "wifi_manager";
 
 void
-wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman_config_t *const p_cfg_dst)
+wifiman_cfg_blob_convert(const wifiman_cfg_blob_t* const p_cfg_blob_src, wifiman_config_t* const p_cfg_dst)
 {
-    const wifiman_config_t *const p_cfg_default = wifiman_default_config_get();
+    const wifiman_config_t* const p_cfg_default = wifiman_default_config_get();
 
     *p_cfg_dst = *p_cfg_default;
 
@@ -53,12 +53,12 @@ wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman
     }
 
     (void)snprintf(
-        (char *)p_cfg_dst->sta.wifi_config_sta.ssid,
+        (char*)p_cfg_dst->sta.wifi_config_sta.ssid,
         sizeof(p_cfg_dst->sta.wifi_config_sta.ssid),
         "%s",
         p_cfg_blob_src->sta_ssid.ssid_buf);
     (void)snprintf(
-        (char *)p_cfg_dst->sta.wifi_config_sta.password,
+        (char*)p_cfg_dst->sta.wifi_config_sta.password,
         sizeof(p_cfg_dst->sta.wifi_config_sta.password),
         "%s",
         p_cfg_blob_src->sta_password.password_buf);

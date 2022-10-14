@@ -72,7 +72,7 @@ sta_ip_safe_reset(void);
  * @return @def sta_ip_address_t
  */
 sta_ip_address_t
-sta_ip_safe_conv_str_to_ip(const char *p_ip_addr_str);
+sta_ip_safe_conv_str_to_ip(const char* p_ip_addr_str);
 
 #if RUUVI_TESTS_STA_IP_SAFE
 

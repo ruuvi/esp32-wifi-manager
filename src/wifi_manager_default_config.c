@@ -8,14 +8,14 @@
 #include "wifi_manager.h"
 #include "wifiman_config.h"
 
-const wifiman_config_t *
-wifi_manager_default_config_init(const wifiman_wifi_ssid_t *const p_wifi_ssid)
+const wifiman_config_t*
+wifi_manager_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid)
 {
     return wifiman_default_config_init(p_wifi_ssid);
 }
 
 void
-wifi_manager_set_default_config(const wifiman_config_t *const p_wifi_cfg)
+wifi_manager_set_default_config(const wifiman_config_t* const p_wifi_cfg)
 {
     wifiman_default_config_set(p_wifi_cfg);
 }

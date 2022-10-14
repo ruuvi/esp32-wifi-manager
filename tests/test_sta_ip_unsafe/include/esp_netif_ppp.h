@@ -95,7 +95,7 @@ typedef enum
  * @return     ESP_OK on success, ESP_ERR_ESP_NETIF_INVALID_PARAMS if netif null or not PPP
  */
 esp_err_t
-esp_netif_ppp_set_auth(esp_netif_t *netif, esp_netif_auth_type_t authtype, const char *user, const char *passwd);
+esp_netif_ppp_set_auth(esp_netif_t* netif, esp_netif_auth_type_t authtype, const char* user, const char* passwd);
 
 /** @brief Sets common parameters for the supplied esp-netif.
  *
@@ -105,7 +105,7 @@ esp_netif_ppp_set_auth(esp_netif_t *netif, esp_netif_auth_type_t authtype, const
  * @return     ESP_OK on success, ESP_ERR_ESP_NETIF_INVALID_PARAMS if netif null or not PPP
  */
 esp_err_t
-esp_netif_ppp_set_params(esp_netif_t *netif, const esp_netif_ppp_config_t *config);
+esp_netif_ppp_set_params(esp_netif_t* netif, const esp_netif_ppp_config_t* config);
 
 #ifdef __cplusplus
 }

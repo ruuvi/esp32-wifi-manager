@@ -29,16 +29,16 @@ typedef struct wifiman_md5_digest_hex_str_t
 } wifiman_md5_digest_hex_str_t;
 
 bool
-wifiman_md5_calc(const void *const p_buf, const size_t buf_size, wifiman_md5_digest_t *const p_digest);
+wifiman_md5_calc(const void* const p_buf, const size_t buf_size, wifiman_md5_digest_t* const p_digest);
 
 wifiman_md5_digest_hex_str_t
-wifiman_md5_hex_str(const wifiman_md5_digest_t *const p_digest);
+wifiman_md5_hex_str(const wifiman_md5_digest_t* const p_digest);
 
 wifiman_md5_digest_hex_str_t
-wifiman_md5_calc_hex_str(const void *const p_buf, const size_t buf_size);
+wifiman_md5_calc_hex_str(const void* const p_buf, const size_t buf_size);
 
 bool
-wifiman_md5_is_empty_digest_hex_str(const wifiman_md5_digest_hex_str_t *const p_digest_hex_str);
+wifiman_md5_is_empty_digest_hex_str(const wifiman_md5_digest_hex_str_t* const p_digest_hex_str);
 
 #ifdef __cplusplus
 }

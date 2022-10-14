@@ -42,7 +42,7 @@ wifiman_msg_deinit(void)
 }
 
 bool
-wifiman_msg_recv(queue_message *p_msg)
+wifiman_msg_recv(queue_message* p_msg)
 {
     const BaseType_t xStatus = xQueueReceive(gh_wifiman_msg_queue, p_msg, portMAX_DELAY);
     if (pdPASS != xStatus)
@@ -54,27 +54,27 @@ wifiman_msg_recv(queue_message *p_msg)
 }
 
 connection_request_made_by_code_e
-wifiman_conv_param_to_conn_req(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_conn_req(const wifiman_msg_param_t* p_param)
 {
     const connection_request_made_by_code_e conn_req = (connection_request_made_by_code_e)p_param->val;
     return conn_req;
 }
 
 sta_ip_address_t
-wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t* p_param)
 {
     const sta_ip_address_t ip_addr = p_param->val;
     return ip_addr;
 }
 
 wifiman_disconnection_reason_t
-wifiman_conv_param_to_reason(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_reason(const wifiman_msg_param_t* p_param)
 {
     const wifiman_disconnection_reason_t reason = (wifiman_disconnection_reason_t)p_param->val;
     return reason;
 }
 
-const char *
+const char*
 wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason)
 {
     switch (reason)

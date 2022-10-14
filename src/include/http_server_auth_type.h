@@ -50,17 +50,17 @@ typedef struct http_server_auth_api_key_t
 } http_server_auth_api_key_t;
 
 http_server_auth_type_e
-http_server_auth_type_from_str(const char *const p_auth_type);
+http_server_auth_type_from_str(const char* const p_auth_type);
 
-const char *
+const char*
 http_server_auth_type_to_str(const http_server_auth_type_e auth_type);
 
 bool
 http_server_set_auth(
     const http_server_auth_type_e           auth_type,
-    const http_server_auth_user_t *const    p_auth_user,
-    const http_server_auth_pass_t *const    p_auth_pass,
-    const http_server_auth_api_key_t *const p_auth_api_key);
+    const http_server_auth_user_t* const    p_auth_user,
+    const http_server_auth_pass_t* const    p_auth_pass,
+    const http_server_auth_api_key_t* const p_auth_api_key);
 
 #ifdef __cplusplus
 }

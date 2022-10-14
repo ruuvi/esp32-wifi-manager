@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 os_delta_ticks_t
-http_server_accept_and_handle_conn(struct netconn *const p_conn);
+http_server_accept_and_handle_conn(struct netconn* const p_conn);
 
 #ifdef __cplusplus
 }
