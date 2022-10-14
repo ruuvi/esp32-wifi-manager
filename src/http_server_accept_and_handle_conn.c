@@ -37,12 +37,12 @@ static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
 
-static const char *
-get_http_body(const char *const p_msg, const uint32_t len, uint32_t *const p_body_len)
+static const char*
+get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)
 {
     static const char g_newlines[] = "\r\n\r\n";
 
-    const char *p_body = strstr(p_msg, g_newlines);
+    const char* p_body = strstr(p_msg, g_newlines);
     if (NULL == p_body)
     {
         LOG_DBG("http body not found: %s", p_msg);
@@ -58,12 +58,12 @@ get_http_body(const char *const p_msg, const uint32_t len, uint32_t *const p_bod
 
 static bool
 http_server_recv_and_handle(
-    struct netconn *const p_conn,
-    char *const           p_req_buf,
-    uint32_t *const       p_req_size,
-    bool *const           p_req_ready)
+    struct netconn* const p_conn,
+    char* const           p_req_buf,
+    uint32_t* const       p_req_size,
+    bool* const           p_req_ready)
 {
-    struct netbuf *p_netbuf_in = NULL;
+    struct netbuf* p_netbuf_in = NULL;
 
     const os_delta_ticks_t t0                    = xTaskGetTickCount();
     const err_t            err                   = netconn_recv(p_conn, &p_netbuf_in);
@@ -74,9 +74,9 @@ http_server_recv_and_handle(
         return false;
     }
 
-    char *p_buf  = NULL;
+    char* p_buf  = NULL;
     u16_t buflen = 0;
-    netbuf_data(p_netbuf_in, (void **)&p_buf, &buflen);
+    netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
 
     if ((*p_req_size + buflen) > FULLBUF_SIZE)
     {
@@ -95,12 +95,12 @@ http_server_recv_and_handle(
     const http_req_header_t req_header = {
         .ptr = p_req_buf,
     };
-    const char *p_content_len_str = http_req_header_get_field(req_header, "Content-Length:", &field_len);
+    const char* p_content_len_str = http_req_header_get_field(req_header, "Content-Length:", &field_len);
     if (NULL != p_content_len_str)
     {
         const uint32_t content_len = (uint32_t)strtoul(p_content_len_str, NULL, 10);
         uint32_t       body_len    = 0;
-        const char *   p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
+        const char*    p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
         if (NULL != p_body)
         {
             LOG_DBG("Header Content-Length: %d, HTTP body length: %d", content_len, body_len);
@@ -127,7 +127,7 @@ http_server_recv_and_handle(
     return true;
 }
 
-static const char *
+static const char*
 conv_lwip_err_to_str(const err_enum_t err)
 {
     switch (err)
@@ -172,8 +172,8 @@ conv_lwip_err_to_str(const err_enum_t err)
 
 static bool
 http_server_netconn_write(
-    struct netconn *const p_conn,
-    const void *const     p_buf,
+    struct netconn* const p_conn,
+    const void* const     p_buf,
     const size_t          buf_len,
     const uint8_t         netconn_flags)
 {
@@ -190,7 +190,7 @@ http_server_netconn_write(
         http_server_sema_send_wait_immediate();
         const err_t err = netconn_write_partly(
             p_conn,
-            &((const uint8_t *)p_buf)[offset],
+            &((const uint8_t*)p_buf)[offset],
             buf_len - offset,
             netconn_flags | (uint8_t)NETCONN_DONTBLOCK,
             &bytes_written);
@@ -226,7 +226,7 @@ http_server_netconn_write(
 
 ATTR_PRINTF(3, 4)
 static bool
-http_server_netconn_printf(struct netconn *const p_conn, const bool flag_more, const char *const p_fmt, ...)
+http_server_netconn_printf(struct netconn* const p_conn, const bool flag_more, const char* const p_fmt, ...)
 {
     va_list args;
     va_start(args, p_fmt);
@@ -256,10 +256,10 @@ http_server_netconn_printf(struct netconn *const p_conn, const bool flag_more, c
     return true;
 }
 
-static const char *
+static const char*
 http_get_content_type_str(const http_content_type_e content_type)
 {
-    const char *p_content_type_str = "application/octet-stream";
+    const char* p_content_type_str = "application/octet-stream";
     switch (content_type)
     {
         case HTTP_CONENT_TYPE_TEXT_HTML:
@@ -290,10 +290,10 @@ http_get_content_type_str(const http_content_type_e content_type)
     return p_content_type_str;
 }
 
-const char *
-http_get_content_encoding_str(const http_server_resp_t *const p_resp)
+const char*
+http_get_content_encoding_str(const http_server_resp_t* const p_resp)
 {
-    const char *p_content_encoding_str = "";
+    const char* p_content_encoding_str = "";
     switch (p_resp->content_encoding)
     {
         case HTTP_CONENT_ENCODING_NONE:
@@ -306,10 +306,10 @@ http_get_content_encoding_str(const http_server_resp_t *const p_resp)
     return p_content_encoding_str;
 }
 
-static const char *
-http_get_cache_control_str(const http_server_resp_t *const p_resp)
+static const char*
+http_get_cache_control_str(const http_server_resp_t* const p_resp)
 {
-    const char *p_cache_control_str = "";
+    const char* p_cache_control_str = "";
     if (p_resp->flag_no_cache)
     {
         p_cache_control_str
@@ -320,7 +320,7 @@ http_get_cache_control_str(const http_server_resp_t *const p_resp)
 }
 
 static void
-write_content_from_memory(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
+write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
@@ -335,17 +335,17 @@ write_content_from_memory(struct netconn *const p_conn, const http_server_resp_t
 }
 
 static void
-write_content_from_heap(struct netconn *const p_conn, http_server_resp_t *const p_resp)
+write_content_from_heap(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     write_content_from_memory(p_conn, p_resp);
     os_free(p_resp->select_location.memory.p_buf);
 }
 
 static void
-write_content_from_fatfs(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
+write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     const size_t tmp_buf_size = FULLBUF_SIZE;
-    char *       p_tmp_buf    = os_malloc(tmp_buf_size);
+    char*        p_tmp_buf    = os_malloc(tmp_buf_size);
     if (NULL == p_tmp_buf)
     {
         LOG_ERR("Can't allocate memory for temporary buffer");
@@ -402,7 +402,7 @@ http_server_gen_header_date_str(const bool flag_gen_date)
 }
 
 static void
-http_server_write_content(struct netconn *const p_conn, http_server_resp_t *const p_resp)
+http_server_write_content(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
@@ -424,11 +424,11 @@ http_server_write_content(struct netconn *const p_conn, http_server_resp_t *cons
 
 static void
 http_server_netconn_resp_with_content(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields,
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
     const http_resp_code_e                  resp_code,
-    const char *const                       p_status_msg)
+    const char* const                       p_status_msg)
 {
     if (HTTP_RESP_CODE_200 == resp_code)
     {
@@ -477,9 +477,9 @@ http_server_netconn_resp_with_content(
 
 static void
 http_server_netconn_resp_without_content(
-    struct netconn *const  p_conn,
+    struct netconn* const  p_conn,
     const http_resp_code_e resp_code,
-    const char *const      p_status_msg)
+    const char* const      p_status_msg)
 {
     LOG_WARN("Response: status %u (%s)", (printf_uint_t)resp_code, p_status_msg);
     if (!http_server_netconn_printf(
@@ -499,15 +499,15 @@ http_server_netconn_resp_without_content(
 
 static void
 http_server_netconn_resp_200(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_200, "OK");
 }
 
 static void
-http_server_netconn_resp_302(struct netconn *const p_conn)
+http_server_netconn_resp_302(struct netconn* const p_conn)
 {
     const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
     LOG_INFO("Response: status 302 (Found), URL=http://%s/", ap_ip_str.buf);
@@ -527,9 +527,9 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
 
 static void
 http_server_netconn_resp_301_auth_html(
-    struct netconn *const                   p_conn,
-    const char *const                       p_hostname,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    const char* const                       p_hostname,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
@@ -550,9 +550,9 @@ http_server_netconn_resp_301_auth_html(
 
 static void
 http_server_netconn_resp_302_auth_html(
-    struct netconn *const                   p_conn,
-    const char *const                       p_hostname,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    const char* const                       p_hostname,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
@@ -572,55 +572,55 @@ http_server_netconn_resp_302_auth_html(
 }
 
 static void
-http_server_netconn_resp_400(struct netconn *const p_conn)
+http_server_netconn_resp_400(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
 }
 
 static void
 http_server_netconn_resp_401(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_401, "Unauthorized");
 }
 
 static void
 http_server_netconn_resp_403(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_403, "Forbidden");
 }
 
 static void
-http_server_netconn_resp_404(struct netconn *const p_conn)
+http_server_netconn_resp_404(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
 }
 
 static void
-http_server_netconn_resp_502(struct netconn *const p_conn)
+http_server_netconn_resp_502(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
 }
 
 static void
-http_server_netconn_resp_503(struct netconn *const p_conn)
+http_server_netconn_resp_503(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
 }
 
 static void
-http_server_netconn_resp_504(struct netconn *const p_conn)
+http_server_netconn_resp_504(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
 }
 
 static void
-http_server_netconn_resp(struct netconn *const p_conn, http_server_resp_t *const p_resp, const char *const p_hostname)
+http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const p_resp, const char* const p_hostname)
 {
     switch (p_resp->http_resp_code)
     {
@@ -664,7 +664,7 @@ http_server_netconn_resp(struct netconn *const p_conn, http_server_resp_t *const
  * @param p_conn - ptr to a connection object
  */
 static void
-http_server_netconn_serve(struct netconn *const p_conn)
+http_server_netconn_serve(struct netconn* const p_conn)
 {
     char     req_buf[FULLBUF_SIZE + 1];
     uint32_t req_size  = 0;
@@ -673,7 +673,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
     sta_ip_string_t local_ip_str  = { '\0' };
     sta_ip_string_t remote_ip_str = { '\0' };
 
-    const struct tcp_pcb *const p_tcp = p_conn->pcb.tcp;
+    const struct tcp_pcb* const p_tcp = p_conn->pcb.tcp;
     if (NULL == p_tcp)
     {
         LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");
@@ -723,7 +723,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
     }
 
     uint32_t          host_len = 0;
-    const char *const p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
+    const char* const p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
 
     LOG_INFO(
         "Request from %s to %s (Host: %.*s): %s %s%s%s",
@@ -773,7 +773,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
         && ((HTTP_CONTENT_LOCATION_STATIC_MEM == resp.content_location)
             || (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)))
     {
-        const size_t content_len = strlen((const char *)resp.select_location.memory.p_buf);
+        const size_t content_len = strlen((const char*)resp.select_location.memory.p_buf);
         if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG)
         {
             LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
@@ -793,9 +793,9 @@ http_server_netconn_serve(struct netconn *const p_conn)
 }
 
 os_delta_ticks_t
-http_server_accept_and_handle_conn(struct netconn *const p_conn)
+http_server_accept_and_handle_conn(struct netconn* const p_conn)
 {
-    struct netconn *p_new_conn = NULL;
+    struct netconn* p_new_conn = NULL;
 
     const err_t err = netconn_accept(p_conn, &p_new_conn);
 

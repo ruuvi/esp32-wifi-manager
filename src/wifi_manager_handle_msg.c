@@ -34,7 +34,7 @@ static uint16_t                 g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t         g_wifi_ap_records[2 * MAX_AP_NUM];
 
 static bool
-wifi_scan_next(wifi_manager_scan_info_t *const p_scan_info)
+wifi_scan_next(wifi_manager_scan_info_t* const p_scan_info)
 {
     p_scan_info->cur_chan += 1;
     if (p_scan_info->cur_chan > p_scan_info->last_chan)
@@ -74,7 +74,7 @@ wifi_handle_cmd_start_wifi_scan(void)
         wifi_country.nchan = WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_NUM_CHANNELS;
     }
 
-    wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     p_scan_info->first_chan                     = wifi_country.schan;
     p_scan_info->last_chan                      = (wifi_country.schan + wifi_country.nchan) - 1;
     p_scan_info->cur_chan                       = 0;
@@ -95,7 +95,7 @@ wifi_handle_cmd_connect_eth(void)
 }
 
 static void
-wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
+wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
 {
     const EventBits_t                       event_bits = xEventGroupGetBits(g_p_wifi_manager_event_group);
     const connection_request_made_by_code_e conn_req   = wifiman_conv_param_to_conn_req(p_param);
@@ -227,7 +227,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
  * @param p_param - pointer to wifiman_msg_param_t
  */
 static bool
-wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
+wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
 {
     const wifiman_disconnection_reason_t reason = wifiman_conv_param_to_reason(p_param);
     const EventBits_t event_bits = xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
@@ -319,7 +319,7 @@ wifi_handle_cmd_stop_ap(void)
 }
 
 static void
-wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
+wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t* const p_param)
 {
     (void)p_param;
     LOG_INFO("MESSAGE: EVENT_STA_GOT_IP");
@@ -338,7 +338,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
 
     esp_netif_ip_info_t ip_info = { 0 };
 
-    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     const esp_err_t    err         = esp_netif_get_ip_info(p_netif_sta, &ip_info);
     if (ESP_OK == err)
     {
@@ -346,7 +346,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
         const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
 
         esp_ip4_addr_t           dhcp_ip = { 0 };
-        const struct dhcp *const p_dhcp  = netif_dhcp_data((struct netif *)esp_netif_get_netif_impl(p_netif_sta));
+        const struct dhcp* const p_dhcp  = netif_dhcp_data((struct netif*)esp_netif_get_netif_impl(p_netif_sta));
         if (NULL != p_dhcp)
         {
             dhcp_ip.addr = p_dhcp->server_ip_addr.u_addr.ip4.addr;
@@ -447,7 +447,7 @@ wifi_handle_cmd_disconnect_sta(void)
 static void
 wifi_handle_ev_scan_next(void)
 {
-    const wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    const wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     /* wifi scanner config */
     const wifi_scan_config_t scan_config = {
         .ssid        = NULL,
@@ -481,7 +481,7 @@ wifi_handle_ev_scan_next(void)
 static void
 wifi_handle_ev_scan_done(void)
 {
-    wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     LOG_DBG("MESSAGE: EVENT_SCAN_DONE: channel=%u", (printf_uint_t)p_scan_info->cur_chan);
 
     wifi_manager_lock();
@@ -637,7 +637,7 @@ wifi_manager_set_callback(const message_code_e message_code, wifi_manager_cb_ptr
     }
 }
 
-const char *
+const char*
 wifi_manager_generate_access_points_json(void)
 {
     return json_access_points_generate(g_wifi_ap_records, g_wifi_ap_num);

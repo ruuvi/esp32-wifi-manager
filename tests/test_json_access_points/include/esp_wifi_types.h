@@ -137,8 +137,8 @@ typedef union
 /** @brief Parameters for an SSID scan. */
 typedef struct
 {
-    uint8_t *        ssid;        /**< SSID of AP */
-    uint8_t *        bssid;       /**< MAC address of AP */
+    uint8_t*         ssid;        /**< SSID of AP */
+    uint8_t*         bssid;       /**< MAC address of AP */
     uint8_t          channel;     /**< channel, scan the specific channel */
     bool             show_hidden; /**< enable to scan AP whose SSID is hidden */
     wifi_scan_type_t scan_type;   /**< scan type, active or passive */
@@ -475,7 +475,7 @@ typedef struct
     wifi_pkt_rx_ctrl_t rx_ctrl;            /**< received packet radio metadata header of the CSI data */
     uint8_t            mac[6];             /**< source MAC address of the CSI data */
     bool               first_word_invalid; /**< first four bytes of the CSI data is invalid or not */
-    int8_t *           buf;                /**< buffer of CSI data */
+    int8_t*            buf;                /**< buffer of CSI data */
     uint16_t           len;                /**< length of CSI data */
 } wifi_csi_info_t;
 

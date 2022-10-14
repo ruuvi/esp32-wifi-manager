@@ -38,21 +38,21 @@ typedef struct http_server_ecdh_pub_key_b64_t
 
 typedef struct http_server_ecdh_encrypted_req_t
 {
-    const char *p_encrypted;
-    const char *p_iv;
-    const char *p_hash;
+    const char* p_encrypted;
+    const char* p_iv;
+    const char* p_hash;
 } http_server_ecdh_encrypted_req_t;
 
 bool
-http_server_ecdh_init(int (*f_rng)(void *, unsigned char *, size_t), void *p_rng);
+http_server_ecdh_init(int (*f_rng)(void*, unsigned char*, size_t), void* p_rng);
 
 bool
 http_server_ecdh_handshake(
-    const http_server_ecdh_pub_key_b64_t *const p_pub_key_b64_cli,
-    http_server_ecdh_pub_key_b64_t *const       p_pub_key_b64_srv);
+    const http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_cli,
+    http_server_ecdh_pub_key_b64_t* const       p_pub_key_b64_srv);
 
 bool
-http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t *const p_enc_req, str_buf_t *const p_str_buf);
+http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t* const p_enc_req, str_buf_t* const p_str_buf);
 
 #ifdef __cplusplus
 }

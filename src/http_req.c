@@ -10,7 +10,7 @@
 #include <string.h>
 
 http_req_info_t
-http_req_parse(char *p_req_buf)
+http_req_parse(char* p_req_buf)
 {
     static const char g_two_crlf[] = "\r\n\r\n";
     static const char g_two_lf[]   = "\n\n";
@@ -37,7 +37,7 @@ http_req_parse(char *p_req_buf)
     };
 
     // find body
-    char *p2 = strstr(p_req_buf, g_two_crlf);
+    char* p2 = strstr(p_req_buf, g_two_crlf);
     if (NULL != p2)
     {
         p2[strlen(g_one_crlf)] = '\0';
@@ -78,7 +78,7 @@ http_req_parse(char *p_req_buf)
         }
     }
 
-    char *p1              = p_req_buf;
+    char* p1              = p_req_buf;
     req_info.http_cmd.ptr = p1;
     p2                    = strchr(p1, ' ');
     if (NULL == p2)
@@ -110,17 +110,17 @@ http_req_parse(char *p_req_buf)
     return req_info;
 }
 
-const char *
-http_req_header_get_field(const http_req_header_t req_header, const char *const p_field_name, uint32_t *const p_len)
+const char*
+http_req_header_get_field(const http_req_header_t req_header, const char* const p_field_name, uint32_t* const p_len)
 {
     *p_len = 0;
 
-    const char *p_start = strstr(req_header.ptr, p_field_name);
+    const char* p_start = strstr(req_header.ptr, p_field_name);
     if (NULL == p_start)
     {
         return NULL;
     }
-    const char *p_val = p_start + strlen(p_field_name);
+    const char* p_val = p_start + strlen(p_field_name);
     while (' ' == *p_val)
     {
         p_val += 1;
@@ -128,7 +128,7 @@ http_req_header_get_field(const http_req_header_t req_header, const char *const 
     if ('"' == *p_val)
     {
         p_val += 1;
-        const char *p_end = strpbrk(p_val, "\r\n");
+        const char* p_end = strpbrk(p_val, "\r\n");
         if (NULL == p_end)
         {
             return NULL;
@@ -146,7 +146,7 @@ http_req_header_get_field(const http_req_header_t req_header, const char *const 
     }
     else
     {
-        const char *p_end = strpbrk(p_val, "\r\n");
+        const char* p_end = strpbrk(p_val, "\r\n");
         if (NULL == p_end)
         {
             return NULL;

@@ -53,7 +53,7 @@ sta_ip_unsafe_reset(void)
 }
 
 uint32_t
-sta_ip_unsafe_conv_str_to_ip(const char *const p_ip_addr_str)
+sta_ip_unsafe_conv_str_to_ip(const char* const p_ip_addr_str)
 {
     esp_ip4_addr_t addr_ip4 = { 0 };
     addr_ip4.addr           = esp_ip4addr_aton(p_ip_addr_str);

@@ -40,7 +40,7 @@ TestAccessPointsList::TestAccessPointsList() = default;
 TestAccessPointsList::~TestAccessPointsList() = default;
 
 bool
-operator==(const wifi_ap_record_t &p1, const wifi_ap_record_t &p2)
+operator==(const wifi_ap_record_t& p1, const wifi_ap_record_t& p2)
 {
     return 0 == memcmp(&p1, &p2, sizeof(p1));
 }

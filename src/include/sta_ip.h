@@ -25,7 +25,7 @@ typedef struct sta_ip_string_t
 } sta_ip_string_t;
 
 static inline bool
-sta_ip_cmp(const sta_ip_string_t *const p_ip1, const sta_ip_string_t *const p_ip2)
+sta_ip_cmp(const sta_ip_string_t* const p_ip1, const sta_ip_string_t* const p_ip2)
 {
     if (0 != strcmp(p_ip1->buf, p_ip2->buf))
     {

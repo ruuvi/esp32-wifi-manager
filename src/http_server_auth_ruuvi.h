@@ -65,15 +65,15 @@ typedef struct http_server_auth_ruuvi_t
 bool
 http_server_auth_ruuvi_get_session_id_from_cookies(
     const http_req_header_t                    http_header,
-    http_server_auth_ruuvi_session_id_t *const p_session_id);
+    http_server_auth_ruuvi_session_id_t* const p_session_id);
 
 http_server_auth_ruuvi_prev_url_t
 http_server_auth_ruuvi_get_prev_url_from_cookies(const http_req_header_t http_header);
 
-http_server_auth_ruuvi_authorized_session_t *
+http_server_auth_ruuvi_authorized_session_t*
 http_server_auth_ruuvi_find_authorized_session(
-    const http_server_auth_ruuvi_session_id_t *const p_session_id,
-    const sta_ip_string_t *const                     p_remote_ip);
+    const http_server_auth_ruuvi_session_id_t* const p_session_id,
+    const sta_ip_string_t* const                     p_remote_ip);
 
 #ifdef __cplusplus
 }

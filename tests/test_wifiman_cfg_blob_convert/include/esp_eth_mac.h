@@ -44,7 +44,7 @@ struct esp_eth_mac_s
      *      - ESP_ERR_INVALID_ARG: set mediator for Ethernet MAC failed because of invalid argument
      *
      */
-    esp_err_t (*set_mediator)(esp_eth_mac_t *mac, esp_eth_mediator_t *eth);
+    esp_err_t (*set_mediator)(esp_eth_mac_t* mac, esp_eth_mediator_t* eth);
 
     /**
      * @brief Initialize Ethernet MAC
@@ -57,7 +57,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: initialize Ethernet MAC failed because some other error occurred
      *
      */
-    esp_err_t (*init)(esp_eth_mac_t *mac);
+    esp_err_t (*init)(esp_eth_mac_t* mac);
 
     /**
      * @brief Deinitialize Ethernet MAC
@@ -69,7 +69,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: deinitialize Ethernet MAC failed because some error occurred
      *
      */
-    esp_err_t (*deinit)(esp_eth_mac_t *mac);
+    esp_err_t (*deinit)(esp_eth_mac_t* mac);
 
     /**
      * @brief Start Ethernet MAC
@@ -81,7 +81,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: start Ethernet MAC failed because some other error occurred
      *
      */
-    esp_err_t (*start)(esp_eth_mac_t *mac);
+    esp_err_t (*start)(esp_eth_mac_t* mac);
 
     /**
      * @brief Stop Ethernet MAC
@@ -93,7 +93,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: stop Ethernet MAC failed because some error occurred
      *
      */
-    esp_err_t (*stop)(esp_eth_mac_t *mac);
+    esp_err_t (*stop)(esp_eth_mac_t* mac);
 
     /**
      * @brief Transmit packet from Ethernet MAC
@@ -109,7 +109,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: transmit packet failed because some other error occurred
      *
      */
-    esp_err_t (*transmit)(esp_eth_mac_t *mac, uint8_t *buf, uint32_t length);
+    esp_err_t (*transmit)(esp_eth_mac_t* mac, uint8_t* buf, uint32_t length);
 
     /**
      * @brief Receive packet from Ethernet MAC
@@ -130,7 +130,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: receive packet failed because some other error occurred
      *
      */
-    esp_err_t (*receive)(esp_eth_mac_t *mac, uint8_t *buf, uint32_t *length);
+    esp_err_t (*receive)(esp_eth_mac_t* mac, uint8_t* buf, uint32_t* length);
 
     /**
      * @brief Read PHY register
@@ -148,7 +148,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: read PHY register failed because some other error occurred
      *
      */
-    esp_err_t (*read_phy_reg)(esp_eth_mac_t *mac, uint32_t phy_addr, uint32_t phy_reg, uint32_t *reg_value);
+    esp_err_t (*read_phy_reg)(esp_eth_mac_t* mac, uint32_t phy_addr, uint32_t phy_reg, uint32_t* reg_value);
 
     /**
      * @brief Write PHY register
@@ -165,7 +165,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: write PHY register failed because some other error occurred
      *
      */
-    esp_err_t (*write_phy_reg)(esp_eth_mac_t *mac, uint32_t phy_addr, uint32_t phy_reg, uint32_t reg_value);
+    esp_err_t (*write_phy_reg)(esp_eth_mac_t* mac, uint32_t phy_addr, uint32_t phy_reg, uint32_t reg_value);
 
     /**
      * @brief Set MAC address
@@ -179,7 +179,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set MAC address failed because some other error occurred
      *
      */
-    esp_err_t (*set_addr)(esp_eth_mac_t *mac, uint8_t *addr);
+    esp_err_t (*set_addr)(esp_eth_mac_t* mac, uint8_t* addr);
 
     /**
      * @brief Get MAC address
@@ -193,7 +193,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: get MAC address failed because some other error occurred
      *
      */
-    esp_err_t (*get_addr)(esp_eth_mac_t *mac, uint8_t *addr);
+    esp_err_t (*get_addr)(esp_eth_mac_t* mac, uint8_t* addr);
 
     /**
      * @brief Set speed of MAC
@@ -207,7 +207,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set MAC speed failed because some other error occurred
      *
      */
-    esp_err_t (*set_speed)(esp_eth_mac_t *mac, eth_speed_t speed);
+    esp_err_t (*set_speed)(esp_eth_mac_t* mac, eth_speed_t speed);
 
     /**
      * @brief Set duplex mode of MAC
@@ -221,7 +221,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set MAC duplex failed because some other error occurred
      *
      */
-    esp_err_t (*set_duplex)(esp_eth_mac_t *mac, eth_duplex_t duplex);
+    esp_err_t (*set_duplex)(esp_eth_mac_t* mac, eth_duplex_t duplex);
 
     /**
      * @brief Set link status of MAC
@@ -235,7 +235,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set link status failed because some other error occurred
      *
      */
-    esp_err_t (*set_link)(esp_eth_mac_t *mac, eth_link_t link);
+    esp_err_t (*set_link)(esp_eth_mac_t* mac, eth_link_t link);
 
     /**
      * @brief Set promiscuous of MAC
@@ -248,7 +248,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set promiscuous mode failed because some error occurred
      *
      */
-    esp_err_t (*set_promiscuous)(esp_eth_mac_t *mac, bool enable);
+    esp_err_t (*set_promiscuous)(esp_eth_mac_t* mac, bool enable);
 
     /**
      * @brief Enable flow control on MAC layer or not
@@ -261,7 +261,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: set flow control failed because some error occurred
      *
      */
-    esp_err_t (*enable_flow_ctrl)(esp_eth_mac_t *mac, bool enable);
+    esp_err_t (*enable_flow_ctrl)(esp_eth_mac_t* mac, bool enable);
 
     /**
      * @brief Set the PAUSE ability of peer node
@@ -274,7 +274,7 @@ struct esp_eth_mac_s
      *      - ESP_OK: set peer pause ability successfully
      *      - ESP_FAIL: set peer pause ability failed because some error occurred
      */
-    esp_err_t (*set_peer_pause_ability)(esp_eth_mac_t *mac, uint32_t ability);
+    esp_err_t (*set_peer_pause_ability)(esp_eth_mac_t* mac, uint32_t ability);
 
     /**
      * @brief Free memory of Ethernet MAC
@@ -286,7 +286,7 @@ struct esp_eth_mac_s
      *      - ESP_FAIL: free Ethernet MAC instance failed because some error occurred
      *
      */
-    esp_err_t (*del)(esp_eth_mac_t *mac);
+    esp_err_t (*del)(esp_eth_mac_t* mac);
 };
 
 /**
@@ -326,8 +326,8 @@ typedef struct
  *      - instance: create MAC instance successfully
  *      - NULL: create MAC instance failed because some error occurred
  */
-esp_eth_mac_t *
-esp_eth_mac_new_esp32(const eth_mac_config_t *config);
+esp_eth_mac_t*
+esp_eth_mac_new_esp32(const eth_mac_config_t* config);
 #endif // CONFIG_ETH_USE_ESP32_EMAC
 
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -337,7 +337,7 @@ esp_eth_mac_new_esp32(const eth_mac_config_t *config);
  */
 typedef struct
 {
-    void *spi_hdl;      /*!< Handle of SPI device driver */
+    void* spi_hdl;      /*!< Handle of SPI device driver */
     int   int_gpio_num; /*!< Interrupt GPIO number */
 } eth_dm9051_config_t;
 
@@ -360,8 +360,8 @@ typedef struct
  *      - instance: create MAC instance successfully
  *      - NULL: create MAC instance failed because some error occurred
  */
-esp_eth_mac_t *
-esp_eth_mac_new_dm9051(const eth_dm9051_config_t *dm9051_config, const eth_mac_config_t *mac_config);
+esp_eth_mac_t*
+esp_eth_mac_new_dm9051(const eth_dm9051_config_t* dm9051_config, const eth_mac_config_t* mac_config);
 #endif // CONFIG_ETH_SPI_ETHERNET_DM9051
 
 #if CONFIG_ETH_SPI_ETHERNET_W5500
@@ -371,7 +371,7 @@ esp_eth_mac_new_dm9051(const eth_dm9051_config_t *dm9051_config, const eth_mac_c
  */
 typedef struct
 {
-    void *spi_hdl;      /*!< Handle of SPI device driver */
+    void* spi_hdl;      /*!< Handle of SPI device driver */
     int   int_gpio_num; /*!< Interrupt GPIO number */
 } eth_w5500_config_t;
 
@@ -394,8 +394,8 @@ typedef struct
  *      - instance: create MAC instance successfully
  *      - NULL: create MAC instance failed because some error occurred
  */
-esp_eth_mac_t *
-esp_eth_mac_new_w5500(const eth_w5500_config_t *w5500_config, const eth_mac_config_t *mac_config);
+esp_eth_mac_t*
+esp_eth_mac_new_w5500(const eth_w5500_config_t* w5500_config, const eth_mac_config_t* mac_config);
 #endif // CONFIG_ETH_SPI_ETHERNET_W5500
 
 #if CONFIG_ETH_USE_OPENETH
@@ -408,8 +408,8 @@ esp_eth_mac_new_w5500(const eth_w5500_config_t *w5500_config, const eth_mac_conf
  *      - instance: create MAC instance successfully
  *      - NULL: create MAC instance failed because some error occurred
  */
-esp_eth_mac_t *
-esp_eth_mac_new_openeth(const eth_mac_config_t *config);
+esp_eth_mac_t*
+esp_eth_mac_new_openeth(const eth_mac_config_t* config);
 #endif // CONFIG_ETH_USE_OPENETH
 
 #ifdef __cplusplus

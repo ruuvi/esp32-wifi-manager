@@ -153,7 +153,7 @@ typedef enum message_code_e
     MESSAGE_CODE_COUNT        = 18 /* important for the callback array */
 } message_code_e;
 
-typedef void (*wifi_manager_cb_ptr)(void *);
+typedef void (*wifi_manager_cb_ptr)(void*);
 
 /**
  * @brief simplified reason codes for a lost connection.
@@ -180,7 +180,7 @@ typedef enum connection_request_made_by_code_e
 
 typedef union wifiman_msg_param_t
 {
-    void *    ptr;
+    void*     ptr;
     uintptr_t val;
 } wifiman_msg_param_t;
 
@@ -262,14 +262,14 @@ typedef struct http_server_resp_t
     bool                    flag_no_cache;
     bool                    flag_add_header_date;
     http_content_type_e     content_type;
-    const char *            p_content_type_param;
+    const char*             p_content_type_param;
     size_t                  content_len;
     http_content_encoding_e content_encoding;
     union
     {
         struct
         {
-            const uint8_t *p_buf;
+            const uint8_t* p_buf;
         } memory;
         struct
         {
@@ -281,15 +281,15 @@ typedef struct http_server_resp_t
 typedef void (*wifi_manager_http_cb_on_user_req_t)(const http_server_user_req_code_e req_code);
 
 typedef http_server_resp_t (*wifi_manager_http_callback_t)(
-    const char *const               p_path,
-    const char *const               p_uri_params,
+    const char* const               p_path,
+    const char* const               p_uri_params,
     const bool                      flag_access_from_lan,
-    const http_server_resp_t *const p_resp_auth);
+    const http_server_resp_t* const p_resp_auth);
 
 typedef http_server_resp_t (*wifi_manager_http_cb_on_post_t)(
-    const char *const p_path,
-    const char *const p_uri_params,
-    const char *const p_body,
+    const char* const p_path,
+    const char* const p_uri_params,
+    const char* const p_body,
     const bool        flag_access_from_lan);
 
 typedef struct wifiman_config_ap_t  wifiman_config_ap_t;
@@ -301,7 +301,7 @@ typedef void (*wifi_manager_callback_on_cmd_disconnect_eth_t)(void);
 typedef void (*wifi_manager_callback_on_cmd_disconnect_sta_t)(void);
 typedef void (*wifi_manager_callback_on_ap_sta_connected_t)(void);
 typedef void (*wifi_manager_callback_on_ap_sta_disconnected_t)(void);
-typedef void (*wifi_manager_callback_save_wifi_config_sta_t)(const wifiman_config_sta_t *const p_wifi_cfg_sta);
+typedef void (*wifi_manager_callback_save_wifi_config_sta_t)(const wifiman_config_sta_t* const p_wifi_cfg_sta);
 
 typedef struct wifi_manager_callbacks_t
 {

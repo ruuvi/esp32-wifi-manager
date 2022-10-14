@@ -104,47 +104,47 @@ wifi_manager_task(void);
 
 void
 wifi_manager_event_handler(
-    ATTR_UNUSED void *     p_ctx,
+    ATTR_UNUSED void*      p_ctx,
     const esp_event_base_t p_event_base,
     const int32_t          event_id,
-    void *                 p_event_data);
+    void*                  p_event_data);
 
 void
 wifi_manager_cb_on_user_req(const http_server_user_req_code_e req_code);
 
 http_server_resp_t
 wifi_manager_cb_on_http_get(
-    const char *const               p_path,
-    const char *const               p_uri_params,
+    const char* const               p_path,
+    const char* const               p_uri_params,
     const bool                      flag_access_from_lan,
-    const http_server_resp_t *const p_resp_auth);
+    const http_server_resp_t* const p_resp_auth);
 
 http_server_resp_t
 wifi_manager_cb_on_http_post(
-    const char *const     p_path,
-    const char *const     p_uri_params,
+    const char* const     p_path,
+    const char* const     p_uri_params,
     const http_req_body_t http_body,
     const bool            flag_access_from_lan);
 
 http_server_resp_t
 wifi_manager_cb_on_http_delete(
-    const char *const               p_path,
-    const char *const               p_uri_params,
+    const char* const               p_path,
+    const char* const               p_uri_params,
     const bool                      flag_access_from_lan,
-    const http_server_resp_t *const p_resp_auth);
+    const http_server_resp_t* const p_resp_auth);
 
 bool
 wifi_manager_recv_and_handle_msg(void);
 
-const char *
+const char*
 wifi_manager_generate_access_points_json(void);
 
 bool
 wifi_manager_init(
     const bool                                 flag_connect_sta,
-    const wifiman_config_t *const              p_wifi_cfg,
-    const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifi_manager_callbacks_t *const      p_callbacks);
+    const wifiman_config_t* const              p_wifi_cfg,
+    const wifi_manager_antenna_config_t* const p_wifi_ant_config,
+    const wifi_manager_callbacks_t* const      p_callbacks);
 
 void
 wifi_manager_scan_timer_start(void);
@@ -168,7 +168,7 @@ void
 wifi_callback_on_disconnect_sta_cmd(void);
 
 void
-wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t *const p_cfg_sta);
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t* const p_cfg_sta);
 
 void
 wifi_manger_notify_scan_done(void);

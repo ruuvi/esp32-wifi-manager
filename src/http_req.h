@@ -17,32 +17,32 @@ extern "C" {
 
 typedef struct http_req_cmd_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_cmd_t;
 
 typedef struct http_req_uri_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_uri_t;
 
 typedef struct http_req_uri_params_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_uri_params_t;
 
 typedef struct http_req_ver_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_ver_t;
 
 typedef struct http_req_header_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_header_t;
 
 typedef struct http_req_body_t
 {
-    const char *ptr;
+    const char* ptr;
 } http_req_body_t;
 
 typedef struct http_req_info_t
@@ -57,10 +57,10 @@ typedef struct http_req_info_t
 } http_req_info_t;
 
 http_req_info_t
-http_req_parse(char *p_req_buf);
+http_req_parse(char* p_req_buf);
 
-const char *
-http_req_header_get_field(const http_req_header_t req_header, const char *const p_field_name, uint32_t *const p_len);
+const char*
+http_req_header_get_field(const http_req_header_t req_header, const char* const p_field_name, uint32_t* const p_len);
 
 #ifdef __cplusplus
 }

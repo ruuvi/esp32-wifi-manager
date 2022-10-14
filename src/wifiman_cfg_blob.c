@@ -30,9 +30,9 @@ static const char TAG[] = "wifi_manager";
 static const char wifi_manager_nvs_namespace[] = "espwifimgr";
 
 static bool
-wifiman_config_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_handle)
+wifiman_config_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t* const p_handle)
 {
-    const char *nvs_name = wifi_manager_nvs_namespace;
+    const char* nvs_name = wifi_manager_nvs_namespace;
     esp_err_t   err      = nvs_open(nvs_name, open_mode, p_handle);
     if (ESP_OK != err)
     {
@@ -54,7 +54,7 @@ wifiman_config_nvs_open(const nvs_open_mode_t open_mode, nvs_handle_t *const p_h
 }
 
 static bool
-wifiman_config_nvs_get_blob(const nvs_handle_t handle, const char *const key, void *const p_out_buf, size_t length)
+wifiman_config_nvs_get_blob(const nvs_handle_t handle, const char* const key, void* const p_out_buf, size_t length)
 {
     const esp_err_t esp_err = nvs_get_blob(handle, key, p_out_buf, &length);
     if (ESP_OK != esp_err)
@@ -66,7 +66,7 @@ wifiman_config_nvs_get_blob(const nvs_handle_t handle, const char *const key, vo
 }
 
 static bool
-wifiman_cfg_blob_read_by_handle(const nvs_handle handle, wifiman_cfg_blob_t *const p_blob)
+wifiman_cfg_blob_read_by_handle(const nvs_handle handle, wifiman_cfg_blob_t* const p_blob)
 {
     if (!wifiman_config_nvs_get_blob(handle, WIFIMAN_CFG_BLOB_KEY_STA_SSID, p_blob->sta_ssid.ssid_buf, MAX_SSID_SIZE))
     {
@@ -92,7 +92,7 @@ wifiman_cfg_blob_read_by_handle(const nvs_handle handle, wifiman_cfg_blob_t *con
 }
 
 bool
-wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
+wifi_manager_cfg_blob_read(wifiman_config_t* const p_cfg)
 {
     nvs_handle handle = 0;
     if (!wifiman_config_nvs_open(NVS_READONLY, &handle))
@@ -112,7 +112,7 @@ wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg)
         return false;
     }
 
-    if (0 == strcmp((char *)&cfg_blob.wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    if (0 == strcmp((char*)&cfg_blob.wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
     {
         return false;
     }
@@ -148,13 +148,13 @@ wifi_manager_cfg_blob_mark_deprecated(void)
         return false;
     }
 
-    if (0 == strcmp((char *)&wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
+    if (0 == strcmp((char*)&wifi_settings.ap_ssid[0], WIFIMAN_CFG_DEPRECATED_BLOB))
     {
         nvs_close(handle);
         return false;
     }
 
-    (void)snprintf((char *)&wifi_settings.ap_ssid[0], sizeof(wifi_settings.ap_ssid), "%s", WIFIMAN_CFG_DEPRECATED_BLOB);
+    (void)snprintf((char*)&wifi_settings.ap_ssid[0], sizeof(wifi_settings.ap_ssid), "%s", WIFIMAN_CFG_DEPRECATED_BLOB);
 
     bool res = true;
     // TODO: in future versions we can completely remove this deprecated BLOB with nvs_erase_all

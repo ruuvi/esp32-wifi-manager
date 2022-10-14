@@ -33,7 +33,7 @@ extern "C" {
 typedef struct
 {
     int32_t     queue_size;      /**< size of the event loop queue */
-    const char *task_name;       /**< name of the event loop task; if NULL,
+    const char* task_name;       /**< name of the event loop task; if NULL,
                                          a dedicated task is not created for event loop*/
     UBaseType_t task_priority;   /**< priority of the event loop task, ignored if task name is NULL */
     uint32_t    task_stack_size; /**< stack size of the event loop task, ignored if task name is NULL */
@@ -54,7 +54,7 @@ typedef struct
  *  - Others: Fail
  */
 esp_err_t
-esp_event_loop_create(const esp_event_loop_args_t *event_loop_args, esp_event_loop_handle_t *event_loop);
+esp_event_loop_create(const esp_event_loop_args_t* event_loop_args, esp_event_loop_handle_t* event_loop);
 
 /**
  * @brief Delete an existing event loop.
@@ -155,7 +155,7 @@ esp_event_handler_register(
     esp_event_base_t    event_base,
     int32_t             event_id,
     esp_event_handler_t event_handler,
-    void *              event_handler_arg);
+    void*               event_handler_arg);
 
 /**
  * @brief Register an event handler to a specific loop (legacy).
@@ -187,7 +187,7 @@ esp_event_handler_register_with(
     esp_event_base_t        event_base,
     int32_t                 event_id,
     esp_event_handler_t     event_handler,
-    void *                  event_handler_arg);
+    void*                   event_handler_arg);
 
 /**
  * @brief Register an instance of event handler to a specific loop.
@@ -234,8 +234,8 @@ esp_event_handler_instance_register_with(
     esp_event_base_t              event_base,
     int32_t                       event_id,
     esp_event_handler_t           event_handler,
-    void *                        event_handler_arg,
-    esp_event_handler_instance_t *instance);
+    void*                         event_handler_arg,
+    esp_event_handler_instance_t* instance);
 
 /**
  * @brief Register an instance of event handler to the default loop.
@@ -268,8 +268,8 @@ esp_event_handler_instance_register(
     esp_event_base_t              event_base,
     int32_t                       event_id,
     esp_event_handler_t           event_handler,
-    void *                        event_handler_arg,
-    esp_event_handler_instance_t *instance);
+    void*                         event_handler_arg,
+    esp_event_handler_instance_t* instance);
 
 /**
  * @brief Unregister a handler with the system event loop (legacy).
@@ -397,7 +397,7 @@ esp_err_t
 esp_event_post(
     esp_event_base_t event_base,
     int32_t          event_id,
-    void *           event_data,
+    void*            event_data,
     size_t           event_data_size,
     TickType_t       ticks_to_wait);
 
@@ -428,7 +428,7 @@ esp_event_post_to(
     esp_event_loop_handle_t event_loop,
     esp_event_base_t        event_base,
     int32_t                 event_id,
-    void *                  event_data,
+    void*                   event_data,
     size_t                  event_data_size,
     TickType_t              ticks_to_wait);
 
@@ -459,9 +459,9 @@ esp_err_t
 esp_event_isr_post(
     esp_event_base_t event_base,
     int32_t          event_id,
-    void *           event_data,
+    void*            event_data,
     size_t           event_data_size,
-    BaseType_t *     task_unblocked);
+    BaseType_t*      task_unblocked);
 
 /**
  * @brief Special variant of esp_event_post_to for posting events from interrupt handlers
@@ -491,9 +491,9 @@ esp_event_isr_post_to(
     esp_event_loop_handle_t event_loop,
     esp_event_base_t        event_base,
     int32_t                 event_id,
-    void *                  event_data,
+    void*                   event_data,
     size_t                  event_data_size,
-    BaseType_t *            task_unblocked);
+    BaseType_t*             task_unblocked);
 #endif
 
 /**
@@ -541,7 +541,7 @@ esp_event_isr_post_to(
  *  - Others: Fail
  */
 esp_err_t
-esp_event_dump(FILE *file);
+esp_event_dump(FILE* file);
 
 #ifdef __cplusplus
 } // extern "C"

@@ -13,7 +13,7 @@
 #define MBEDTLS_SHA256_USE_256 0
 
 wifiman_sha256_digest_hex_str_t
-wifiman_sha256_hex_str(const wifiman_sha256_digest_t *const p_digest)
+wifiman_sha256_hex_str(const wifiman_sha256_digest_t* const p_digest)
 {
     wifiman_sha256_digest_hex_str_t digest_str     = { 0 };
     str_buf_t                       str_buf_digest = STR_BUF_INIT(digest_str.buf, sizeof(digest_str.buf));
@@ -22,7 +22,7 @@ wifiman_sha256_hex_str(const wifiman_sha256_digest_t *const p_digest)
 }
 
 bool
-wifiman_sha256_calc(const void *const p_buf, const size_t buf_size, wifiman_sha256_digest_t *const p_digest)
+wifiman_sha256_calc(const void* const p_buf, const size_t buf_size, wifiman_sha256_digest_t* const p_digest)
 {
     mbedtls_sha256_context ctx = { 0 };
     mbedtls_sha256_init(&ctx);
@@ -46,7 +46,7 @@ wifiman_sha256_calc(const void *const p_buf, const size_t buf_size, wifiman_sha2
 }
 
 wifiman_sha256_digest_hex_str_t
-wifiman_sha256_calc_hex_str(const void *const p_buf, const size_t buf_size)
+wifiman_sha256_calc_hex_str(const void* const p_buf, const size_t buf_size)
 {
     wifiman_sha256_digest_t digest = { 0 };
     if (!wifiman_sha256_calc(p_buf, buf_size, &digest))
@@ -59,7 +59,7 @@ wifiman_sha256_calc_hex_str(const void *const p_buf, const size_t buf_size)
 }
 
 bool
-wifiman_sha256_is_empty_digest_hex_str(const wifiman_sha256_digest_hex_str_t *const p_digest_hex_str)
+wifiman_sha256_is_empty_digest_hex_str(const wifiman_sha256_digest_hex_str_t* const p_digest_hex_str)
 {
     if ('\0' == p_digest_hex_str->buf[0])
     {
