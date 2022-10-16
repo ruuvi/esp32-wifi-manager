@@ -84,8 +84,8 @@ wifi_manager_start(
     const wifiman_config_t* const              p_wifi_cfg,
     const wifi_manager_antenna_config_t* const p_wifi_ant_config,
     const wifi_manager_callbacks_t* const      p_callbacks,
-    int (*f_rng)(void*, unsigned char*, size_t),
-    void* p_rng)
+    wifi_manager_ecdh_f_rng                    f_rng,
+    void*                                      p_rng)
 {
     wifi_manager_init_mutex();
     wifi_manager_lock();

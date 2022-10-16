@@ -155,6 +155,8 @@ typedef enum message_code_e
 
 typedef void (*wifi_manager_cb_ptr)(void*);
 
+typedef int (*wifi_manager_ecdh_f_rng)(void*, unsigned char*, size_t);
+
 /**
  * @brief simplified reason codes for a lost connection.
  *

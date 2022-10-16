@@ -14,6 +14,7 @@
 #include "cJSON.h"
 #include "esp_type_wrapper.h"
 #include "os_malloc.h"
+#include "wifi_manager_defs.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -21,6 +22,7 @@
 #define HTTP_SERVER_ECDH_AES_KEY_SIZE   (32)
 #define HTTP_SERVER_ECDH_AES_NUM_BITS   (HTTP_SERVER_ECDH_AES_KEY_SIZE * 8)
 #define HTTP_SERVER_ECDH_AES_BLOCK_SIZE (16)
+#define HTTP_SERVER_ECDH_SHA256_SIZE    (32)
 
 typedef struct http_server_ecdh_aes_key_t
 {
@@ -55,20 +57,19 @@ typedef struct http_server_ecdh_array_buf_t
 
 typedef struct http_server_ecdh_sha256_t
 {
-#define HTTP_SERVER_ECDH_SHA256_SIZE (32)
     uint8_t buf[HTTP_SERVER_ECDH_SHA256_SIZE];
 } http_server_ecdh_sha256_t;
 
 static const char* const TAG = "ECDH";
 
-static int (*g_http_server_ecdh_f_rng)(void*, unsigned char*, size_t);
-static void* g_http_server_ecdh_p_rng;
+static wifi_manager_ecdh_f_rng g_http_server_ecdh_f_rng;
+static void*                   g_http_server_ecdh_p_rng;
 
 static mbedtls_ecdh_context       g_http_server_ecdh_ctx;
 static http_server_ecdh_aes_key_t g_http_server_ecdh_aes_key;
 
 bool
-http_server_ecdh_init(int (*f_rng)(void*, unsigned char*, size_t), void* p_rng)
+http_server_ecdh_init(wifi_manager_ecdh_f_rng f_rng, void* p_rng)
 {
     if ((NULL == f_rng) || (NULL == p_rng))
     {
