@@ -277,9 +277,7 @@ http_server_handle_req_post_auth(
             flag_auth_default);
     }
     http_server_auth_ruuvi_add_authorized_session(p_auth_ruuvi, &session_id, p_remote_ip);
-    p_auth_ruuvi->login_session.session_id.buf[0] = '\0';
-    p_auth_ruuvi->login_session.challenge.buf[0]  = '\0';
-    p_auth_ruuvi->login_session.remote_ip.buf[0]  = '\0';
+    http_server_auth_ruuvi_login_session_clear(&p_auth_ruuvi->login_session);
     if ('\0' != prev_url.buf[0])
     {
         (void)snprintf(

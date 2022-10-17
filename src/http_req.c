@@ -10,7 +10,7 @@
 #include <string.h>
 
 http_req_info_t
-http_req_parse(char* p_req_buf)
+http_req_parse(char* const p_req_buf)
 {
     static const char g_two_crlf[] = "\r\n\r\n";
     static const char g_two_lf[]   = "\n\n";

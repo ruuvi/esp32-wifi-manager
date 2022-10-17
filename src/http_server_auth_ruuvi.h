@@ -75,6 +75,9 @@ http_server_auth_ruuvi_find_authorized_session(
     const http_server_auth_ruuvi_session_id_t* const p_session_id,
     const sta_ip_string_t* const                     p_remote_ip);
 
+void
+http_server_auth_ruuvi_login_session_clear(http_server_auth_ruuvi_login_session_t* const p_login_session);
+
 #ifdef __cplusplus
 }
 #endif

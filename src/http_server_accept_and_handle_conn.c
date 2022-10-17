@@ -11,11 +11,9 @@
 #include "os_sema.h"
 #include "os_malloc.h"
 #include "str_buf.h"
-#include "wifi_manager.h"
 #include "wifiman_config.h"
 #include "sta_ip.h"
 #include "http_req.h"
-#include "sta_ip_safe.h"
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 
@@ -396,7 +394,7 @@ http_server_gen_header_date_str(const bool flag_gen_date)
         const time_t cur_time = time(NULL);
         struct tm    tm_time  = { 0 };
         gmtime_r(&cur_time, &tm_time);
-        strftime(date_str.buf, sizeof(date_str.buf), "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm_time);
+        (void)strftime(date_str.buf, sizeof(date_str.buf), "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm_time);
     }
     return date_str;
 }
@@ -659,76 +657,39 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
     http_server_netconn_resp_503(p_conn);
 }
 
-/**
- * @brief Helper function that processes one HTTP request at a time.
- * @param p_conn - ptr to a connection object
- */
 static void
-http_server_netconn_serve(struct netconn* const p_conn)
+http_server_netconn_serve_handle_req(
+    struct netconn* const        p_conn,
+    char* const                  p_req_buf,
+    const sta_ip_string_t* const p_local_ip_str,
+    const sta_ip_string_t* const p_remote_ip_str)
 {
-    char     req_buf[FULLBUF_SIZE + 1];
-    uint32_t req_size  = 0;
-    bool     req_ready = false;
-
-    sta_ip_string_t local_ip_str  = { '\0' };
-    sta_ip_string_t remote_ip_str = { '\0' };
-
-    const struct tcp_pcb* const p_tcp = p_conn->pcb.tcp;
-    if (NULL == p_tcp)
-    {
-        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");
-        return;
-    }
-
-    const ip_addr_t local_ip  = p_tcp->local_ip;
-    const ip_addr_t remote_ip = p_tcp->remote_ip;
-
-    if (NULL == p_conn->pcb.tcp)
-    {
-        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(2)");
-        return;
-    }
-
-    ipaddr_ntoa_r(&local_ip, local_ip_str.buf, sizeof(local_ip_str.buf));
-    ipaddr_ntoa_r(&remote_ip, remote_ip_str.buf, sizeof(remote_ip_str.buf));
-
-    while (!req_ready)
-    {
-        if (!http_server_recv_and_handle(p_conn, &req_buf[0], &req_size, &req_ready))
-        {
-            break;
-        }
-    }
-
-    if (!req_ready)
-    {
-        LOG_WARN("The connection was closed by the client side");
-        return;
-    }
     LOG_DBG(
         "Request from %s:%u to %s:%u: %s",
-        remote_ip_str.buf,
+        p_remote_ip_str->buf,
         p_tcp->remote_port,
         local_ip_str.buf,
         p_tcp->local_port,
-        req_buf);
+        p_req_buf);
 
-    const http_req_info_t req_info = http_req_parse(req_buf);
-
+    const http_req_info_t req_info = http_req_parse(p_req_buf);
     if (!req_info.is_success)
     {
-        LOG_ERR("Request from %s to %s: failed to parse request: %s", remote_ip_str.buf, local_ip_str.buf, req_buf);
+        LOG_ERR(
+            "Request from %s to %s: failed to parse request: %s",
+            p_remote_ip_str->buf,
+            p_local_ip_str->buf,
+            p_req_buf);
         http_server_netconn_resp_400(p_conn);
         return;
     }
-
     uint32_t          host_len = 0;
     const char* const p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
 
     LOG_INFO(
         "Request from %s to %s (Host: %.*s): %s %s%s%s",
-        remote_ip_str.buf,
-        local_ip_str.buf,
+        p_remote_ip_str->buf,
+        p_local_ip_str->buf,
         host_len,
         (NULL != p_host) ? p_host : "",
         (NULL != req_info.http_cmd.ptr) ? req_info.http_cmd.ptr : "NULL",
@@ -746,7 +707,7 @@ http_server_netconn_serve(struct netconn* const p_conn)
     const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
 
     /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
-    const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
+    const bool flag_access_from_lan = (0 != strcmp(p_local_ip_str->buf, ap_ip_str.buf)) ? true : false;
     if (!flag_access_from_lan)
     {
         const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
@@ -761,7 +722,7 @@ http_server_netconn_serve(struct netconn* const p_conn)
 
     http_server_resp_t resp = http_server_handle_req(
         &req_info,
-        &remote_ip_str,
+        p_remote_ip_str,
         http_server_get_auth(),
         &g_http_server_extra_header_fields,
         flag_access_from_lan);
@@ -785,11 +746,56 @@ http_server_netconn_serve(struct netconn* const p_conn)
     }
 
     str_buf_t hostname = ((NULL != p_host) && (0 != host_len)) ? str_buf_printf_with_alloc("%.*s", host_len, p_host)
-                                                               : str_buf_printf_with_alloc("%s", local_ip_str.buf);
-
+                                                               : str_buf_printf_with_alloc("%s", p_local_ip_str->buf);
     http_server_netconn_resp(p_conn, &resp, hostname.buf);
-
     str_buf_free_buf(&hostname);
+}
+
+/**
+ * @brief Helper function that processes one HTTP request at a time.
+ * @param p_conn - ptr to a connection object
+ */
+static void
+http_server_netconn_serve(struct netconn* const p_conn)
+{
+    char     req_buf[FULLBUF_SIZE + 1];
+    uint32_t req_size  = 0;
+    bool     req_ready = false;
+
+    sta_ip_string_t local_ip_str  = { '\0' };
+    sta_ip_string_t remote_ip_str = { '\0' };
+
+    const struct tcp_pcb* const p_tcp = p_conn->pcb.tcp;
+    if (NULL == p_tcp)
+    {
+        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");
+        return;
+    }
+
+    const ip_addr_t local_ip  = p_tcp->local_ip;
+    const ip_addr_t remote_ip = p_tcp->remote_ip;
+    if (NULL == p_conn->pcb.tcp)
+    {
+        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(2)");
+        return;
+    }
+    ipaddr_ntoa_r(&local_ip, local_ip_str.buf, sizeof(local_ip_str.buf));
+    ipaddr_ntoa_r(&remote_ip, remote_ip_str.buf, sizeof(remote_ip_str.buf));
+
+    while (!req_ready)
+    {
+        if (!http_server_recv_and_handle(p_conn, &req_buf[0], &req_size, &req_ready))
+        {
+            break;
+        }
+    }
+    if (!req_ready)
+    {
+        LOG_WARN("The connection was closed by the client side");
+        return;
+    }
+
+    http_server_netconn_serve_handle_req(p_conn, &req_buf[0], &local_ip_str, &remote_ip_str);
 }
 
 os_delta_ticks_t
