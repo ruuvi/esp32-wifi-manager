@@ -359,7 +359,7 @@ http_server_handle_ruuvi_ecdh_pub_key(
 }
 
 static bool
-http_server_parse_encrypted_req(cJSON* p_json_root, http_server_ecdh_encrypted_req_t* const p_enc_req)
+http_server_parse_encrypted_req(const cJSON* const p_json_root, http_server_ecdh_encrypted_req_t* const p_enc_req)
 {
     p_enc_req->p_encrypted = http_server_json_get_string_val_ptr(p_json_root, "encrypted");
     if (NULL == p_enc_req->p_encrypted)
@@ -635,12 +635,10 @@ http_server_handle_req(
             p_req_info->http_header,
             "ruuvi_ecdh_encrypted:",
             &len_ruuvi_ecdh_encrypted);
-        if (NULL != p_ruuvi_ecdh_encrypted)
+        if ((NULL != p_ruuvi_ecdh_encrypted)
+            && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
         {
-            if (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted))
-            {
-                flag_encrypted = true;
-            }
+            flag_encrypted = true;
         }
 
         str_buf_t       decrypted_str_buf   = STR_BUF_INIT_NULL();

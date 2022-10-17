@@ -139,3 +139,11 @@ http_server_auth_ruuvi_get_prev_url_from_cookies(const http_req_header_t http_he
     }
     return prev_url;
 }
+
+void
+http_server_auth_ruuvi_login_session_clear(http_server_auth_ruuvi_login_session_t* const p_login_session)
+{
+    p_login_session->session_id.buf[0] = '\0';
+    p_login_session->challenge.buf[0]  = '\0';
+    p_login_session->remote_ip.buf[0]  = '\0';
+}

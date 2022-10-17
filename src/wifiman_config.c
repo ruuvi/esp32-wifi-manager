@@ -68,11 +68,12 @@ static const wifiman_config_t g_wifiman_config_default_const = {
     },
     .sta = {
         .wifi_config_sta = {
-            .ssid = {0},
-            .password = {0},
+            .ssid = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+            .password = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
             .scan_method = WIFI_FAST_SCAN,
             .bssid_set = false,
-            .bssid = {0},
+            .bssid = {0, 0, 0, 0, 0, 0},
             .channel = 0,
             .listen_interval = 0,
             .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,

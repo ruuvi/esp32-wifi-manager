@@ -619,7 +619,6 @@ wifi_manager_recv_and_handle_msg(void)
         default:
             break;
     }
-    //    LOG_DBG("Handled request msg.code=%d", (printf_int_t)msg.code);
     LOG_DBG("Request processed: msg.code=%d", (printf_int_t)msg.code);
     if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
     {

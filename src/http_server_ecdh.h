@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <str_buf.h>
+#include "wifi_manager_defs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,16 +25,17 @@ extern "C" {
 
 #define HTTP_SERVER_ECDH_PUB_KEY_SIZE (HTTP_SERVER_ECDH_PUB_KEY_OFFSET + 2 * HTTP_SERVER_ECDH_MPI_SIZE)
 
-#define HTTP_SERVER_ECDH_CALC_B64_SIZE(bin_size_) ((((bin_size_) / 3) + (((bin_size_) % 3) != 0)) * 4 + 1)
+#define HTTP_SERVER_ECDH_CALC_B64_SIZE \
+    (((HTTP_SERVER_ECDH_PUB_KEY_SIZE / 3) + ((HTTP_SERVER_ECDH_PUB_KEY_SIZE % 3) != 0)) * 4 + 1)
 
 typedef struct http_server_ecdh_pub_key_bin_t
 {
-    uint8_t buf[1 + 2 * HTTP_SERVER_ECDH_MPI_SIZE];
+    uint8_t buf[1 + (2 * HTTP_SERVER_ECDH_MPI_SIZE)];
 } http_server_ecdh_pub_key_bin_t;
 
 typedef struct http_server_ecdh_pub_key_b64_t
 {
-    char buf[HTTP_SERVER_ECDH_CALC_B64_SIZE(HTTP_SERVER_ECDH_PUB_KEY_SIZE)];
+    char buf[HTTP_SERVER_ECDH_CALC_B64_SIZE];
 } http_server_ecdh_pub_key_b64_t;
 
 typedef struct http_server_ecdh_encrypted_req_t
@@ -44,7 +46,7 @@ typedef struct http_server_ecdh_encrypted_req_t
 } http_server_ecdh_encrypted_req_t;
 
 bool
-http_server_ecdh_init(int (*f_rng)(void*, unsigned char*, size_t), void* p_rng);
+http_server_ecdh_init(wifi_manager_ecdh_f_rng f_rng, void* p_rng);
 
 bool
 http_server_ecdh_handshake(
