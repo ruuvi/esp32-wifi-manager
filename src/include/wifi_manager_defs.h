@@ -117,7 +117,8 @@ typedef struct wifi_ip4_addr_str_t
  * @brief Defines the maximum length in bytes of a JSON representation of the IP information
  * assuming all ips are 4*3 digits, and all characters in the ssid require to be escaped.
  * example:
- * {"ssid":"abcdefghijklmnopqrstuvwxyz012345","ip":"192.168.1.119","netmask":"255.255.255.0","gw":"192.168.1.1","urc":0,"extra":{"fw_updating":1,"percentage":50}}
+ * {"ssid":"abcdefghijklmnopqrstuvwxyz012345","ip":"192.168.1.119","netmask":"255.255.255.0",
+ *   "gw":"192.168.1.1","urc":0,"extra":{"fw_updating":1,"percentage":50}}
  */
 #define JSON_IP_INFO_SIZE (150 + JSON_NETWORK_EXTRA_INFO_SIZE)
 

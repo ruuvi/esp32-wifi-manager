@@ -635,12 +635,10 @@ http_server_handle_req(
             p_req_info->http_header,
             "ruuvi_ecdh_encrypted:",
             &len_ruuvi_ecdh_encrypted);
-        if (NULL != p_ruuvi_ecdh_encrypted)
+        if ((NULL != p_ruuvi_ecdh_encrypted)
+            && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
         {
-            if (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted))
-            {
-                flag_encrypted = true;
-            }
+            flag_encrypted = true;
         }
 
         str_buf_t       decrypted_str_buf   = STR_BUF_INIT_NULL();

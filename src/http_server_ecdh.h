@@ -30,7 +30,7 @@ extern "C" {
 
 typedef struct http_server_ecdh_pub_key_bin_t
 {
-    uint8_t buf[1 + 2 * HTTP_SERVER_ECDH_MPI_SIZE];
+    uint8_t buf[1 + (2 * HTTP_SERVER_ECDH_MPI_SIZE)];
 } http_server_ecdh_pub_key_bin_t;
 
 typedef struct http_server_ecdh_pub_key_b64_t

@@ -25,6 +25,9 @@ http_req_parse(char* p_req_buf)
         .http_uri    = {
             .ptr = NULL,
         },
+        .http_uri_params = {
+            .ptr = NULL,
+        },
         .http_ver    = {
             .ptr = NULL,
         },
