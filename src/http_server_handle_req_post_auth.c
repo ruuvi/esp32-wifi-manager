@@ -130,6 +130,52 @@ http_server_auth_ruuvi_add_authorized_session(
     p_auth_ruuvi->authorized_sessions[0].remote_ip  = *p_remote_ip;
 }
 
+static bool
+http_server_handle_req_post_auth_check_login_session(
+    const http_server_auth_ruuvi_login_session_t* const p_login_session,
+    const http_server_auth_ruuvi_session_id_t*          p_session_id,
+    const sta_ip_string_t* const                        p_remote_ip,
+    const wifiman_wifi_ssid_t* const                    p_ap_ssid,
+    const bool                                          flag_auth_default,
+    http_header_extra_fields_t* const                   p_extra_header_fields,
+    http_server_resp_t* const                           p_resp)
+{
+    if ('\0' == p_login_session->session_id.buf[0])
+    {
+        LOG_WARN("session_id is empty");
+        *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_ap_ssid,
+            p_extra_header_fields,
+            flag_auth_default);
+        return false;
+    }
+    if (0 != strcmp(p_login_session->session_id.buf, p_session_id->buf))
+    {
+        LOG_WARN(
+            "session_id (%s) does not match with the last saved one (%s)",
+            p_session_id->buf,
+            p_login_session->session_id.buf);
+        *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_ap_ssid,
+            p_extra_header_fields,
+            flag_auth_default);
+        return false;
+    }
+    if (!sta_ip_cmp(&p_login_session->remote_ip, p_remote_ip))
+    {
+        LOG_WARN("RemoteIP does not match with the session_id");
+        *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_ap_ssid,
+            p_extra_header_fields,
+            flag_auth_default);
+        return false;
+    }
+    return true;
+}
+
 http_server_resp_t
 http_server_handle_req_post_auth(
     const bool                           flag_access_from_lan,
@@ -166,36 +212,20 @@ http_server_handle_req_post_auth(
     const http_server_auth_ruuvi_prev_url_t prev_url = http_server_auth_ruuvi_get_prev_url_from_cookies(http_header);
 
     http_server_auth_ruuvi_t* const p_auth_ruuvi = http_server_auth_ruuvi_get_info();
-    if ('\0' == p_auth_ruuvi->login_session.session_id.buf[0])
-    {
-        LOG_WARN("session_id is empty");
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+
+    http_server_resp_t resp = { 0 };
+    if (!http_server_handle_req_post_auth_check_login_session(
+            &p_auth_ruuvi->login_session,
+            &session_id,
             p_remote_ip,
             p_ap_ssid,
+            flag_auth_default,
             p_extra_header_fields,
-            flag_auth_default);
-    }
-    if (0 != strcmp(p_auth_ruuvi->login_session.session_id.buf, session_id.buf))
+            &resp))
     {
-        LOG_WARN(
-            "session_id (%s) does not match with the last saved one (%s)",
-            session_id.buf,
-            p_auth_ruuvi->login_session.session_id.buf);
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_ap_ssid,
-            p_extra_header_fields,
-            flag_auth_default);
+        return resp;
     }
-    if (!sta_ip_cmp(&p_auth_ruuvi->login_session.remote_ip, p_remote_ip))
-    {
-        LOG_WARN("RemoteIP does not match with the session_id");
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_ap_ssid,
-            p_extra_header_fields,
-            flag_auth_default);
-    }
+
     http_server_auth_ruuvi_req_t auth_req = { 0 };
     if (!json_ruuvi_auth_parse_http_body(http_body.ptr, &auth_req))
     {
@@ -252,7 +282,7 @@ http_server_handle_req_post_auth(
     p_auth_ruuvi->login_session.remote_ip.buf[0]  = '\0';
     if ('\0' != prev_url.buf[0])
     {
-        snprintf(
+        (void)snprintf(
             p_extra_header_fields->buf,
             sizeof(p_extra_header_fields->buf),
             "Ruuvi-prev-url: %s\r\n"
