@@ -302,6 +302,7 @@ wifi_handle_cmd_start_ap(void)
     }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    wifi_callback_on_ap_started();
 }
 
 static void
@@ -316,6 +317,7 @@ wifi_handle_cmd_stop_ap(void)
     }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    wifi_callback_on_ap_stopped();
 }
 
 static void
