@@ -622,6 +622,24 @@ wifi_callback_on_connect_eth_cmd(void)
 }
 
 void
+wifi_callback_on_ap_started(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_started)
+    {
+        g_wifi_callbacks.cb_on_ap_started();
+    }
+}
+
+void
+wifi_callback_on_ap_stopped(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_stopped)
+    {
+        g_wifi_callbacks.cb_on_ap_stopped();
+    }
+}
+
+void
 wifi_callback_on_ap_sta_connected(void)
 {
     if (NULL != g_wifi_callbacks.cb_on_ap_sta_connected)

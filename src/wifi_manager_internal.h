@@ -156,6 +156,12 @@ void
 wifi_callback_on_connect_eth_cmd(void);
 
 void
+wifi_callback_on_ap_started(void);
+
+void
+wifi_callback_on_ap_stopped(void);
+
+void
 wifi_callback_on_ap_sta_connected(void);
 
 void
