@@ -51,9 +51,9 @@ typedef struct http_server_auth_digest_req_t
 
 bool
 http_server_parse_digest_authorization_str(
-    const char *const                    p_authorization,
+    const char* const                    p_authorization,
     const uint32_t                       len_authorization,
-    http_server_auth_digest_req_t *const p_req);
+    http_server_auth_digest_req_t* const p_req);
 
 #ifdef __cplusplus
 }

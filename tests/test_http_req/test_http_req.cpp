@@ -254,7 +254,7 @@ TEST_F(TestHttpReq, test_lf_http_req_header_get_field) // NOLINT
 
     {
         uint32_t    host_len = 0;
-        const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
+        const char* p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
         ASSERT_NE(nullptr, p_host);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", host_len, p_host);
@@ -264,7 +264,7 @@ TEST_F(TestHttpReq, test_lf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    conn_len = 0;
-        const char *p_conn   = http_req_header_get_field(req_info.http_header, "Connection:", &conn_len);
+        const char* p_conn   = http_req_header_get_field(req_info.http_header, "Connection:", &conn_len);
         ASSERT_NE(nullptr, p_conn);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", conn_len, p_conn);
@@ -274,7 +274,7 @@ TEST_F(TestHttpReq, test_lf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    user_agent_len = 0;
-        const char *p_user_agent   = http_req_header_get_field(req_info.http_header, "User-Agent:", &user_agent_len);
+        const char* p_user_agent   = http_req_header_get_field(req_info.http_header, "User-Agent:", &user_agent_len);
         ASSERT_NE(nullptr, p_user_agent);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", user_agent_len, p_user_agent);
@@ -284,7 +284,7 @@ TEST_F(TestHttpReq, test_lf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    none_field_len = 1;
-        const char *p_none_field   = http_req_header_get_field(
+        const char* p_none_field   = http_req_header_get_field(
             req_info.http_header,
             "Non-existent-field:",
             &none_field_len);
@@ -322,7 +322,7 @@ TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
 
     {
         uint32_t    host_len = 0;
-        const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
+        const char* p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
         ASSERT_NE(nullptr, p_host);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", host_len, p_host);
@@ -332,7 +332,7 @@ TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    conn_len = 0;
-        const char *p_conn   = http_req_header_get_field(req_info.http_header, "Connection:", &conn_len);
+        const char* p_conn   = http_req_header_get_field(req_info.http_header, "Connection:", &conn_len);
         ASSERT_NE(nullptr, p_conn);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", conn_len, p_conn);
@@ -342,7 +342,7 @@ TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    user_agent_len = 0;
-        const char *p_user_agent   = http_req_header_get_field(req_info.http_header, "User-Agent:", &user_agent_len);
+        const char* p_user_agent   = http_req_header_get_field(req_info.http_header, "User-Agent:", &user_agent_len);
         ASSERT_NE(nullptr, p_user_agent);
         char buf[80];
         snprintf(buf, sizeof(buf), "%.*s", user_agent_len, p_user_agent);
@@ -352,7 +352,7 @@ TEST_F(TestHttpReq, test_crlf_http_req_header_get_field) // NOLINT
     }
     {
         uint32_t    none_field_len = 1;
-        const char *p_none_field   = http_req_header_get_field(
+        const char* p_none_field   = http_req_header_get_field(
             req_info.http_header,
             "Non-existent-field:",
             &none_field_len);

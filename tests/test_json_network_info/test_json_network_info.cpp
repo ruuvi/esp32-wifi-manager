@@ -13,14 +13,14 @@
 using namespace std;
 
 class TestJsonNetworkInfo;
-static TestJsonNetworkInfo *g_pTestClass;
+static TestJsonNetworkInfo* g_pTestClass;
 
 class MemAllocTrace
 {
-    vector<void *> allocated_mem;
+    vector<void*> allocated_mem;
 
-    std::vector<void *>::iterator
-    find(void *ptr)
+    std::vector<void*>::iterator
+    find(void* ptr)
     {
         for (auto iter = this->allocated_mem.begin(); iter != this->allocated_mem.end(); ++iter)
         {
@@ -34,14 +34,14 @@ class MemAllocTrace
 
 public:
     void
-    add(void *ptr)
+    add(void* ptr)
     {
         auto iter = find(ptr);
         assert(iter == this->allocated_mem.end()); // ptr was found in the list of allocated memory blocks
         this->allocated_mem.push_back(ptr);
     }
     void
-    remove(void *ptr)
+    remove(void* ptr)
     {
         auto iter = find(ptr);
         assert(iter != this->allocated_mem.end()); // ptr was not found in the list of allocated memory blocks
@@ -93,47 +93,47 @@ TestJsonNetworkInfo::~TestJsonNetworkInfo() = default;
 
 extern "C" {
 
-void *
+void*
 os_malloc(const size_t size)
 {
     if (++g_pTestClass->m_malloc_cnt == g_pTestClass->m_malloc_fail_on_cnt)
     {
         return nullptr;
     }
-    void *ptr = malloc(size);
+    void* ptr = malloc(size);
     assert(nullptr != ptr);
     g_pTestClass->m_mem_alloc_trace.add(ptr);
     return ptr;
 }
 
 void
-os_free_internal(void *ptr)
+os_free_internal(void* ptr)
 {
     g_pTestClass->m_mem_alloc_trace.remove(ptr);
     free(ptr);
 }
 
-void *
+void*
 os_calloc(const size_t nmemb, const size_t size)
 {
     if (++g_pTestClass->m_malloc_cnt == g_pTestClass->m_malloc_fail_on_cnt)
     {
         return nullptr;
     }
-    void *ptr = calloc(nmemb, size);
+    void* ptr = calloc(nmemb, size);
     assert(nullptr != ptr);
     g_pTestClass->m_mem_alloc_trace.add(ptr);
     return ptr;
 }
 
 os_mutex_t
-os_mutex_create_static(os_mutex_static_t *const p_mutex_static)
+os_mutex_create_static(os_mutex_static_t* const p_mutex_static)
 {
     return reinterpret_cast<os_mutex_t>(p_mutex_static);
 }
 
 void
-os_mutex_delete(os_mutex_t *p_mutex)
+os_mutex_delete(os_mutex_t* p_mutex)
 {
     if (nullptr != *p_mutex)
     {

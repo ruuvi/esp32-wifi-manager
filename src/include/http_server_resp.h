@@ -31,10 +31,10 @@ typedef struct http_server_resp_auth_json_t
 } http_server_resp_auth_json_t;
 
 http_server_resp_t
-http_server_resp_200_json(const char *p_json_content);
+http_server_resp_200_json(const char* p_json_content);
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char *const p_json_content);
+http_server_resp_200_json_in_heap(const char* const p_json_content);
 
 http_server_resp_t
 http_server_resp_302(void);
@@ -43,7 +43,7 @@ http_server_resp_t
 http_server_resp_400(void);
 
 http_server_resp_t
-http_server_resp_401_json(const http_server_resp_auth_json_t *const p_auth_json);
+http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json);
 
 http_server_resp_t
 http_server_resp_404(void);
@@ -57,28 +57,29 @@ http_server_resp_504(void);
 http_server_resp_t
 http_server_resp_data_in_flash(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf);
+    const uint8_t*                p_buf,
+    const bool                    flag_no_cache);
 
 http_server_resp_t
 http_server_resp_data_in_static_mem(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf,
+    const uint8_t*                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date);
 
 http_server_resp_t
 http_server_resp_data_in_heap(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf,
+    const uint8_t*                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date);
 
@@ -86,37 +87,38 @@ http_server_resp_t
 http_server_resp_data_from_file(
     http_resp_code_e              http_resp_code,
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const socket_t                fd);
+    const socket_t                fd,
+    const bool                    flag_no_cache);
 
 http_server_resp_t
 http_server_resp_401_auth_digest(
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields);
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    http_header_extra_fields_t* const p_extra_header_fields);
 
 http_server_resp_t
 http_server_resp_401_auth_ruuvi_with_new_session_id(
-    const sta_ip_string_t *const      p_remote_ip,
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields,
+    const sta_ip_string_t* const      p_remote_ip,
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    http_header_extra_fields_t* const p_extra_header_fields,
     const bool                        flag_auth_default);
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid, const bool flag_auth_default);
+http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t* const p_ap_ssid, const bool flag_auth_default);
 
 http_server_resp_t
-http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t *const p_ap_ssid);
+http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid);
 
-const http_server_resp_auth_json_t *
+const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const bool                       is_successful,
-    const wifiman_wifi_ssid_t *const p_ap_ssid,
+    const wifiman_wifi_ssid_t* const p_ap_ssid,
     const http_server_auth_type_e    lan_auth_type);
 
-const http_server_resp_auth_json_t *
-http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t *const p_ap_ssid);
+const http_server_resp_auth_json_t*
+http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t* const p_ap_ssid);
 
 #ifdef __cplusplus
 }

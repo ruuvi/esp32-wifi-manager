@@ -23,6 +23,7 @@
 #include "http_server_handle_req_post_auth.h"
 #include "http_server_handle_req_delete_auth.h"
 #include "http_server_ecdh.h"
+#include "dns_server.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -35,7 +36,7 @@ static const char TAG[] = "http_server";
 
 typedef struct http_server_gen_resp_status_json_param_t
 {
-    http_server_resp_t *const p_http_resp;
+    http_server_resp_t* const p_http_resp;
     bool                      flag_access_from_lan;
 } http_server_gen_resp_status_json_param_t;
 
@@ -50,9 +51,9 @@ typedef struct wifi_ssid_password_t
 static http_server_resp_status_json_t g_resp_status_json;
 
 static void
-http_server_gen_resp_status_json(const json_network_info_t *const p_info, void *const p_param)
+http_server_gen_resp_status_json(const json_network_info_t* const p_info, void* const p_param)
 {
-    http_server_gen_resp_status_json_param_t *p_params = p_param;
+    http_server_gen_resp_status_json_param_t* p_params = p_param;
     if (NULL == p_info)
     {
         LOG_ERR("http_server_netconn_serve: GET /status.json failed to obtain mutex");
@@ -70,10 +71,10 @@ http_server_gen_resp_status_json(const json_network_info_t *const p_info, void *
 static http_server_resp_t
 http_server_handle_req_get_html_or_json(
     const bool                           flag_access_from_lan,
-    const char *const                    p_file_name,
-    const http_server_auth_info_t *const p_auth_info,
-    const http_server_resp_t *const      p_resp_auth_check,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const char* const                    p_file_name,
+    const http_server_auth_info_t* const p_auth_info,
+    const http_server_resp_t* const      p_resp_auth_check,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if ((HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code) && (0 != strcmp(p_file_name, "auth.html")))
     {
@@ -94,7 +95,7 @@ http_server_handle_req_get_html_or_json(
 
     if (0 == strcmp(p_file_name, "ap.json"))
     {
-        const char *const p_buff = wifi_manager_scan_sync();
+        const char* const p_buff = wifi_manager_scan_sync();
         if (NULL == p_buff)
         {
             LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
@@ -110,8 +111,8 @@ http_server_handle_req_get_html_or_json(
 
         http_server_resp_t                       http_resp = { 0 };
         http_server_gen_resp_status_json_param_t params    = {
-            .p_http_resp          = &http_resp,
-            .flag_access_from_lan = flag_access_from_lan,
+               .p_http_resp          = &http_resp,
+               .flag_access_from_lan = flag_access_from_lan,
         };
         const os_delta_ticks_t ticks_to_wait = 10U;
         json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
@@ -126,10 +127,10 @@ http_server_handle_req_get_html_or_json(
 
 static http_server_resp_t
 http_server_handle_req_get_path_without_extension_api_key_not_used(
-    const char *const                    p_file_name,
-    const http_server_auth_info_t *const p_auth_info,
-    const http_server_resp_t *const      p_resp_auth_check,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const char* const                    p_file_name,
+    const http_server_auth_info_t* const p_auth_info,
+    const http_server_resp_t* const      p_resp_auth_check,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if (HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code)
     {
@@ -146,17 +147,24 @@ http_server_handle_req_get_path_without_extension_api_key_not_used(
         }
         return *p_resp_auth_check;
     }
-    return http_server_resp_data_in_flash(HTTP_CONENT_TYPE_TEXT_PLAIN, NULL, 0, HTTP_CONENT_ENCODING_NONE, NULL);
+    const bool flag_no_cache = true;
+    return http_server_resp_data_in_flash(
+        HTTP_CONENT_TYPE_TEXT_PLAIN,
+        NULL,
+        0,
+        HTTP_CONENT_ENCODING_NONE,
+        NULL,
+        flag_no_cache);
 }
 
 static http_server_resp_t
 http_server_handle_req_get_path_without_extension(
-    const char *const                    p_file_name,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    const http_server_resp_t *const      p_resp_auth_check,
+    const char* const                    p_file_name,
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const http_server_resp_t* const      p_resp_auth_check,
     const http_server_auth_api_key_e     access_by_api_key,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     switch (access_by_api_key)
     {
@@ -171,24 +179,31 @@ http_server_handle_req_get_path_without_extension(
         case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
             return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_ap_ssid));
     }
-    return http_server_resp_data_in_flash(HTTP_CONENT_TYPE_TEXT_PLAIN, NULL, 0, HTTP_CONENT_ENCODING_NONE, NULL);
+    const bool flag_no_cache = true;
+    return http_server_resp_data_in_flash(
+        HTTP_CONENT_TYPE_TEXT_PLAIN,
+        NULL,
+        0,
+        HTTP_CONENT_ENCODING_NONE,
+        NULL,
+        flag_no_cache);
 }
 
 static http_server_resp_t
 http_server_handle_req_get(
-    const char *const                    p_file_name_unchecked,
-    const char *const                    p_uri_params,
+    const char* const                    p_file_name_unchecked,
+    const char* const                    p_uri_params,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     LOG_DBG("http_server_handle_req_get /%s", p_file_name_unchecked);
 
-    const char *const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
+    const char* const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
 
-    const char *const p_file_ext = strrchr(p_file_name, '.');
+    const char* const p_file_ext = strrchr(p_file_name, '.');
 
     const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
@@ -249,12 +264,12 @@ http_server_handle_req_get(
 
 static http_server_resp_t
 http_server_handle_req_delete(
-    const char *                         p_file_name,
+    const char*                          p_file_name,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     LOG_INFO("DELETE /%s", p_file_name);
     const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
@@ -280,6 +295,7 @@ http_server_handle_req_delete(
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         LOG_INFO("http_server_netconn_serve: DELETE /connect.json");
+        dns_server_stop();
         if (wifi_manager_is_connected_to_ethernet())
         {
             wifi_manager_disconnect_eth();
@@ -294,10 +310,10 @@ http_server_handle_req_delete(
     return wifi_manager_cb_on_http_delete(p_file_name, NULL, flag_access_from_lan, NULL);
 }
 
-static const char *
-http_server_json_get_string_val_ptr(const cJSON *const p_json_root, const char *const p_attr_name)
+static const char*
+http_server_json_get_string_val_ptr(const cJSON* const p_json_root, const char* const p_attr_name)
 {
-    cJSON *const p_json_attr = cJSON_GetObjectItem(p_json_root, p_attr_name);
+    cJSON* const p_json_attr = cJSON_GetObjectItem(p_json_root, p_attr_name);
     if (NULL == p_json_attr)
     {
         return NULL;
@@ -308,10 +324,10 @@ http_server_json_get_string_val_ptr(const cJSON *const p_json_root, const char *
 static bool
 http_server_handle_ruuvi_ecdh_pub_key(
     const http_req_header_t               http_header,
-    http_server_ecdh_pub_key_b64_t *const p_pub_key_b64_srv)
+    http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_srv)
 {
     uint32_t          len_ruuvi_ecdh_pub_key = 0;
-    const char *const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
+    const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
         http_header,
         "ruuvi_ecdh_pub_key:",
         &len_ruuvi_ecdh_pub_key);
@@ -343,7 +359,7 @@ http_server_handle_ruuvi_ecdh_pub_key(
 }
 
 static bool
-http_server_parse_encrypted_req(cJSON *p_json_root, http_server_ecdh_encrypted_req_t *const p_enc_req)
+http_server_parse_encrypted_req(const cJSON* const p_json_root, http_server_ecdh_encrypted_req_t* const p_enc_req)
 {
     p_enc_req->p_encrypted = http_server_json_get_string_val_ptr(p_json_root, "encrypted");
     if (NULL == p_enc_req->p_encrypted)
@@ -364,9 +380,9 @@ http_server_parse_encrypted_req(cJSON *p_json_root, http_server_ecdh_encrypted_r
 }
 
 static bool
-http_server_decrypt(const http_req_body_t http_body, str_buf_t *p_str_buf)
+http_server_decrypt(const http_req_body_t http_body, str_buf_t* p_str_buf)
 {
-    cJSON *p_json_root = cJSON_Parse(http_body.ptr);
+    cJSON* p_json_root = cJSON_Parse(http_body.ptr);
     if (NULL == p_json_root)
     {
         LOG_ERR("Failed to parse json or no memory");
@@ -391,22 +407,22 @@ http_server_decrypt(const http_req_body_t http_body, str_buf_t *p_str_buf)
 }
 
 static bool
-http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_ssid_password_t *const p_info)
+http_server_parse_cjson_wifi_ssid_password(const cJSON* const p_json_root, wifi_ssid_password_t* const p_info)
 {
-    cJSON *const p_json_attr_ssid = cJSON_GetObjectItem(p_json_root, "ssid");
+    cJSON* const p_json_attr_ssid = cJSON_GetObjectItem(p_json_root, "ssid");
     if (NULL == p_json_attr_ssid)
     {
         LOG_ERR("connect.json: Can't find attribute 'ssid'");
         return false;
     }
-    const char * p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
-    cJSON *const p_json_attr_password = cJSON_GetObjectItem(p_json_root, "password");
+    const char*  p_ssid               = cJSON_GetStringValue(p_json_attr_ssid);
+    cJSON* const p_json_attr_password = cJSON_GetObjectItem(p_json_root, "password");
     if (NULL == p_json_attr_password)
     {
         LOG_ERR("connect.json: Can't find attribute 'password'");
         return false;
     }
-    const char *p_password = cJSON_GetStringValue(p_json_attr_password);
+    const char* p_password = cJSON_GetStringValue(p_json_attr_password);
 
     if (NULL == p_ssid)
     {
@@ -443,9 +459,9 @@ http_server_parse_cjson_wifi_ssid_password(const cJSON *const p_json_root, wifi_
 }
 
 static bool
-http_server_parse_json_wifi_ssid_password(const char *const p_json, wifi_ssid_password_t *const p_info)
+http_server_parse_json_wifi_ssid_password(const char* const p_json, wifi_ssid_password_t* const p_info)
 {
-    cJSON *p_json_root = cJSON_Parse(p_json);
+    cJSON* p_json_root = cJSON_Parse(p_json);
     if (NULL == p_json_root)
     {
         LOG_ERR("connect.json: Failed to parse decrypted content or no memory");
@@ -496,7 +512,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
                 wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
             }
             LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
-            wifi_manager_connect_async();
+            wifi_manager_start_timer_reconnect_sta_after_timeout();
             return http_server_resp_200_json("{}");
         }
         LOG_DBG(
@@ -516,13 +532,13 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 
 static http_server_resp_t
 http_server_handle_req_post(
-    const char *                         p_file_name,
+    const char*                          p_file_name,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
     const http_req_body_t                http_body,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     LOG_INFO("POST /%s", p_file_name);
 
@@ -563,16 +579,16 @@ http_server_handle_req_post(
 
 http_server_resp_t
 http_server_handle_req(
-    const http_req_info_t *const         p_req_info,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    http_header_extra_fields_t *const    p_extra_header_fields,
+    const http_req_info_t* const         p_req_info,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    http_header_extra_fields_t* const    p_extra_header_fields,
     const bool                           flag_access_from_lan)
 {
     assert(NULL != p_extra_header_fields);
     p_extra_header_fields->buf[0] = '\0';
 
-    const char *path = p_req_info->http_uri.ptr;
+    const char* path = p_req_info->http_uri.ptr;
     if ('/' == path[0])
     {
         path += 1;
@@ -615,16 +631,14 @@ http_server_handle_req(
     {
         bool              flag_encrypted           = false;
         uint32_t          len_ruuvi_ecdh_encrypted = 0;
-        const char *const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
+        const char* const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
             p_req_info->http_header,
             "ruuvi_ecdh_encrypted:",
             &len_ruuvi_ecdh_encrypted);
-        if (NULL != p_ruuvi_ecdh_encrypted)
+        if ((NULL != p_ruuvi_ecdh_encrypted)
+            && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
         {
-            if (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted))
-            {
-                flag_encrypted = true;
-            }
+            flag_encrypted = true;
         }
 
         str_buf_t       decrypted_str_buf   = STR_BUF_INIT_NULL();

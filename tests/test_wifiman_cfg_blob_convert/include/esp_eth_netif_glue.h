@@ -26,7 +26,7 @@ extern "C" {
  * @param eth_hdl Ethernet driver handle
  * @return glue object, which inherits esp_netif_driver_base_t
  */
-void *
+void*
 esp_eth_new_netif_glue(esp_eth_handle_t eth_hdl);
 
 /**
@@ -36,7 +36,7 @@ esp_eth_new_netif_glue(esp_eth_handle_t eth_hdl);
  * @return -ESP_OK: delete netif glue successfully
  */
 esp_err_t
-esp_eth_del_netif_glue(void *glue);
+esp_eth_del_netif_glue(void* glue);
 
 /**
  * @brief Register default IP layer handlers for Ethernet
@@ -51,7 +51,7 @@ esp_eth_del_netif_glue(void *glue);
  */
 
 esp_err_t
-esp_eth_set_default_handlers(void *esp_netif);
+esp_eth_set_default_handlers(void* esp_netif);
 
 /**
  * @brief Unregister default IP layer handlers for Ethernet
@@ -63,7 +63,7 @@ esp_eth_set_default_handlers(void *esp_netif);
  *      - others: other failure occurred during unregister esp_event handler
  */
 esp_err_t
-esp_eth_clear_default_handlers(void *esp_netif);
+esp_eth_clear_default_handlers(void* esp_netif);
 
 #ifdef __cplusplus
 }

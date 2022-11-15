@@ -29,16 +29,16 @@ typedef struct wifiman_sha256_digest_hex_str_t
 } wifiman_sha256_digest_hex_str_t;
 
 bool
-wifiman_sha256_calc(const void *const p_buf, const size_t buf_size, wifiman_sha256_digest_t *const p_digest);
+wifiman_sha256_calc(const void* const p_buf, const size_t buf_size, wifiman_sha256_digest_t* const p_digest);
 
 wifiman_sha256_digest_hex_str_t
-wifiman_sha256_hex_str(const wifiman_sha256_digest_t *const p_digest);
+wifiman_sha256_hex_str(const wifiman_sha256_digest_t* const p_digest);
 
 wifiman_sha256_digest_hex_str_t
-wifiman_sha256_calc_hex_str(const void *const p_buf, const size_t buf_size);
+wifiman_sha256_calc_hex_str(const void* const p_buf, const size_t buf_size);
 
 bool
-wifiman_sha256_is_empty_digest_hex_str(const wifiman_sha256_digest_hex_str_t *const p_digest_hex_str);
+wifiman_sha256_is_empty_digest_hex_str(const wifiman_sha256_digest_hex_str_t* const p_digest_hex_str);
 
 #ifdef __cplusplus
 }

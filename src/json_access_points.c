@@ -61,8 +61,8 @@ json_access_points_clear(void)
     snprintf(g_json_access_points_buf, sizeof(g_json_access_points_buf), "[]\n");
 }
 
-const char *
-json_access_points_generate(const wifi_ap_record_t *p_access_points, const uint32_t num_access_points)
+const char*
+json_access_points_generate(const wifi_ap_record_t* p_access_points, const uint32_t num_access_points)
 {
     str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(g_json_access_points_buf);
     str_buf_printf(&str_buf, "[");
@@ -72,7 +72,7 @@ json_access_points_generate(const wifi_ap_record_t *p_access_points, const uint3
         const wifi_ap_record_t ap = p_access_points[i];
 
         str_buf_printf(&str_buf, "{\"ssid\":");
-        json_print_escaped_string(&str_buf, (const char *)ap.ssid);
+        json_print_escaped_string(&str_buf, (const char*)ap.ssid);
 
         /* print the rest of the json for this access point: no more string to escape */
         str_buf_printf(
@@ -87,7 +87,7 @@ json_access_points_generate(const wifi_ap_record_t *p_access_points, const uint3
     return json_access_points_get();
 }
 
-const char *
+const char*
 json_access_points_get(void)
 {
     return g_json_access_points_buf;

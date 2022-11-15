@@ -9,10 +9,13 @@
 #include "wifi_manager_defs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "log.h"
 #include "wifi_manager_internal.h"
 
+#define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
+#include "log.h"
+
 static QueueHandle_t gh_wifiman_msg_queue;
+static bool          g_wifiman_msg_flag_wdog_feed_active;
 
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "wifi_manager";
@@ -39,7 +42,7 @@ wifiman_msg_deinit(void)
 }
 
 bool
-wifiman_msg_recv(queue_message *p_msg)
+wifiman_msg_recv(queue_message* p_msg)
 {
     const BaseType_t xStatus = xQueueReceive(gh_wifiman_msg_queue, p_msg, portMAX_DELAY);
     if (pdPASS != xStatus)
@@ -51,27 +54,27 @@ wifiman_msg_recv(queue_message *p_msg)
 }
 
 connection_request_made_by_code_e
-wifiman_conv_param_to_conn_req(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_conn_req(const wifiman_msg_param_t* p_param)
 {
     const connection_request_made_by_code_e conn_req = (connection_request_made_by_code_e)p_param->val;
     return conn_req;
 }
 
 sta_ip_address_t
-wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_ip_addr(const wifiman_msg_param_t* p_param)
 {
     const sta_ip_address_t ip_addr = p_param->val;
     return ip_addr;
 }
 
 wifiman_disconnection_reason_t
-wifiman_conv_param_to_reason(const wifiman_msg_param_t *p_param)
+wifiman_conv_param_to_reason(const wifiman_msg_param_t* p_param)
 {
     const wifiman_disconnection_reason_t reason = (wifiman_disconnection_reason_t)p_param->val;
     return reason;
 }
 
-const char *
+const char*
 wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason)
 {
     switch (reason)
@@ -143,7 +146,10 @@ wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason)
 }
 
 static bool
-wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
+wifiman_msg_send_with_timeout(
+    const message_code_e      code,
+    const wifiman_msg_param_t msg_param,
+    const TickType_t          timeout_ticks)
 {
     const queue_message msg = {
         .code      = code,
@@ -157,7 +163,7 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
         wifi_manager_unlock();
         return false;
     }
-    if (pdTRUE != xQueueSend(gh_wifiman_msg_queue, &msg, portMAX_DELAY))
+    if (pdTRUE != xQueueSend(gh_wifiman_msg_queue, &msg, timeout_ticks))
     {
         LOG_ERR("%s failed", "xQueueSend");
         wifi_manager_unlock();
@@ -167,13 +173,46 @@ wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
     return true;
 }
 
-bool
+static bool
+wifiman_msg_send(const message_code_e code, const wifiman_msg_param_t msg_param)
+{
+    return wifiman_msg_send_with_timeout(code, msg_param, portMAX_DELAY);
+}
+
+static bool
+wifiman_msg_try_send_without_waiting(const message_code_e code, const wifiman_msg_param_t msg_param)
+{
+    const TickType_t timeout_ticks = 0;
+    return wifiman_msg_send_with_timeout(code, msg_param, timeout_ticks);
+}
+
+void
+wifiman_msg_clear_flag_wdog_feed_active(void)
+{
+    wifi_manager_lock();
+    g_wifiman_msg_flag_wdog_feed_active = false;
+    wifi_manager_unlock();
+}
+
+void
 wifiman_msg_send_cmd_task_watchdog_feed(void)
 {
+    LOG_DBG("Send: ORDER_TASK_WATCHDOG_FEED");
     const wifiman_msg_param_t msg_param = {
         .ptr = NULL,
     };
-    return wifiman_msg_send(ORDER_TASK_WATCHDOG_FEED, msg_param);
+
+    wifi_manager_lock();
+    if (!g_wifiman_msg_flag_wdog_feed_active)
+    {
+        g_wifiman_msg_flag_wdog_feed_active = true;
+        (void)wifiman_msg_try_send_without_waiting(ORDER_TASK_WATCHDOG_FEED, msg_param);
+    }
+    else
+    {
+        LOG_WARN("Previous task watchdog feed command is not handled yet");
+    }
+    wifi_manager_unlock();
 }
 
 bool
@@ -209,6 +248,7 @@ wifiman_msg_send_cmd_connect_sta(const connection_request_made_by_code_e conn_re
     const wifiman_msg_param_t msg_param = {
         .val = conn_req_code,
     };
+    LOG_INFO("Send msg: ORDER_CONNECT_STA, conn_req_code=%d", (printf_int_t)conn_req_code);
     return wifiman_msg_send(ORDER_CONNECT_STA, msg_param);
 }
 

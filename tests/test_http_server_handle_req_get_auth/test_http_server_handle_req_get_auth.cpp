@@ -39,7 +39,7 @@ protected:
     }
 
 public:
-    const uint32_t *m_p_random_values;
+    const uint32_t* m_p_random_values;
     size_t          m_num_random_values;
     size_t          m_idx_random_value;
 
@@ -48,7 +48,7 @@ public:
     ~TestHttpServerHandleReqGetAuth() override;
 
     void
-    set_random_values(const uint32_t *const p_random_values, const size_t num_random_values)
+    set_random_values(const uint32_t* const p_random_values, const size_t num_random_values)
     {
         this->m_p_random_values   = p_random_values;
         this->m_num_random_values = num_random_values;
@@ -56,7 +56,7 @@ public:
     }
 };
 
-static TestHttpServerHandleReqGetAuth *g_pTestObj;
+static TestHttpServerHandleReqGetAuth* g_pTestObj;
 
 TestHttpServerHandleReqGetAuth::TestHttpServerHandleReqGetAuth()
     : Test()
@@ -114,7 +114,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 }
@@ -143,7 +143,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 }
@@ -157,9 +157,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         encoded_buf.begin(),
         encoded_buf.size(),
         &olen,
-        reinterpret_cast<const unsigned char *>(raw_user_pass.c_str()),
+        reinterpret_cast<const unsigned char*>(raw_user_pass.c_str()),
         raw_user_pass.length()));
-    const string encoded_pass = string(reinterpret_cast<const char *>(encoded_buf.cbegin()));
+    const string encoded_pass = string(reinterpret_cast<const char*>(encoded_buf.cbegin()));
 
     http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_BASIC,
@@ -185,7 +185,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 }
@@ -199,9 +199,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         encoded_buf.begin(),
         encoded_buf.size(),
         &olen,
-        reinterpret_cast<const unsigned char *>(raw_user_pass.c_str()),
+        reinterpret_cast<const unsigned char*>(raw_user_pass.c_str()),
         raw_user_pass.length()));
-    const string encoded_pass = string(reinterpret_cast<const char *>(encoded_buf.cbegin()));
+    const string encoded_pass = string(reinterpret_cast<const char*>(encoded_buf.cbegin()));
 
     http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_BASIC,
@@ -226,7 +226,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Basic realm=\"RuuviGatewayEEFF\", charset=\"UTF-8\"\r\n"),
@@ -242,9 +242,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         encoded_buf.begin(),
         encoded_buf.size(),
         &olen,
-        reinterpret_cast<const unsigned char *>(raw_user_pass.c_str()),
+        reinterpret_cast<const unsigned char*>(raw_user_pass.c_str()),
         raw_user_pass.length()));
-    const string encoded_pass = string(reinterpret_cast<const char *>(encoded_buf.cbegin()));
+    const string encoded_pass = string(reinterpret_cast<const char*>(encoded_buf.cbegin()));
 
     http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_BASIC,
@@ -270,7 +270,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Basic realm=\"RuuviGatewayEEFF\", charset=\"UTF-8\"\r\n"),
@@ -286,9 +286,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         encoded_buf.begin(),
         encoded_buf.size(),
         &olen,
-        reinterpret_cast<const unsigned char *>(raw_user_pass.c_str()),
+        reinterpret_cast<const unsigned char*>(raw_user_pass.c_str()),
         raw_user_pass.length()));
-    const string encoded_pass = string(reinterpret_cast<const char *>(encoded_buf.cbegin()));
+    const string encoded_pass = string(reinterpret_cast<const char*>(encoded_buf.cbegin()));
 
     http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_BASIC,
@@ -314,7 +314,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Basic realm=\"RuuviGatewayEEFF\", charset=\"UTF-8\"\r\n"),
@@ -330,9 +330,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         encoded_buf.begin(),
         encoded_buf.size(),
         &olen,
-        reinterpret_cast<const unsigned char *>(raw_user_pass.c_str()),
+        reinterpret_cast<const unsigned char*>(raw_user_pass.c_str()),
         raw_user_pass.length()));
-    const string encoded_pass = string(reinterpret_cast<const char *>(encoded_buf.cbegin()));
+    const string encoded_pass = string(reinterpret_cast<const char*>(encoded_buf.cbegin()));
 
     http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_BASIC,
@@ -358,7 +358,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Basic realm=\"RuuviGatewayEEFF\", charset=\"UTF-8\"\r\n"),
@@ -406,7 +406,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 }
@@ -449,7 +449,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Digest realm=\"RuuviGatewayEEFF\" qop=\"auth\" "
@@ -496,7 +496,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Digest realm=\"RuuviGatewayEEFF\" qop=\"auth\" "
@@ -544,7 +544,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Digest realm=\"RuuviGatewayEEFF\" qop=\"auth\" "
@@ -592,7 +592,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
         string("WWW-Authenticate: Digest realm=\"RuuviGatewayEEFF\" qop=\"auth\" "
@@ -645,7 +645,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -691,7 +691,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(string(""), string(extra_header_fields.buf));
     }
@@ -719,7 +719,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(string(""), string(extra_header_fields.buf));
     }
@@ -743,7 +743,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     }
 
@@ -770,7 +770,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -825,7 +825,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -874,7 +874,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -929,7 +929,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -978,7 +978,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1033,7 +1033,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1082,7 +1082,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1137,7 +1137,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1186,7 +1186,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1241,7 +1241,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1290,7 +1290,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1345,7 +1345,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1394,7 +1394,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1449,7 +1449,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1498,7 +1498,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1553,7 +1553,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1601,7 +1601,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1656,7 +1656,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1705,7 +1705,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1760,7 +1760,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1808,7 +1808,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1863,7 +1863,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1900,7 +1900,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
         ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
         ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+        ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
             string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
@@ -1960,7 +1960,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -1993,7 +1993,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
 
     string wrong_api_key = bearer_auth_api_key;
-    for (auto &c : wrong_api_key)
+    for (auto& c : wrong_api_key)
         c = toupper(c);
     const string               auth_header         = string("Authorization: Bearer ") + wrong_api_key + string("\r\n");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -2019,7 +2019,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -2075,7 +2075,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -2130,7 +2130,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -2184,7 +2184,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -2237,7 +2237,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
@@ -2291,7 +2291,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
-    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char *>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 

@@ -57,20 +57,20 @@ typedef struct http_server_resp_status_json_t
     char buf[JSON_IP_INFO_SIZE];
 } http_server_resp_status_json_t;
 
-typedef void (*json_network_info_do_action_callback_t)(json_network_info_t *const p_info, void *const p_param);
+typedef void (*json_network_info_do_action_callback_t)(json_network_info_t* const p_info, void* const p_param);
 
 typedef void (*json_network_info_do_action_callback_with_const_param_t)(
-    json_network_info_t *const p_info,
-    const void *const          p_param);
+    json_network_info_t* const p_info,
+    const void* const          p_param);
 
-typedef void (*json_network_info_do_action_callback_without_param_t)(json_network_info_t *const p_info);
+typedef void (*json_network_info_do_action_callback_without_param_t)(json_network_info_t* const p_info);
 
 typedef void (
-    *json_network_info_do_const_action_callback_t)(const json_network_info_t *const p_info, void *const p_param);
+    *json_network_info_do_const_action_callback_t)(const json_network_info_t* const p_info, void* const p_param);
 
 typedef void (*json_network_info_do_const_action_callback_with_const_param_t)(
-    const json_network_info_t *const p_info,
-    const void *const                p_param);
+    const json_network_info_t* const p_info,
+    const void* const                p_param);
 
 /**
  * @brief Init json_network_info
@@ -95,7 +95,7 @@ json_network_info_deinit(void);
 void
 json_network_info_do_action_with_timeout(
     json_network_info_do_action_callback_t cb_func,
-    void *const                            p_param,
+    void* const                            p_param,
     const os_delta_ticks_t                 ticks_to_wait);
 
 /**
@@ -109,7 +109,7 @@ json_network_info_do_action_with_timeout(
 void
 json_network_info_do_action_with_timeout_with_const_param(
     json_network_info_do_action_callback_with_const_param_t cb_func,
-    const void *const                                       p_param,
+    const void* const                                       p_param,
     const os_delta_ticks_t                                  ticks_to_wait);
 
 /**
@@ -136,7 +136,7 @@ json_network_info_do_action_with_timeout_without_param(
 void
 json_network_info_do_const_action_with_timeout(
     json_network_info_do_const_action_callback_t cb_func,
-    void *const                                  p_param,
+    void* const                                  p_param,
     const os_delta_ticks_t                       ticks_to_wait);
 
 /**
@@ -150,7 +150,7 @@ json_network_info_do_const_action_with_timeout(
 void
 json_network_info_do_const_action_with_timeout_with_const_param(
     json_network_info_do_const_action_callback_with_const_param_t cb_func,
-    const void *const                                             p_param,
+    const void* const                                             p_param,
     const os_delta_ticks_t                                        ticks_to_wait);
 
 /**
@@ -159,7 +159,7 @@ json_network_info_do_const_action_with_timeout_with_const_param(
  * @param p_param - pointer to be passed to the callback-function
  */
 void
-json_network_info_do_action(json_network_info_do_action_callback_t cb_func, void *const p_param);
+json_network_info_do_action(json_network_info_do_action_callback_t cb_func, void* const p_param);
 
 /**
  * @brief Lock access to json_network_info in read-write mode and perform specified action.
@@ -169,7 +169,7 @@ json_network_info_do_action(json_network_info_do_action_callback_t cb_func, void
 void
 json_network_info_do_action_with_const_param(
     json_network_info_do_action_callback_with_const_param_t cb_func,
-    const void *const                                       p_param);
+    const void* const                                       p_param);
 
 /**
  * @brief Lock access to json_network_info in read-write mode and perform specified action.
@@ -185,7 +185,7 @@ json_network_info_do_action_without_param(json_network_info_do_action_callback_w
  * @param p_param - pointer to be passed to the callback-function
  */
 void
-json_network_info_do_const_action(json_network_info_do_const_action_callback_t cb_func, void *const p_param);
+json_network_info_do_const_action(json_network_info_do_const_action_callback_t cb_func, void* const p_param);
 
 /**
  * @brief Lock access to json_network_info in read-only mode and perform specified action.
@@ -195,21 +195,21 @@ json_network_info_do_const_action(json_network_info_do_const_action_callback_t c
 void
 json_network_info_do_const_action_with_const_param(
     json_network_info_do_const_action_callback_with_const_param_t cb_func,
-    const void *const                                             p_param);
+    const void* const                                             p_param);
 
 /**
  * @brief Generates the connection status json: ssid and IP addresses.
  */
 void
-json_network_info_generate(http_server_resp_status_json_t *const p_resp_status_json, const bool flag_access_from_lan);
+json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json, const bool flag_access_from_lan);
 
 /**
  * @brief Generates the connection status json: ssid and IP addresses.
  */
 void
 json_network_info_do_generate_internal(
-    const json_network_info_t *const      p_info,
-    http_server_resp_status_json_t *const p_resp_status_json,
+    const json_network_info_t* const      p_info,
+    http_server_resp_status_json_t* const p_resp_status_json,
     const bool                            flag_access_from_lan);
 
 /**
@@ -217,15 +217,15 @@ json_network_info_do_generate_internal(
  */
 void
 json_network_info_update(
-    const wifiman_wifi_ssid_t *p_ssid,
-    const network_info_str_t * p_network_info,
+    const wifiman_wifi_ssid_t* p_ssid,
+    const network_info_str_t*  p_network_info,
     const update_reason_code_e update_reason_code);
 
 /**
  * @brief Set extra info.
  */
 void
-json_network_set_extra_info(const char *const p_extra);
+json_network_set_extra_info(const char* const p_extra);
 
 /**
  * @brief Clears the connection status json.

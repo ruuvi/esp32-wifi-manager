@@ -25,7 +25,7 @@ extern "C" {
  * @brief Handle of Ethernet driver
  *
  */
-typedef void *esp_eth_handle_t;
+typedef void* esp_eth_handle_t;
 
 /**
  * @brief Configuration of Ethernet driver
@@ -37,13 +37,13 @@ typedef struct
      * @brief Ethernet MAC object
      *
      */
-    esp_eth_mac_t *mac;
+    esp_eth_mac_t* mac;
 
     /**
      * @brief Ethernet PHY object
      *
      */
-    esp_eth_phy_t *phy;
+    esp_eth_phy_t* phy;
 
     /**
      * @brief Period time of checking Ethernet link status
@@ -63,7 +63,7 @@ typedef struct
      *      - ESP_FAIL: error occurred when inputting buffer to upper stack
      *
      */
-    esp_err_t (*stack_input)(esp_eth_handle_t eth_handle, uint8_t *buffer, uint32_t length, void *priv);
+    esp_err_t (*stack_input)(esp_eth_handle_t eth_handle, uint8_t* buffer, uint32_t length, void* priv);
 
     /**
      * @brief Callback function invoked when lowlevel initialization is finished
@@ -112,7 +112,7 @@ typedef struct
  *       - ESP_FAIL: install esp_eth driver failed because some other error occurred
  */
 esp_err_t
-esp_eth_driver_install(const esp_eth_config_t *config, esp_eth_handle_t *out_hdl);
+esp_eth_driver_install(const esp_eth_config_t* config, esp_eth_handle_t* out_hdl);
 
 /**
  * @brief Uninstall Ethernet driver
@@ -179,8 +179,8 @@ esp_eth_stop(esp_eth_handle_t hdl);
 esp_err_t
 esp_eth_update_input_path(
     esp_eth_handle_t hdl,
-    esp_err_t (*stack_input)(esp_eth_handle_t hdl, uint8_t *buffer, uint32_t length, void *priv),
-    void *priv);
+    esp_err_t (*stack_input)(esp_eth_handle_t hdl, uint8_t* buffer, uint32_t length, void* priv),
+    void* priv);
 
 /**
  * @brief General Transmit
@@ -195,7 +195,7 @@ esp_eth_update_input_path(
  *       - ESP_FAIL: transmit frame buffer failed because some other error occurred
  */
 esp_err_t
-esp_eth_transmit(esp_eth_handle_t hdl, void *buf, size_t length);
+esp_eth_transmit(esp_eth_handle_t hdl, void* buf, size_t length);
 
 /**
  * @brief General Receive is deprecated and shall not be accessed from app code,
@@ -219,7 +219,7 @@ esp_eth_transmit(esp_eth_handle_t hdl, void *buf, size_t length);
  *       - ESP_FAIL: receive frame buffer failed because some other error occurred
  */
 esp_err_t
-esp_eth_receive(esp_eth_handle_t hdl, uint8_t *buf, uint32_t *length) __attribute__((deprecated(
+esp_eth_receive(esp_eth_handle_t hdl, uint8_t* buf, uint32_t* length) __attribute__((deprecated(
     "Ethernet driver is interrupt driven only, please register input callback with esp_eth_update_input_path")));
 
 /**
@@ -235,7 +235,7 @@ esp_eth_receive(esp_eth_handle_t hdl, uint8_t *buf, uint32_t *length) __attribut
  *       - ESP_FAIL: process io command failed because some other error occurred
  */
 esp_err_t
-esp_eth_ioctl(esp_eth_handle_t hdl, esp_eth_io_cmd_t cmd, void *data);
+esp_eth_ioctl(esp_eth_handle_t hdl, esp_eth_io_cmd_t cmd, void* data);
 
 /**
  * @brief Increase Ethernet driver reference

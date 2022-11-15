@@ -34,16 +34,16 @@ typedef union http_server_auth_t
 void
 http_server_auth_clear_authorized_sessions(void);
 
-http_server_auth_digest_req_t *
+http_server_auth_digest_req_t*
 http_server_auth_digest_get_info(void);
 
-http_server_auth_ruuvi_t *
+http_server_auth_ruuvi_t*
 http_server_auth_ruuvi_get_info(void);
 
-const char *
-http_server_strnstr(const char *const p_haystack, const char *const p_needle, const size_t len);
+const char*
+http_server_strnstr(const char* const p_haystack, const char* const p_needle, const size_t len);
 
-http_server_auth_info_t *
+http_server_auth_info_t*
 http_server_get_auth(void);
 
 #ifdef __cplusplus

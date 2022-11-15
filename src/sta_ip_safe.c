@@ -90,7 +90,7 @@ sta_ip_safe_get(void)
 }
 
 sta_ip_address_t
-sta_ip_safe_conv_str_to_ip(const char *p_ip_addr_str)
+sta_ip_safe_conv_str_to_ip(const char* p_ip_addr_str)
 {
     return sta_ip_unsafe_conv_str_to_ip(p_ip_addr_str);
 }

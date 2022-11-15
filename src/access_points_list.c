@@ -13,17 +13,17 @@ typedef int qsort_callback_result_t;
 
 ACCESS_POINTS_LIST_STATIC
 void
-ap_list_clear_wifi_ap_record(wifi_ap_record_t *p_wifi_ap)
+ap_list_clear_wifi_ap_record(wifi_ap_record_t* p_wifi_ap)
 {
     memset(p_wifi_ap, 0, sizeof(*p_wifi_ap));
 }
 
 ACCESS_POINTS_LIST_STATIC
 void
-ap_list_clear_identical_ap(wifi_ap_record_t *p_ap_src, wifi_ap_record_t *p_ap_dst)
+ap_list_clear_identical_ap(wifi_ap_record_t* p_ap_src, wifi_ap_record_t* p_ap_dst)
 {
     /* same SSID, different auth mode is skipped */
-    if ((0 == strcmp((const char *)p_ap_src->ssid, (const char *)p_ap_dst->ssid))
+    if ((0 == strcmp((const char*)p_ap_src->ssid, (const char*)p_ap_dst->ssid))
         && ((!(WIFI_AUTH_OPEN == p_ap_src->authmode)) == (!(WIFI_AUTH_OPEN == p_ap_dst->authmode))))
     {
         /* save the rssi for the display */
@@ -37,7 +37,7 @@ ap_list_clear_identical_ap(wifi_ap_record_t *p_ap_src, wifi_ap_record_t *p_ap_ds
 
 ACCESS_POINTS_LIST_STATIC
 void
-ap_list_clear_identical_aps(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t num_aps)
+ap_list_clear_identical_aps(wifi_ap_record_t* p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     if (0 == num_aps)
     {
@@ -45,7 +45,7 @@ ap_list_clear_identical_aps(wifi_ap_record_t *p_arr_of_ap, const number_wifi_acc
     }
     for (uint32_t i = 0; i < (num_aps - 1); ++i)
     {
-        wifi_ap_record_t *p_ap = &p_arr_of_ap[i];
+        wifi_ap_record_t* p_ap = &p_arr_of_ap[i];
         if ('\0' == p_ap->ssid[0])
         {
             continue; /* skip the previously removed APs */
@@ -58,12 +58,12 @@ ap_list_clear_identical_aps(wifi_ap_record_t *p_arr_of_ap, const number_wifi_acc
 }
 
 ACCESS_POINTS_LIST_STATIC
-wifi_ap_record_t *
-ap_list_find_first_free_slot(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t num_aps)
+wifi_ap_record_t*
+ap_list_find_first_free_slot(wifi_ap_record_t* p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     for (uint32_t j = 0; j < num_aps; ++j)
     {
-        wifi_ap_record_t *p_ap = &p_arr_of_ap[j];
+        wifi_ap_record_t* p_ap = &p_arr_of_ap[j];
         if ('\0' == p_ap->ssid[0])
         {
             return p_ap;
@@ -74,14 +74,14 @@ ap_list_find_first_free_slot(wifi_ap_record_t *p_arr_of_ap, const number_wifi_ac
 
 ACCESS_POINTS_LIST_STATIC
 number_wifi_access_points_t
-ap_list_reorder(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t num_aps)
+ap_list_reorder(wifi_ap_record_t* p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     /* reorder the list so APs follow each other in the list */
     number_wifi_access_points_t num_unique_aps = num_aps;
-    wifi_ap_record_t *          p_first_free   = NULL;
+    wifi_ap_record_t*           p_first_free   = NULL;
     for (uint32_t i = 0; i < num_aps; ++i)
     {
-        wifi_ap_record_t *p_ap = &p_arr_of_ap[i];
+        wifi_ap_record_t* p_ap = &p_arr_of_ap[i];
         /* skipping all that has no name */
         if ('\0' == p_ap->ssid[0])
         {
@@ -104,7 +104,7 @@ ap_list_reorder(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t
 }
 
 number_wifi_access_points_t
-ap_list_filter_unique(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_points_t num_aps)
+ap_list_filter_unique(wifi_ap_record_t* p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     if (0 == num_aps)
     {
@@ -115,10 +115,10 @@ ap_list_filter_unique(wifi_ap_record_t *p_arr_of_ap, const number_wifi_access_po
 }
 
 static qsort_callback_result_t
-ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
+ap_list_compare_by_rssi(const void* p_elem1, const void* p_elem2)
 {
-    const wifi_ap_record_t *p_item1 = (const wifi_ap_record_t *)p_elem1;
-    const wifi_ap_record_t *p_item2 = (const wifi_ap_record_t *)p_elem2;
+    const wifi_ap_record_t* p_item1 = (const wifi_ap_record_t*)p_elem1;
+    const wifi_ap_record_t* p_item2 = (const wifi_ap_record_t*)p_elem2;
     if ('\0' == p_item2->ssid[0])
     {
         return INT16_MIN;
@@ -127,7 +127,7 @@ ap_list_compare_by_rssi(const void *p_elem1, const void *p_elem2)
 }
 
 void
-ap_list_sort_by_rssi(wifi_ap_record_t *const p_arr_of_ap, const number_wifi_access_points_t num_aps)
+ap_list_sort_by_rssi(wifi_ap_record_t* const p_arr_of_ap, const number_wifi_access_points_t num_aps)
 {
     if (0 == num_aps)
     {

@@ -14,10 +14,10 @@
 #include "str_buf.h"
 
 static http_server_resp_t
-http_server_handle_req_get_auth_allow(const wifiman_wifi_ssid_t *const p_ap_ssid)
+http_server_handle_req_get_auth_allow(const wifiman_wifi_ssid_t* const p_ap_ssid)
 {
     const bool                                is_successful = true;
-    const http_server_resp_auth_json_t *const p_auth_json   = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json   = http_server_fill_auth_json(
         is_successful,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_ALLOW);
@@ -26,10 +26,10 @@ http_server_handle_req_get_auth_allow(const wifiman_wifi_ssid_t *const p_ap_ssid
 
 static http_server_resp_t
 http_server_resp_401_auth_basic(
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields)
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    http_header_extra_fields_t* const p_extra_header_fields)
 {
-    const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_BASIC);
@@ -44,21 +44,21 @@ http_server_resp_401_auth_basic(
 static http_server_auth_api_key_e
 http_server_handle_req_check_auth_bearer(
     const http_req_header_t              http_header,
-    const http_server_auth_info_t *const p_auth_info)
+    const http_server_auth_info_t* const p_auth_info)
 {
     uint32_t          len_authorization = 0;
-    const char *const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
+    const char* const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
     {
         return HTTP_SERVER_AUTH_API_KEY_NOT_USED;
     }
-    const char *const p_auth_prefix   = "Bearer ";
+    const char* const p_auth_prefix   = "Bearer ";
     const size_t      auth_prefix_len = strlen(p_auth_prefix);
     if (0 != strncmp(p_authorization, p_auth_prefix, auth_prefix_len))
     {
         return HTTP_SERVER_AUTH_API_KEY_NOT_USED;
     }
-    const char *const p_auth_token   = &p_authorization[auth_prefix_len];
+    const char* const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
     if ('\0' == p_auth_info->auth_api_key.buf[0])
@@ -79,23 +79,23 @@ http_server_handle_req_check_auth_bearer(
 static http_server_resp_t
 http_server_handle_req_get_auth_basic(
     const http_req_header_t              http_header,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     uint32_t          len_authorization = 0;
-    const char *const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
+    const char* const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
     {
         return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
     }
-    const char *const p_auth_prefix   = "Basic ";
+    const char* const p_auth_prefix   = "Basic ";
     const size_t      auth_prefix_len = strlen(p_auth_prefix);
     if (0 != strncmp(p_authorization, p_auth_prefix, auth_prefix_len))
     {
         return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
     }
-    const char *const p_auth_token   = &p_authorization[auth_prefix_len];
+    const char* const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
     if (auth_token_len != strlen(p_auth_info->auth_pass.buf))
@@ -107,7 +107,7 @@ http_server_handle_req_get_auth_basic(
         return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
     }
 
-    const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_BASIC);
@@ -117,17 +117,17 @@ http_server_handle_req_get_auth_basic(
 static http_server_resp_t
 http_server_handle_req_get_auth_digest(
     const http_req_header_t              http_header,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     uint32_t          len_authorization = 0;
-    const char *const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
+    const char* const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
     {
         return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
     }
-    http_server_auth_digest_req_t *const p_auth_req = http_server_auth_digest_get_info();
+    http_server_auth_digest_req_t* const p_auth_req = http_server_auth_digest_get_info();
     if (!http_server_parse_digest_authorization_str(p_authorization, len_authorization, p_auth_req))
     {
         return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
@@ -164,7 +164,7 @@ http_server_handle_req_get_auth_digest(
         return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
     }
 
-    const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_DIGEST);
@@ -174,11 +174,11 @@ http_server_handle_req_get_auth_digest(
 static http_server_resp_t
 http_server_handle_req_get_auth_ruuvi(
     const http_req_header_t           http_header,
-    const sta_ip_string_t *const      p_remote_ip,
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
+    const sta_ip_string_t* const      p_remote_ip,
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
     const bool                        flag_check,
     const bool                        flag_auth_default,
-    http_header_extra_fields_t *const p_extra_header_fields)
+    http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_auth_ruuvi_session_id_t session_id = { 0 };
     if (!http_server_auth_ruuvi_get_session_id_from_cookies(http_header, &session_id))
@@ -193,7 +193,7 @@ http_server_handle_req_get_auth_ruuvi(
             p_extra_header_fields,
             flag_auth_default);
     }
-    const http_server_auth_ruuvi_authorized_session_t *const p_authorized_session
+    const http_server_auth_ruuvi_authorized_session_t* const p_authorized_session
         = http_server_auth_ruuvi_find_authorized_session(&session_id, p_remote_ip);
 
     if (NULL == p_authorized_session)
@@ -209,7 +209,7 @@ http_server_handle_req_get_auth_ruuvi(
             flag_auth_default);
     }
 
-    const http_server_resp_auth_json_t *p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
         p_ap_ssid,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
@@ -217,7 +217,7 @@ http_server_handle_req_get_auth_ruuvi(
 }
 
 static http_server_resp_t
-http_server_handle_req_get_auth_deny(const wifiman_wifi_ssid_t *const p_ap_ssid)
+http_server_handle_req_get_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid)
 {
     return http_server_resp_403_auth_deny(p_ap_ssid);
 }
@@ -225,12 +225,12 @@ http_server_handle_req_get_auth_deny(const wifiman_wifi_ssid_t *const p_ap_ssid)
 static http_server_resp_t
 http_server_handle_req_get_or_check_auth(
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
     const bool                           flag_check,
-    http_header_extra_fields_t *const    p_extra_header_fields,
-    http_server_auth_api_key_e *const    p_allow_access_by_api_key)
+    http_header_extra_fields_t* const    p_extra_header_fields,
+    http_server_auth_api_key_e* const    p_allow_access_by_api_key)
 {
     if (NULL != p_allow_access_by_api_key)
     {
@@ -270,11 +270,11 @@ http_server_resp_t
 http_server_handle_req_check_auth(
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    http_header_extra_fields_t *const    p_extra_header_fields,
-    http_server_auth_api_key_e *const    p_allow_access_by_api_key)
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    http_header_extra_fields_t* const    p_extra_header_fields,
+    http_server_auth_api_key_e* const    p_allow_access_by_api_key)
 {
     if (!flag_access_from_lan)
     {
@@ -294,10 +294,10 @@ http_server_resp_t
 http_server_handle_req_get_auth(
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    http_header_extra_fields_t *const    p_extra_header_fields)
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if (!flag_access_from_lan)
     {

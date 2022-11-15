@@ -34,7 +34,7 @@ static uint16_t                 g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t         g_wifi_ap_records[2 * MAX_AP_NUM];
 
 static bool
-wifi_scan_next(wifi_manager_scan_info_t *const p_scan_info)
+wifi_scan_next(wifi_manager_scan_info_t* const p_scan_info)
 {
     p_scan_info->cur_chan += 1;
     if (p_scan_info->cur_chan > p_scan_info->last_chan)
@@ -74,7 +74,7 @@ wifi_handle_cmd_start_wifi_scan(void)
         wifi_country.nchan = WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_NUM_CHANNELS;
     }
 
-    wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     p_scan_info->first_chan                     = wifi_country.schan;
     p_scan_info->last_chan                      = (wifi_country.schan + wifi_country.nchan) - 1;
     p_scan_info->cur_chan                       = 0;
@@ -95,7 +95,7 @@ wifi_handle_cmd_connect_eth(void)
 }
 
 static void
-wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
+wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
 {
     const EventBits_t                       event_bits = xEventGroupGetBits(g_p_wifi_manager_event_group);
     const connection_request_made_by_code_e conn_req   = wifiman_conv_param_to_conn_req(p_param);
@@ -123,6 +123,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
             LOG_INFO(
                 "MESSAGE: ORDER_CONNECT_STA: CONNECTION_REQUEST_RESTORE_CONNECTION, event_bits=0x%04x",
                 (printf_uint_t)event_bits);
+            LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
             break;
         default:
@@ -135,9 +136,10 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
 
     if (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT))
     {
+        LOG_WARN("%s: Already connected to WiFi, first need to disconnect, then reconnect", __func__);
+        LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
+        xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
         wifiman_msg_send_cmd_disconnect_sta();
-        LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_AUTO_RECONNECT", __func__);
-        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
     }
     else
     {
@@ -225,7 +227,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t *const p_param)
  * @param p_param - pointer to wifiman_msg_param_t
  */
 static bool
-wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
+wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
 {
     const wifiman_disconnection_reason_t reason = wifiman_conv_param_to_reason(p_param);
     const EventBits_t event_bits = xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
@@ -235,14 +237,21 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
         (printf_uint_t)reason,
         wifiman_disconnection_reason_to_str(reason),
         (printf_uint_t)event_bits);
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_SCAN_BIT");
 
     /* if a DISCONNECT message is posted while a scan is in progress this scan will NEVER end, causing scan
      * to never work again. For this reason SCAN_BIT is cleared too */
     const bool is_connected_to_wifi = (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT)) ? true : false;
 
-    update_reason_code_e update_reason_code = UPDATE_LOST_CONNECTION;
-    if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
+    bool                 flag_need_to_reconnect = false;
+    update_reason_code_e update_reason_code     = UPDATE_LOST_CONNECTION;
+    if ((WIFI_MANAGER_REQUEST_STA_CONNECT_BIT | WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)
+        == (event_bits & (WIFI_MANAGER_REQUEST_STA_CONNECT_BIT | WIFI_MANAGER_REQUEST_RESTORE_STA_BIT)))
+    {
+        LOG_INFO("User requested to disconnect from WiFi before connecting to a new one");
+        update_reason_code     = UPDATE_USER_DISCONNECT;
+        flag_need_to_reconnect = true;
+    }
+    else if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
     {
         LOG_INFO("A user-initiated connection to WiFi AP has failed (maybe because of wrong password)");
         /* there are no retries when it's a user requested connection by design. This avoids a user
@@ -270,6 +279,10 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t *const p_param)
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
+    if (flag_need_to_reconnect)
+    {
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+    }
     if (!is_connected_to_wifi)
     {
         return false;
@@ -281,16 +294,22 @@ static void
 wifi_handle_cmd_start_ap(void)
 {
     LOG_INFO("MESSAGE: ORDER_START_AP");
-    esp_wifi_set_mode(WIFI_MODE_APSTA);
+    LOG_INFO("### Configure WiFi mode: AP and Station");
+    const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "esp_wifi_set_mode failed");
+    }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    wifi_callback_on_ap_started();
 }
 
 static void
 wifi_handle_cmd_stop_ap(void)
 {
     LOG_INFO("MESSAGE: ORDER_STOP_AP");
-    LOG_INFO("Configure WiFi mode: Station");
+    LOG_INFO("### Configure WiFi mode: Station");
     const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (ESP_OK != err)
     {
@@ -298,10 +317,11 @@ wifi_handle_cmd_stop_ap(void)
     }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    wifi_callback_on_ap_stopped();
 }
 
 static void
-wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
+wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t* const p_param)
 {
     (void)p_param;
     LOG_INFO("MESSAGE: EVENT_STA_GOT_IP");
@@ -315,12 +335,12 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
     /* save wifi config in NVS if it wasn't a restored of a connection */
     if (0 == (event_bits & WIFI_MANAGER_REQUEST_RESTORE_STA_BIT))
     {
-        wifiman_config_save();
+        wifiman_config_sta_save();
     }
 
     esp_netif_ip_info_t ip_info = { 0 };
 
-    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     const esp_err_t    err         = esp_netif_get_ip_info(p_netif_sta, &ip_info);
     if (ESP_OK == err)
     {
@@ -328,7 +348,7 @@ wifi_handle_ev_sta_got_ip(const wifiman_msg_param_t *const p_param)
         const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
 
         esp_ip4_addr_t           dhcp_ip = { 0 };
-        const struct dhcp *const p_dhcp  = netif_dhcp_data((struct netif *)esp_netif_get_netif_impl(p_netif_sta));
+        const struct dhcp* const p_dhcp  = netif_dhcp_data((struct netif*)esp_netif_get_netif_impl(p_netif_sta));
         if (NULL != p_dhcp)
         {
             dhcp_ip.addr = p_dhcp->server_ip_addr.u_addr.ip4.addr;
@@ -419,13 +439,17 @@ wifi_handle_cmd_disconnect_sta(void)
         LOG_INFO("Got a command to disconnect from WiFi AP, but we are not currently connected");
         LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_REQUEST_DISCONNECT_BIT");
         xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
+        if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
+        {
+            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+        }
     }
 }
 
 static void
 wifi_handle_ev_scan_next(void)
 {
-    const wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    const wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     /* wifi scanner config */
     const wifi_scan_config_t scan_config = {
         .ssid        = NULL,
@@ -459,7 +483,7 @@ wifi_handle_ev_scan_next(void)
 static void
 wifi_handle_ev_scan_done(void)
 {
-    wifi_manager_scan_info_t *const p_scan_info = &g_wifi_scan_info;
+    wifi_manager_scan_info_t* const p_scan_info = &g_wifi_scan_info;
     LOG_DBG("MESSAGE: EVENT_SCAN_DONE: channel=%u", (printf_uint_t)p_scan_info->cur_chan);
 
     wifi_manager_lock();
@@ -510,6 +534,7 @@ wifi_handle_ev_scan_done(void)
 static void
 wifi_manager_wdt_task_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
@@ -522,6 +547,7 @@ wifi_manager_recv_and_handle_msg(void)
 {
     bool          flag_terminate = false;
     queue_message msg            = { 0 };
+    LOG_DBG("wifiman_msg_recv");
     if (!wifiman_msg_recv(&msg))
     {
         LOG_ERR("%s failed", "wifiman_msg_recv");
@@ -534,6 +560,7 @@ wifi_manager_recv_and_handle_msg(void)
         vTaskDelay(delay_ms / portTICK_PERIOD_MS);
         return flag_terminate;
     }
+    LOG_DBG("wifiman_msg_recv: msg.code=%d", (printf_int_t)msg.code);
     bool flag_do_not_call_cb = false;
     switch (msg.code)
     {
@@ -588,11 +615,13 @@ wifi_manager_recv_and_handle_msg(void)
             wifi_handle_ev_ap_sta_ip_assigned();
             break;
         case ORDER_TASK_WATCHDOG_FEED:
+            wifiman_msg_clear_flag_wdog_feed_active();
             wifi_manager_wdt_task_reset();
             break;
         default:
             break;
     }
+    LOG_DBG("Request processed: msg.code=%d", (printf_int_t)msg.code);
     if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
     {
         (*g_wifi_cb_ptr_arr[msg.code])(NULL);
@@ -609,7 +638,7 @@ wifi_manager_set_callback(const message_code_e message_code, wifi_manager_cb_ptr
     }
 }
 
-const char *
+const char*
 wifi_manager_generate_access_points_json(void)
 {
     return json_access_points_generate(g_wifi_ap_records, g_wifi_ap_num);

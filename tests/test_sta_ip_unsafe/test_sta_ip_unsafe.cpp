@@ -15,7 +15,7 @@ using namespace std;
 
 class TestStaIpUnsafe;
 
-static TestStaIpUnsafe *g_pTestClass;
+static TestStaIpUnsafe* g_pTestClass;
 
 class TestStaIpUnsafe : public ::testing::Test
 {

@@ -119,7 +119,7 @@ typedef union
     system_event_sta_got_ip_t          got_ip;     /*!< ESP32 station got IP, first time got IP or when IP is changed */
     system_event_sta_wps_er_pin_t      sta_er_pin; /*!< ESP32 station WPS enrollee mode PIN code received */
     system_event_sta_wps_fail_reason_t
-                                      sta_er_fail_reason; /*!< ESP32 station WPS enrollee mode failed reason code received */
+        sta_er_fail_reason; /*!< ESP32 station WPS enrollee mode failed reason code received */
     system_event_sta_wps_er_success_t sta_er_success;    /*!< ESP32 station WPS enrollee success */
     system_event_ap_staconnected_t    sta_connected;     /*!< a station connected to ESP32 soft-AP */
     system_event_ap_stadisconnected_t sta_disconnected;  /*!< a station disconnected to ESP32 soft-AP */
@@ -140,7 +140,7 @@ typedef struct
 typedef esp_err_t (*system_event_handler_t)(
     esp_event_base_t event_base,
     int32_t          event_id,
-    void *           event_data,
+    void*            event_data,
     size_t           event_data_size,
     TickType_t       ticks_to_wait);
 
@@ -157,7 +157,7 @@ typedef esp_err_t (*system_event_handler_t)(
  * @return others : fail
  */
 esp_err_t
-esp_event_send(system_event_t *event) __attribute__((deprecated));
+esp_event_send(system_event_t* event) __attribute__((deprecated));
 
 /**
  * @brief  Send a event to event task
@@ -179,7 +179,7 @@ esp_err_t
 esp_event_send_internal(
     esp_event_base_t event_base,
     int32_t          event_id,
-    void *           event_data,
+    void*            event_data,
     size_t           event_data_size,
     TickType_t       ticks_to_wait);
 
@@ -199,7 +199,7 @@ esp_event_send_internal(
  * @return ESP_OK if an event was handled successfully
  */
 esp_err_t
-esp_event_process_default(system_event_t *event) __attribute__((deprecated));
+esp_event_process_default(system_event_t* event) __attribute__((deprecated));
 
 /**
  * @brief  Install default event handlers for Ethernet interface
@@ -231,7 +231,7 @@ esp_event_set_default_wifi_handlers(void) __attribute__((deprecated));
  *    - ESP_OK: succeed
  *    - others: fail
  */
-typedef esp_err_t (*system_event_cb_t)(void *ctx, system_event_t *event);
+typedef esp_err_t (*system_event_cb_t)(void* ctx, system_event_t* event);
 
 /**
  * @brief  Initialize event loop
@@ -248,7 +248,7 @@ typedef esp_err_t (*system_event_cb_t)(void *ctx, system_event_t *event);
  *    - others: fail
  */
 esp_err_t
-esp_event_loop_init(system_event_cb_t cb, void *ctx) __attribute__((deprecated));
+esp_event_loop_init(system_event_cb_t cb, void* ctx) __attribute__((deprecated));
 
 /**
  * @brief  Set application specified event callback function
@@ -266,7 +266,7 @@ esp_event_loop_init(system_event_cb_t cb, void *ctx) __attribute__((deprecated))
  * @return old callback
  */
 system_event_cb_t
-esp_event_loop_set_cb(system_event_cb_t cb, void *ctx) __attribute__((deprecated));
+esp_event_loop_set_cb(system_event_cb_t cb, void* ctx) __attribute__((deprecated));
 
 #ifdef __cplusplus
 }

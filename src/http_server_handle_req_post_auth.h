@@ -20,11 +20,11 @@ http_server_resp_t
 http_server_handle_req_post_auth(
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
-    const sta_ip_string_t *const         p_remote_ip,
+    const sta_ip_string_t* const         p_remote_ip,
     const http_req_body_t                http_body,
-    const http_server_auth_info_t *const p_auth_info,
-    const wifiman_wifi_ssid_t *const     p_ap_ssid,
-    http_header_extra_fields_t *const    p_extra_header_fields);
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    http_header_extra_fields_t* const    p_extra_header_fields);
 
 #ifdef __cplusplus
 }

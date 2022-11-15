@@ -35,10 +35,10 @@ typedef enum MainTaskCmd_Tag
 
 class TestStaIpSafe;
 
-static TestStaIpSafe *g_pTestClass;
+static TestStaIpSafe* g_pTestClass;
 
-static void *
-freertosStartup(void *arg);
+static void*
+freertosStartup(void* arg);
 
 class TestStaIpSafe : public ::testing::Test
 {
@@ -64,7 +64,7 @@ protected:
         cmdQueue.push_and_wait(MainTaskCmd_Exit);
         sleep(1);
         vTaskEndScheduler();
-        void *ret_code = nullptr;
+        void* ret_code = nullptr;
         pthread_join(pid_freertos, &ret_code);
         sem_destroy(&semaFreeRTOS);
         esp_log_wrapper_deinit();
@@ -137,11 +137,11 @@ checkIfCurThreadIsFreeRTOS(void)
     return true;
 }
 
-const char *
+const char*
 os_task_get_name(void)
 {
     static const char g_task_name[] = "main";
-    return const_cast<char *>(g_task_name);
+    return const_cast<char*>(g_task_name);
 }
 
 os_task_priority_t
@@ -161,9 +161,9 @@ lwip_port_rand(void)
 /*** Cmd-handler task *************************************************************************************************/
 
 static void
-cmdHandlerTask(void *parameters)
+cmdHandlerTask(void* parameters)
 {
-    auto *pTestStaIpSafe = static_cast<TestStaIpSafe *>(parameters);
+    auto* pTestStaIpSafe = static_cast<TestStaIpSafe*>(parameters);
     bool  flagExit       = false;
     sem_post(&pTestStaIpSafe->semaFreeRTOS);
     while (!flagExit)
@@ -208,10 +208,10 @@ cmdHandlerTask(void *parameters)
     vTaskDelete(nullptr);
 }
 
-static void *
-freertosStartup(void *arg)
+static void*
+freertosStartup(void* arg)
 {
-    auto *pObj = static_cast<TestStaIpSafe *>(arg);
+    auto* pObj = static_cast<TestStaIpSafe*>(arg);
     disableCheckingIfCurThreadIsFreeRTOS();
     BaseType_t res = xTaskCreate(
         cmdHandlerTask,
@@ -219,7 +219,7 @@ freertosStartup(void *arg)
         configMINIMAL_STACK_SIZE,
         pObj,
         (tskIDLE_PRIORITY + 1),
-        (xTaskHandle *)nullptr);
+        (xTaskHandle*)nullptr);
     assert(pdPASS == res);
     vTaskStartScheduler();
     return nullptr;
