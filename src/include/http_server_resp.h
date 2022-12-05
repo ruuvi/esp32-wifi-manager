@@ -111,6 +111,9 @@ http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t* const p_ap_ssid, cons
 http_server_resp_t
 http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid);
 
+http_server_resp_t
+http_server_resp_403_forbidden(void);
+
 const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const bool                       is_successful,

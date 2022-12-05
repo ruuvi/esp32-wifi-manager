@@ -131,7 +131,7 @@ wifi_manager_cb_on_http_delete(
     return g_wifi_callbacks.cb_on_http_delete(p_path, p_uri_params, flag_access_from_lan, p_resp_auth);
 }
 
-static void
+void
 wifi_manager_esp_wifi_configure_ap(void)
 {
     esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
@@ -192,7 +192,7 @@ wifi_manager_netif_set_default_ip(void)
     }
 }
 
-static void
+void
 wifi_manager_netif_configure_sta(void)
 {
     const wifi_settings_sta_t wifi_sta_settings = wifiman_config_sta_get_settings();
@@ -472,6 +472,22 @@ wifi_manager_init_start_wifi(
     return true;
 }
 
+void
+wifi_manager_reconnect_sta(void)
+{
+    const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
+    if (is_ssid_configured)
+    {
+        LOG_INFO("WiFi manager init: Wi-Fi connection is requested and SSID is configured, try to connect");
+        LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
+    }
+    else
+    {
+        LOG_WARN("WiFi manager init: Wi-Fi connection is requested, but no SSID is configured");
+    }
+}
+
 bool
 wifi_manager_init(
     const bool                                 flag_connect_sta,
@@ -536,17 +552,7 @@ wifi_manager_init(
 
     if (flag_connect_sta)
     {
-        const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
-        if (is_ssid_configured)
-        {
-            LOG_INFO("WiFi manager init: Wi-Fi connection is requested and SSID is configured, try to connect");
-            LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
-            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
-        }
-        else
-        {
-            LOG_WARN("WiFi manager init: Wi-Fi connection is requested, but no SSID is configured");
-        }
+        wifi_manager_reconnect_sta();
     }
     return true;
 }

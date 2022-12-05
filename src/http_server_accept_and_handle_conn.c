@@ -665,14 +665,6 @@ http_server_netconn_serve_handle_req(
     const sta_ip_string_t* const p_local_ip_str,
     const sta_ip_string_t* const p_remote_ip_str)
 {
-    LOG_DBG(
-        "Request from %s:%u to %s:%u: %s",
-        p_remote_ip_str->buf,
-        p_tcp->remote_port,
-        local_ip_str.buf,
-        p_tcp->local_port,
-        p_req_buf);
-
     const http_req_info_t req_info = http_req_parse(p_req_buf);
     if (!req_info.is_success)
     {

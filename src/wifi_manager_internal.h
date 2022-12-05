@@ -147,6 +147,12 @@ wifi_manager_init(
     const wifi_manager_callbacks_t* const      p_callbacks);
 
 void
+wifi_manager_esp_wifi_configure_ap(void);
+
+void
+wifi_manager_netif_configure_sta(void);
+
+void
 wifi_manager_scan_timer_start(void);
 
 void

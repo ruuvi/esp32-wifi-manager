@@ -30,6 +30,9 @@ void
 wifiman_config_ap_set(const wifiman_config_ap_t* const p_wifi_cfg_ap);
 
 void
+wifiman_config_sta_set(const wifiman_config_sta_t* const p_wifi_cfg_sta);
+
+void
 wifiman_config_sta_save(void);
 
 wifi_sta_config_t
