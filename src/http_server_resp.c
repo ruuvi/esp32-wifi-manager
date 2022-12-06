@@ -392,3 +392,9 @@ http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid)
         HTTP_SERVER_AUTH_TYPE_DENY);
     return http_server_resp_403_json(p_auth_json);
 }
+
+http_server_resp_t
+http_server_resp_403_forbidden(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_403);
+}

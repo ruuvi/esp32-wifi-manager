@@ -73,8 +73,17 @@ wifi_manager_start(
     wifi_manager_ecdh_f_rng                    f_rng,
     void*                                      p_rng);
 
+bool
+wifi_manager_reconfigure(const bool flag_connect_sta, const wifiman_config_t* const p_wifi_cfg);
+
 void
 wifi_manager_set_config_ap(const wifiman_config_ap_t* const p_wifi_cfg_ap);
+
+void
+wifi_manager_set_config_sta(const wifiman_config_sta_t* const p_wifi_cfg_sta);
+
+void
+wifi_manager_reconnect_sta(void);
 
 /**
  * @brief Stop WiFi access-point

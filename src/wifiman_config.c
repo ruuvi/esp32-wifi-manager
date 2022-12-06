@@ -217,7 +217,7 @@ wifiman_config_init(const wifiman_config_t* const p_wifi_cfg)
 }
 
 static void
-wifiman_config_cb_do_sta_config_ap(wifiman_config_t* const p_cfg, const void* const p_param)
+wifiman_config_cb_do_config_ap_set(wifiman_config_t* const p_cfg, const void* const p_param)
 {
     const wifiman_config_ap_t* const p_cfg_ap_src = p_param;
     p_cfg->ap                                     = *p_cfg_ap_src;
@@ -226,7 +226,20 @@ wifiman_config_cb_do_sta_config_ap(wifiman_config_t* const p_cfg, const void* co
 void
 wifiman_config_ap_set(const wifiman_config_ap_t* const p_wifi_cfg_ap)
 {
-    return wifiman_config_safe_transaction_with_const_param(&wifiman_config_cb_do_sta_config_ap, p_wifi_cfg_ap);
+    return wifiman_config_safe_transaction_with_const_param(&wifiman_config_cb_do_config_ap_set, p_wifi_cfg_ap);
+}
+
+static void
+wifiman_config_cb_do_config_sta_set(wifiman_config_t* const p_cfg, const void* const p_param)
+{
+    const wifiman_config_sta_t* const p_cfg_sta_src = p_param;
+    p_cfg->sta                                      = *p_cfg_sta_src;
+}
+
+void
+wifiman_config_sta_set(const wifiman_config_sta_t* const p_wifi_cfg_sta)
+{
+    return wifiman_config_safe_transaction_with_const_param(&wifiman_config_cb_do_config_sta_set, p_wifi_cfg_sta);
 }
 
 static void

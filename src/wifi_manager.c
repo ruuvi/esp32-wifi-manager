@@ -120,6 +120,44 @@ void
 wifi_manager_set_config_ap(const wifiman_config_ap_t* const p_wifi_cfg_ap)
 {
     wifiman_config_ap_set(p_wifi_cfg_ap);
+    wifi_manager_esp_wifi_configure_ap();
+}
+
+void
+wifi_manager_set_config_sta(const wifiman_config_sta_t* const p_wifi_cfg_sta)
+{
+    wifiman_config_sta_set(p_wifi_cfg_sta);
+
+    /* STA - Wifi Station configuration setup */
+    wifi_manager_netif_configure_sta();
+
+    /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
+    const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_set_mode");
+    }
+}
+
+bool
+wifi_manager_reconfigure(const bool flag_connect_sta, const wifiman_config_t* const p_wifi_cfg)
+{
+    wifi_manager_set_config_ap(&p_wifi_cfg->ap);
+    wifi_manager_set_config_sta(&p_wifi_cfg->sta);
+
+    esp_netif_t* const        p_netif_sta  = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    const wifiman_wifi_ssid_t wifi_ap_ssid = wifiman_config_ap_get_ssid();
+    LOG_INFO("### Set hostname for WiFi interface: %s", wifi_ap_ssid.ssid_buf);
+    esp_err_t err = esp_netif_set_hostname(p_netif_sta, wifi_ap_ssid.ssid_buf);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_netif_set_hostname");
+    }
+    if (flag_connect_sta)
+    {
+        wifi_manager_reconnect_sta();
+    }
+    return true;
 }
 
 void
