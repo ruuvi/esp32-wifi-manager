@@ -80,7 +80,7 @@ typedef struct wifi_ip4_addr_str_t
  * To save memory and avoid nasty out of memory errors,
  * we can limit the number of APs detected in a wifi scan.
  */
-#define MAX_AP_NUM 15
+#define MAX_AP_NUM 30
 
 /** @brief Defines the task priority of the wifi_manager.
  *
