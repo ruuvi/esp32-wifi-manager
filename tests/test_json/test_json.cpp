@@ -57,7 +57,7 @@ TEST_F(TestJson, test_null_output_buf_nonnull_input_buf) // NOLINT
 TEST_F(TestJson, test_nullptr_in_output_buf) // NOLINT
 {
     str_buf_t str_buf = STR_BUF_INIT(nullptr, 0);
-    ASSERT_FALSE(json_print_escaped_string(&str_buf, nullptr));
+    ASSERT_TRUE(json_print_escaped_string(&str_buf, nullptr));
 }
 
 TEST_F(TestJson, test_null_input_buf) // NOLINT

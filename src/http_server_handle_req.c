@@ -101,9 +101,8 @@ http_server_handle_req_get_html_or_json(
             LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
             return http_server_resp_503();
         }
-        LOG_INFO("ap.json: %s", ((NULL != p_buff) ? p_buff : "NULL"));
-        const http_server_resp_t resp = http_server_resp_200_json(p_buff);
-        return resp;
+        LOG_INFO("ap.json: %s", p_buff);
+        return http_server_resp_200_json_in_heap(p_buff);
     }
     if (0 == strcmp(p_file_name, "status.json"))
     {

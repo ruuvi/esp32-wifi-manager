@@ -51,10 +51,6 @@ json_print_escaped_string(str_buf_t* p_str_buf, const char* p_input_str)
     {
         return false;
     }
-    if ((NULL == p_str_buf->buf) || (0 == p_str_buf->size))
-    {
-        return false;
-    }
     if (NULL == p_input_str)
     {
         return str_buf_printf(p_str_buf, "\"\"");
