@@ -17,7 +17,7 @@
 #define HTTP_SERVER_AUTH_TYPE_STR_DEFAULT "lan_auth_default"
 
 http_server_auth_type_e
-http_server_auth_type_from_str(const char *const p_auth_type)
+http_server_auth_type_from_str(const char* const p_auth_type)
 {
     http_server_auth_type_e auth_type = HTTP_SERVER_AUTH_TYPE_DENY;
     if (0 == strcmp(HTTP_SERVER_AUTH_TYPE_STR_ALLOW, p_auth_type))
@@ -52,7 +52,7 @@ http_server_auth_type_from_str(const char *const p_auth_type)
     return auth_type;
 }
 
-const char *
+const char*
 http_server_auth_type_to_str(const http_server_auth_type_e auth_type)
 {
     switch (auth_type)

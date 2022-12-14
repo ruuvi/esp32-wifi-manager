@@ -51,6 +51,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include "os_signal.h"
 #include "os_mutex.h"
 #include "os_timer_sig.h"
+#include "wifi_manager_internal.h"
 
 typedef enum dns_server_sig_e
 {
@@ -66,8 +67,8 @@ static const char TAG[] = "dns_server";
 static os_mutex_static_t              g_dns_server_mutex_mem;
 static os_mutex_t                     g_dns_server_mutex;
 static os_signal_static_t             g_dns_server_signal_mem;
-static os_signal_t *                  g_p_dns_server_sig;
-static os_timer_sig_periodic_t *      g_p_dns_server_timer_sig_watchdog_feed;
+static os_signal_t*                   g_p_dns_server_sig;
+static os_timer_sig_periodic_t*       g_p_dns_server_timer_sig_watchdog_feed;
 static os_timer_sig_periodic_static_t g_dns_server_timer_sig_watchdog_feed_mem;
 
 ATTR_PURE
@@ -100,7 +101,7 @@ dns_server_init(void)
 bool
 dns_server_start(void)
 {
-    LOG_INFO("Start DNS-Server");
+    LOG_INFO("### Start DNS-Server");
     assert(NULL != g_dns_server_mutex);
 
     const uint32_t stack_depth = 3072U;
@@ -124,7 +125,7 @@ dns_server_stop(void)
     os_mutex_lock(g_dns_server_mutex);
     if (os_signal_is_any_thread_registered(g_p_dns_server_sig))
     {
-        LOG_INFO("Send request to stop DNS-Server");
+        LOG_INFO("### Send request to stop DNS-Server");
         if (!os_signal_send(g_p_dns_server_sig, dns_server_conv_to_sig_num(DNS_SERVER_SIG_STOP)))
         {
             LOG_ERR("Failed to send DNS-Server stop request");
@@ -138,9 +139,9 @@ dns_server_stop(void)
 }
 
 static void
-replace_non_ascii_with_dots(char *p_domain)
+replace_non_ascii_with_dots(char* p_domain)
 {
-    for (char *p_ch = p_domain; *p_ch != '\0'; ++p_ch)
+    for (char* p_ch = p_domain; *p_ch != '\0'; ++p_ch)
     {
         if ((*p_ch < ' ') || (*p_ch > 'z'))
         {
@@ -152,7 +153,7 @@ replace_non_ascii_with_dots(char *p_domain)
 }
 
 static void
-dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resolved)
+dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t* const p_ip_resolved)
 {
     struct sockaddr_in client     = { 0 };
     socklen_t          client_len = sizeof(client);
@@ -163,7 +164,7 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resol
 
     memset(data, 0x00, sizeof(data));
     const socket_recv_result_t length
-        = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr *)&client, &client_len);
+        = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr*)&client, &client_len);
 
     /*if the query is bigger than the buffer size we simply ignore it. This case should only happen in case of
      * multiple queries within the same DNS packet and is not supported by this simple DNS hijack. */
@@ -188,7 +189,7 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resol
 
     /* Generate header message */
     memcpy(response, data, sizeof(dns_header_t));
-    dns_header_t *dns_header              = (dns_header_t *)response;
+    dns_header_t* dns_header              = (dns_header_t*)response;
     dns_header->flag_query_response       = 1;                          /*response bit */
     dns_header->operation_code            = DNS_OPCODE_QUERY;           /* no support for other type of response */
     dns_header->flag_authoritative_answer = 1;                          /*authoritative answer */
@@ -204,12 +205,12 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resol
 
     /* extract domain name and request IP for debug */
     inet_ntop(AF_INET, &(client.sin_addr), ip_address, INET_ADDRSTRLEN);
-    char *p_domain = (char *)&data[sizeof(dns_header_t) + 1];
+    char* p_domain = (char*)&data[sizeof(dns_header_t) + 1];
     replace_non_ascii_with_dots(p_domain);
     LOG_INFO("Replying to DNS request for %s from %s", p_domain, ip_address);
 
     /* create DNS answer at the end of the query*/
-    dns_answer_t *p_dns_answer = (dns_answer_t *)&response[length];
+    dns_answer_t* p_dns_answer = (dns_answer_t*)&response[length];
     p_dns_answer->domain_name  = htons(
         0xC00C); /* This is a pointer to the beginning of the question.
                    * As per DNS standard, first two bits must be set to 11 for some odd reason hence 0xC0 */
@@ -221,7 +222,7 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t *const p_ip_resol
     p_dns_answer->dns_response_data        = p_ip_resolved->addr;
 
     const socket_send_result_t err
-        = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr *)&client, client_len);
+        = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr*)&client, client_len);
     if (err < 0)
     {
         LOG_ERR("UDP sendto failed: %d", err);
@@ -265,6 +266,7 @@ dns_server_wdt_add_and_start(void)
 static void
 dns_server_task_wdt_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
@@ -290,7 +292,7 @@ dns_server_handle_sig(const dns_server_sig_e dns_server_sig)
 }
 
 static bool
-dns_server_handle_sig_events(os_signal_events_t *const p_sig_events)
+dns_server_handle_sig_events(os_signal_events_t* const p_sig_events)
 {
     bool flag_stop = false;
     for (;;)
@@ -338,12 +340,12 @@ dns_server_task(void)
     struct sockaddr_in bind_addr = { 0 };
     /* Bind to port 53 (typical DNS Server port) */
     esp_netif_ip_info_t ip_info     = { 0 };
-    esp_netif_t *       p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t*        p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     esp_netif_get_ip_info(p_netif_sta, &ip_info);
     bind_addr.sin_family      = AF_INET;
     bind_addr.sin_addr.s_addr = ip_info.ip.addr;
     bind_addr.sin_port        = htons(53);
-    if (SOCKET_BIND_ERROR == bind(socket_fd, (struct sockaddr *)&bind_addr, sizeof(struct sockaddr_in)))
+    if (SOCKET_BIND_ERROR == bind(socket_fd, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in)))
     {
         LOG_ERR("Failed to bind to 53/udp");
         close(socket_fd);
@@ -361,7 +363,7 @@ dns_server_task(void)
         "dns:wdog",
         g_p_dns_server_sig,
         dns_server_conv_to_sig_num(DNS_SERVER_SIG_TASK_WATCHDOG_FEED),
-        pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U));
+        WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS);
 
     dns_server_wdt_add_and_start();
 
@@ -382,7 +384,7 @@ dns_server_task(void)
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. DNS daemon should not be taxing on the
                         system */
     }
-    LOG_INFO("Stop DNS Server");
+    LOG_INFO("### Stop DNS Server");
 
     LOG_INFO("TaskWatchdog: Unregister current thread");
     esp_task_wdt_delete(xTaskGetCurrentTaskHandle());

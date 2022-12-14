@@ -10,7 +10,7 @@
 #include "str_buf.h"
 
 wifiman_md5_digest_hex_str_t
-wifiman_md5_hex_str(const wifiman_md5_digest_t *const p_digest)
+wifiman_md5_hex_str(const wifiman_md5_digest_t* const p_digest)
 {
     wifiman_md5_digest_hex_str_t digest_str     = { 0 };
     str_buf_t                    str_buf_digest = STR_BUF_INIT(digest_str.buf, sizeof(digest_str.buf));
@@ -19,7 +19,7 @@ wifiman_md5_hex_str(const wifiman_md5_digest_t *const p_digest)
 }
 
 bool
-wifiman_md5_calc(const void *const p_buf, const size_t buf_size, wifiman_md5_digest_t *const p_digest)
+wifiman_md5_calc(const void* const p_buf, const size_t buf_size, wifiman_md5_digest_t* const p_digest)
 {
     mbedtls_md5_context ctx = { 0 };
     mbedtls_md5_init(&ctx);
@@ -43,7 +43,7 @@ wifiman_md5_calc(const void *const p_buf, const size_t buf_size, wifiman_md5_dig
 }
 
 wifiman_md5_digest_hex_str_t
-wifiman_md5_calc_hex_str(const void *const p_buf, const size_t buf_size)
+wifiman_md5_calc_hex_str(const void* const p_buf, const size_t buf_size)
 {
     wifiman_md5_digest_t digest = { 0 };
     if (!wifiman_md5_calc(p_buf, buf_size, &digest))
@@ -56,7 +56,7 @@ wifiman_md5_calc_hex_str(const void *const p_buf, const size_t buf_size)
 }
 
 bool
-wifiman_md5_is_empty_digest_hex_str(const wifiman_md5_digest_hex_str_t *const p_digest_hex_str)
+wifiman_md5_is_empty_digest_hex_str(const wifiman_md5_digest_hex_str_t* const p_digest_hex_str)
 {
     if ('\0' == p_digest_hex_str->buf[0])
     {

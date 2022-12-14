@@ -31,7 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "str_buf.h"
 
 static bool
-json_print_char_escaped(str_buf_t *p_str_buf, const char in_chr)
+json_print_char_escaped(str_buf_t* p_str_buf, const char in_chr)
 {
     if (in_chr >= '\x20')
     {
@@ -45,13 +45,9 @@ json_print_char_escaped(str_buf_t *p_str_buf, const char in_chr)
 }
 
 bool
-json_print_escaped_string(str_buf_t *p_str_buf, const char *p_input_str)
+json_print_escaped_string(str_buf_t* p_str_buf, const char* p_input_str)
 {
     if (NULL == p_str_buf)
-    {
-        return false;
-    }
-    if ((NULL == p_str_buf->buf) || (0 == p_str_buf->size))
     {
         return false;
     }
@@ -61,7 +57,7 @@ json_print_escaped_string(str_buf_t *p_str_buf, const char *p_input_str)
     }
 
     str_buf_printf(p_str_buf, "\"");
-    for (const char *in_ptr = p_input_str; '\0' != *in_ptr; ++in_ptr)
+    for (const char* in_ptr = p_input_str; '\0' != *in_ptr; ++in_ptr)
     {
         const char in_chr = *in_ptr;
         bool       res    = false;

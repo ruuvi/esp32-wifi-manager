@@ -13,7 +13,7 @@
 static http_server_resp_auth_json_t g_auth_json;
 
 http_server_resp_t
-http_server_resp_200_json(const char *p_json_content)
+http_server_resp_200_json(const char* p_json_content)
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
@@ -22,13 +22,13 @@ http_server_resp_200_json(const char *p_json_content)
         NULL,
         strlen(p_json_content),
         HTTP_CONENT_ENCODING_NONE,
-        (const uint8_t *)p_json_content,
+        (const uint8_t*)p_json_content,
         flag_no_cache,
         flag_add_header_date);
 }
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char *const p_json_content)
+http_server_resp_200_json_in_heap(const char* const p_json_content)
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
@@ -37,7 +37,7 @@ http_server_resp_200_json_in_heap(const char *const p_json_content)
         NULL,
         strlen(p_json_content),
         HTTP_CONENT_ENCODING_NONE,
-        (const uint8_t *)p_json_content,
+        (const uint8_t*)p_json_content,
         flag_no_cache,
         flag_add_header_date);
 }
@@ -64,7 +64,7 @@ http_server_resp_err(const http_resp_code_e http_resp_code)
 }
 
 static http_server_resp_t
-http_server_resp_err_json(const http_resp_code_e http_resp_code, const char *const p_json_content)
+http_server_resp_err_json(const http_resp_code_e http_resp_code, const char* const p_json_content)
 {
     const http_server_resp_t resp = {
         .http_resp_code       = http_resp_code,
@@ -97,13 +97,13 @@ http_server_resp_400(void)
 }
 
 http_server_resp_t
-http_server_resp_401_json(const http_server_resp_auth_json_t *const p_auth_json)
+http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
     return http_server_resp_err_json(HTTP_RESP_CODE_401, p_auth_json->buf);
 }
 
 http_server_resp_t
-http_server_resp_403_json(const http_server_resp_auth_json_t *const p_auth_json)
+http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
     return http_server_resp_err_json(HTTP_RESP_CODE_403, p_auth_json->buf);
 }
@@ -129,15 +129,16 @@ http_server_resp_504(void)
 http_server_resp_t
 http_server_resp_data_in_flash(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf)
+    const uint8_t*                p_buf,
+    const bool                    flag_no_cache)
 {
     const http_server_resp_t resp = {
         .http_resp_code       = HTTP_RESP_CODE_200,
         .content_location     = HTTP_CONTENT_LOCATION_FLASH_MEM,
-        .flag_no_cache        = false,
+        .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = false,
         .content_type         = content_type,
         .p_content_type_param = p_content_type_param,
@@ -155,10 +156,10 @@ http_server_resp_data_in_flash(
 http_server_resp_t
 http_server_resp_data_in_static_mem(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf,
+    const uint8_t*                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date)
 {
@@ -183,10 +184,10 @@ http_server_resp_data_in_static_mem(
 http_server_resp_t
 http_server_resp_data_in_heap(
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t *               p_buf,
+    const uint8_t*                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date)
 {
@@ -212,15 +213,16 @@ http_server_resp_t
 http_server_resp_data_from_file(
     http_resp_code_e              http_resp_code,
     const http_content_type_e     content_type,
-    const char *                  p_content_type_param,
+    const char*                   p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const socket_t                fd)
+    const socket_t                fd,
+    const bool                    flag_no_cache)
 {
     const http_server_resp_t resp = {
         .http_resp_code       = http_resp_code,
         .content_location     = HTTP_CONTENT_LOCATION_FATFS,
-        .flag_no_cache        = false,
+        .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = false,
         .content_type         = content_type,
         .p_content_type_param = p_content_type_param,
@@ -236,7 +238,7 @@ http_server_resp_data_from_file(
 }
 
 static void
-http_server_fill_buf_with_random_u8(uint8_t *const p_buf, const size_t buf_size)
+http_server_fill_buf_with_random_u8(uint8_t* const p_buf, const size_t buf_size)
 {
     for (uint32_t i = 0; i < buf_size; ++i)
     {
@@ -246,8 +248,8 @@ http_server_fill_buf_with_random_u8(uint8_t *const p_buf, const size_t buf_size)
 
 static void
 http_server_login_session_init(
-    http_server_auth_ruuvi_login_session_t *p_login_session,
-    const sta_ip_string_t *const            p_remote_ip)
+    http_server_auth_ruuvi_login_session_t* p_login_session,
+    const sta_ip_string_t* const            p_remote_ip)
 {
     static const char g_ascii_upper[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     uint8_t           challenge_random[SHA256_DIGEST_SIZE];
@@ -264,10 +266,10 @@ http_server_login_session_init(
     p_login_session->session_id.buf[HTTP_SERVER_AUTH_RUUVI_SESSION_ID_SIZE - 1] = '\0';
 }
 
-const http_server_resp_auth_json_t *
+const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const bool                       is_successful,
-    const wifiman_wifi_ssid_t *const p_ap_ssid,
+    const wifiman_wifi_ssid_t* const p_ap_ssid,
     const http_server_auth_type_e    lan_auth_type)
 {
     snprintf(
@@ -280,8 +282,8 @@ http_server_fill_auth_json(
     return &g_auth_json;
 }
 
-const http_server_resp_auth_json_t *
-http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t *const p_ap_ssid)
+const http_server_resp_auth_json_t*
+http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t* const p_ap_ssid)
 {
     snprintf(
         g_auth_json.buf,
@@ -294,8 +296,8 @@ http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t *const p_ap_s
 
 http_server_resp_t
 http_server_resp_401_auth_digest(
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields)
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    http_header_extra_fields_t* const p_extra_header_fields)
 {
     uint8_t nonce_random[HTTP_SERVER_AUTH_DIGEST_RANDOM_SIZE];
     http_server_fill_buf_with_random_u8(nonce_random, sizeof(nonce_random) / sizeof(nonce_random[0]));
@@ -311,7 +313,7 @@ http_server_resp_401_auth_digest(
         p_ap_ssid->ssid_buf,
         strlen(p_ap_ssid->ssid_buf));
 
-    const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_DIGEST);
@@ -327,9 +329,9 @@ http_server_resp_401_auth_digest(
 
 static void
 http_server_resp_auth_ruuvi_prep_www_authenticate_header(
-    const wifiman_wifi_ssid_t *const                    p_ap_ssid,
-    const http_server_auth_ruuvi_login_session_t *const p_login_session,
-    http_header_extra_fields_t *const                   p_extra_header_fields)
+    const wifiman_wifi_ssid_t* const                    p_ap_ssid,
+    const http_server_auth_ruuvi_login_session_t* const p_login_session,
+    http_header_extra_fields_t* const                   p_extra_header_fields)
 {
     snprintf(
         p_extra_header_fields->buf,
@@ -347,13 +349,13 @@ http_server_resp_auth_ruuvi_prep_www_authenticate_header(
 
 http_server_resp_t
 http_server_resp_401_auth_ruuvi_with_new_session_id(
-    const sta_ip_string_t *const      p_remote_ip,
-    const wifiman_wifi_ssid_t *const  p_ap_ssid,
-    http_header_extra_fields_t *const p_extra_header_fields,
+    const sta_ip_string_t* const      p_remote_ip,
+    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    http_header_extra_fields_t* const p_extra_header_fields,
     const bool                        flag_auth_default)
 {
-    http_server_auth_ruuvi_t *const               p_auth_info     = http_server_auth_ruuvi_get_info();
-    http_server_auth_ruuvi_login_session_t *const p_login_session = &p_auth_info->login_session;
+    http_server_auth_ruuvi_t* const               p_auth_info     = http_server_auth_ruuvi_get_info();
+    http_server_auth_ruuvi_login_session_t* const p_login_session = &p_auth_info->login_session;
 
     http_server_login_session_init(p_login_session, p_remote_ip);
 
@@ -364,7 +366,7 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
 
     http_server_resp_auth_ruuvi_prep_www_authenticate_header(p_ap_ssid, p_login_session, p_extra_header_fields);
 
-    const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
@@ -372,9 +374,9 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
 }
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid, const bool flag_auth_default)
+http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t* const p_ap_ssid, const bool flag_auth_default)
 {
-    const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
@@ -382,11 +384,17 @@ http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t *const p_ap_ssid, cons
 }
 
 http_server_resp_t
-http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t *const p_ap_ssid)
+http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid)
 {
-    const http_server_resp_auth_json_t *const p_auth_json = http_server_fill_auth_json(
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
         p_ap_ssid,
         HTTP_SERVER_AUTH_TYPE_DENY);
     return http_server_resp_403_json(p_auth_json);
+}
+
+http_server_resp_t
+http_server_resp_403_forbidden(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_403);
 }

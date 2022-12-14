@@ -12,14 +12,14 @@
 
 static bool
 http_server_parse_token(
-    const char *const p_str,
+    const char* const p_str,
     const uint32_t    len,
-    const char *const p_prefix,
-    const char *const p_suffix,
-    char *const       p_buf,
+    const char* const p_prefix,
+    const char* const p_suffix,
+    char* const       p_buf,
     const size_t      buf_size)
 {
-    const char *p_idx1 = http_server_strnstr(p_str, p_prefix, len);
+    const char* p_idx1 = http_server_strnstr(p_str, p_prefix, len);
     if (NULL == p_idx1)
     {
         return false;
@@ -27,7 +27,7 @@ http_server_parse_token(
     p_idx1 += strlen(p_prefix);
     const ptrdiff_t   ptr_diff = (ptrdiff_t)(p_idx1 - p_str);
     const size_t      len_diff = len - ptr_diff;
-    const char *const p_idx2   = http_server_strnstr(p_idx1, p_suffix, len_diff);
+    const char* const p_idx2   = http_server_strnstr(p_idx1, p_suffix, len_diff);
     if (NULL == p_idx2)
     {
         return false;
@@ -45,11 +45,11 @@ http_server_parse_token(
 
 bool
 http_server_parse_digest_authorization_str(
-    const char *const                    p_authorization,
+    const char* const                    p_authorization,
     const uint32_t                       len_authorization,
-    http_server_auth_digest_req_t *const p_req)
+    http_server_auth_digest_req_t* const p_req)
 {
-    const char *const p_auth_prefix   = "Digest ";
+    const char* const p_auth_prefix   = "Digest ";
     const size_t      auth_prefix_len = strlen(p_auth_prefix);
     if (0 != strncmp(p_authorization, p_auth_prefix, auth_prefix_len))
     {

@@ -19,20 +19,20 @@ http_server_auth_clear_authorized_sessions(void)
     memset(&g_auth, 0, sizeof(g_auth));
 }
 
-http_server_auth_digest_req_t *
+http_server_auth_digest_req_t*
 http_server_auth_digest_get_info(void)
 {
     return &g_auth.digest;
 }
 
-http_server_auth_ruuvi_t *
+http_server_auth_ruuvi_t*
 http_server_auth_ruuvi_get_info(void)
 {
     return &g_auth.ruuvi;
 }
 
-const char *
-http_server_strnstr(const char *const p_haystack, const char *const p_needle, const size_t len)
+const char*
+http_server_strnstr(const char* const p_haystack, const char* const p_needle, const size_t len)
 {
     const size_t needle_len = strnlen(p_needle, len);
 
@@ -56,13 +56,13 @@ http_server_strnstr(const char *const p_haystack, const char *const p_needle, co
 bool
 http_server_set_auth(
     const http_server_auth_type_e           auth_type,
-    const http_server_auth_user_t *const    p_auth_user,
-    const http_server_auth_pass_t *const    p_auth_pass,
-    const http_server_auth_api_key_t *const p_auth_api_key)
+    const http_server_auth_user_t* const    p_auth_user,
+    const http_server_auth_pass_t* const    p_auth_pass,
+    const http_server_auth_api_key_t* const p_auth_api_key)
 {
-    http_server_auth_info_t *const p_auth_info                    = &g_auth_info;
-    const char *const              p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user->buf : "";
-    const char *const              p_auth_pass_safe               = (NULL != p_auth_pass) ? p_auth_pass->buf : "";
+    http_server_auth_info_t* const p_auth_info                    = &g_auth_info;
+    const char* const              p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user->buf : "";
+    const char* const              p_auth_pass_safe               = (NULL != p_auth_pass) ? p_auth_pass->buf : "";
     bool                           flag_clear_authorized_sessions = false;
     if (auth_type != p_auth_info->auth_type)
     {
@@ -93,7 +93,7 @@ http_server_set_auth(
     return true;
 }
 
-http_server_auth_info_t *
+http_server_auth_info_t*
 http_server_get_auth(void)
 {
     return &g_auth_info;

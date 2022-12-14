@@ -39,7 +39,7 @@ typedef struct esp_netif_slip_config
  * @return     ESP_OK on success, ESP_ERR_ESP_NETIF_INVALID_PARAMS if netif null or not SLIP
  */
 esp_err_t
-esp_netif_slip_set_params(esp_netif_t *netif, const esp_netif_slip_config_t *config);
+esp_netif_slip_set_params(esp_netif_t* netif, const esp_netif_slip_config_t* config);
 
 #if CONFIG_LWIP_IPV6
 /** @brief Sets IPV6 address for the supplied esp-netif.
@@ -50,7 +50,7 @@ esp_netif_slip_set_params(esp_netif_t *netif, const esp_netif_slip_config_t *con
  * @return     ESP_OK on success, ESP_ERR_ESP_NETIF_INVALID_PARAMS if netif null or not SLIP
  */
 esp_err_t
-esp_netif_slip_set_ipv6(esp_netif_t *netif, const esp_ip6_addr_t *ipv6);
+esp_netif_slip_set_ipv6(esp_netif_t* netif, const esp_ip6_addr_t* ipv6);
 #endif
 
 /**
@@ -66,7 +66,7 @@ esp_netif_slip_set_ipv6(esp_netif_t *netif, const esp_ip6_addr_t *ipv6);
  *         - ESP_OK on success
  */
 void
-esp_netif_lwip_slip_raw_output(esp_netif_t *netif, void *buffer, size_t len);
+esp_netif_lwip_slip_raw_output(esp_netif_t* netif, void* buffer, size_t len);
 
 /**
  * @brief  Fetch IP6 address attached to the SLIP interface
@@ -77,8 +77,8 @@ esp_netif_lwip_slip_raw_output(esp_netif_t *netif, void *buffer, size_t len);
  * @return
  *         - pointer to the internal ip6 address object
  */
-const esp_ip6_addr_t *
-esp_slip_get_ip6(esp_netif_t *slip_netif);
+const esp_ip6_addr_t*
+esp_slip_get_ip6(esp_netif_t* slip_netif);
 
 #ifdef __cplusplus
 }

@@ -99,12 +99,12 @@ static const char TAG[] = "http_server";
 static os_mutex_static_t  g_http_server_mutex_mem;
 static os_mutex_t         g_http_server_mutex;
 static os_signal_static_t g_http_server_signal_mem;
-static os_signal_t *      g_p_http_server_sig;
+static os_signal_t*       g_p_http_server_sig;
 static os_sema_t          g_p_http_server_sema_send;
 static os_sema_static_t   g_http_server_sema_send_mem;
-struct netconn *          g_p_conn_listen;
+struct netconn*           g_p_conn_listen;
 
-static os_timer_sig_periodic_t *      g_p_http_server_timer_sig_watchdog_feed;
+static os_timer_sig_periodic_t*       g_p_http_server_timer_sig_watchdog_feed;
 static os_timer_sig_periodic_static_t g_http_server_timer_sig_watchdog_feed_mem;
 
 ATTR_PURE
@@ -269,6 +269,7 @@ http_server_task_wdt_add_and_start(void)
 static void
 http_server_task_wdt_reset(void)
 {
+    LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
@@ -277,7 +278,7 @@ http_server_task_wdt_reset(void)
 }
 
 static void
-http_server_netconn_callback(const struct netconn *const p_conn, const enum netconn_evt event)
+http_server_netconn_callback(const struct netconn* const p_conn, const enum netconn_evt event)
 {
     if (p_conn != g_p_conn_listen)
     {
@@ -297,13 +298,13 @@ http_server_netconn_callback(const struct netconn *const p_conn, const enum netc
 }
 
 static void
-http_server_netconn_callback_wrap(struct netconn *p_conn, enum netconn_evt event, ATTR_UNUSED u16_t len)
+http_server_netconn_callback_wrap(struct netconn* p_conn, enum netconn_evt event, ATTR_UNUSED u16_t len)
 {
     http_server_netconn_callback(p_conn, event);
 }
 
 static bool
-http_server_handle_sig_events(os_signal_events_t *const p_sig_events)
+http_server_handle_sig_events(os_signal_events_t* const p_sig_events)
 {
     bool flag_stop = false;
     for (;;)
@@ -349,7 +350,7 @@ http_server_get_task_wdog_feed_period_ms(void)
 }
 
 static bool
-http_server_netconn_listen(struct netconn *const p_conn)
+http_server_netconn_listen(struct netconn* const p_conn)
 {
     const err_t err = netconn_listen(p_conn);
     if (ERR_OK != err)
@@ -370,7 +371,7 @@ http_server_task(void)
         return;
     }
 
-    struct netconn *p_conn = netconn_new_with_callback(NETCONN_TCP, &http_server_netconn_callback_wrap);
+    struct netconn* p_conn = netconn_new_with_callback(NETCONN_TCP, &http_server_netconn_callback_wrap);
     if (NULL == p_conn)
     {
         LOG_ERR("Can't create netconn for HTTP Server");

@@ -29,10 +29,10 @@ static const char TAG[] = "wifi_manager";
 
 static wifi_manager_callbacks_t g_wifi_callbacks;
 
-static os_timer_one_shot_without_arg_t *g_p_wifi_scan_timer;
+static os_timer_one_shot_without_arg_t* g_p_wifi_scan_timer;
 static os_timer_one_shot_static_t       g_wifi_scan_timer_mem;
 
-static os_timer_one_shot_cptr_without_arg_t *g_p_wifi_manager_timer_reconnect_sta;
+static os_timer_one_shot_cptr_without_arg_t* g_p_wifi_manager_timer_reconnect_sta;
 static os_timer_one_shot_static_t            g_wifi_manager_timer_reconnect_sta_mem;
 
 static os_sema_t        g_p_scan_sync_sema;
@@ -74,7 +74,7 @@ wifi_manager_unlock(void)
 }
 
 static void
-wifi_manager_set_callbacks(const wifi_manager_callbacks_t *const p_callbacks)
+wifi_manager_set_callbacks(const wifi_manager_callbacks_t* const p_callbacks)
 {
     g_wifi_callbacks = *p_callbacks;
 }
@@ -91,10 +91,10 @@ wifi_manager_cb_on_user_req(const http_server_user_req_code_e req_code)
 
 http_server_resp_t
 wifi_manager_cb_on_http_get(
-    const char *const               p_path,
-    const char *const               p_uri_params,
+    const char* const               p_path,
+    const char* const               p_uri_params,
     const bool                      flag_access_from_lan,
-    const http_server_resp_t *const p_resp_auth)
+    const http_server_resp_t* const p_resp_auth)
 {
     if (NULL == g_wifi_callbacks.cb_on_http_get)
     {
@@ -105,8 +105,8 @@ wifi_manager_cb_on_http_get(
 
 http_server_resp_t
 wifi_manager_cb_on_http_post(
-    const char *const     p_path,
-    const char *const     p_uri_params,
+    const char* const     p_path,
+    const char* const     p_uri_params,
     const http_req_body_t http_body,
     const bool            flag_access_from_lan)
 {
@@ -119,10 +119,10 @@ wifi_manager_cb_on_http_post(
 
 http_server_resp_t
 wifi_manager_cb_on_http_delete(
-    const char *const               p_path,
-    const char *const               p_uri_params,
+    const char* const               p_path,
+    const char* const               p_uri_params,
     const bool                      flag_access_from_lan,
-    const http_server_resp_t *const p_resp_auth)
+    const http_server_resp_t* const p_resp_auth)
 {
     if (NULL == g_wifi_callbacks.cb_on_http_delete)
     {
@@ -131,7 +131,7 @@ wifi_manager_cb_on_http_delete(
     return g_wifi_callbacks.cb_on_http_delete(p_path, p_uri_params, flag_access_from_lan, p_resp_auth);
 }
 
-static void
+void
 wifi_manager_esp_wifi_configure_ap(void)
 {
     esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
@@ -140,9 +140,6 @@ wifi_manager_esp_wifi_configure_ap(void)
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_mode");
         return;
     }
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
-
     wifi_config_t ap_config = {
         .ap = wifiman_config_ap_get_config(),
     };
@@ -154,7 +151,8 @@ wifi_manager_esp_wifi_configure_ap(void)
     }
 
     const wifi_settings_ap_t wifi_ap_settings = wifiman_config_ap_get_settings();
-    err                                       = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
+
+    err = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_wifi_set_bandwidth");
@@ -167,7 +165,7 @@ wifi_manager_netif_set_default_ip(void)
 {
     const wifi_settings_ap_t ap_settings = wifiman_config_ap_get_settings();
     LOG_INFO("Set default IP for WiFi AP: %s", ap_settings.ap_ip.buf);
-    esp_netif_t *const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    esp_netif_t* const p_netif_ap = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
 
     esp_netif_ip_info_t info = { 0 };
     info.ip.addr             = esp_ip4addr_aton(ap_settings.ap_ip.buf); /* access point is on a static IP */
@@ -194,11 +192,11 @@ wifi_manager_netif_set_default_ip(void)
     }
 }
 
-static void
+void
 wifi_manager_netif_configure_sta(void)
 {
     const wifi_settings_sta_t wifi_sta_settings = wifiman_config_sta_get_settings();
-    esp_netif_t *const        p_netif_sta       = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t* const        p_netif_sta       = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
     if (wifi_sta_settings.sta_static_ip)
     {
         wifiman_ip4_addr_str_t buf_ip;
@@ -259,14 +257,14 @@ wifi_manager_netif_configure_sta(void)
 }
 
 static void
-wifi_scan_next_timer_handler(os_timer_one_shot_without_arg_t *const p_timer)
+wifi_scan_next_timer_handler(os_timer_one_shot_without_arg_t* const p_timer)
 {
     (void)p_timer;
     wifiman_msg_send_ev_scan_next();
 }
 
 static void
-wifi_manager_timer_cb_reconnect(const os_timer_one_shot_cptr_without_arg_t *const p_timer)
+wifi_manager_timer_cb_reconnect(const os_timer_one_shot_cptr_without_arg_t* const p_timer)
 {
     (void)p_timer;
     LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_AUTO_RECONNECT", __func__);
@@ -275,10 +273,10 @@ wifi_manager_timer_cb_reconnect(const os_timer_one_shot_cptr_without_arg_t *cons
 
 void
 wifi_manager_event_handler(
-    ATTR_UNUSED void *     p_ctx,
+    ATTR_UNUSED void*      p_ctx,
     const esp_event_base_t p_event_base,
     const int32_t          event_id,
-    void *                 p_event_data)
+    void*                  p_event_data)
 {
     if (WIFI_EVENT == p_event_base)
     {
@@ -323,10 +321,10 @@ wifi_manager_event_handler(
             case WIFI_EVENT_STA_DISCONNECTED:
                 LOG_INFO(
                     "WIFI_EVENT_STA_DISCONNECTED, reason=%d (%s)",
-                    ((const wifi_event_sta_disconnected_t *)p_event_data)->reason,
-                    wifiman_disconnection_reason_to_str(((const wifi_event_sta_disconnected_t *)p_event_data)->reason));
+                    ((const wifi_event_sta_disconnected_t*)p_event_data)->reason,
+                    wifiman_disconnection_reason_to_str(((const wifi_event_sta_disconnected_t*)p_event_data)->reason));
 
-                wifiman_msg_send_ev_disconnected(((const wifi_event_sta_disconnected_t *)p_event_data)->reason);
+                wifiman_msg_send_ev_disconnected(((const wifi_event_sta_disconnected_t*)p_event_data)->reason);
                 break;
             default:
                 break;
@@ -338,7 +336,7 @@ wifi_manager_event_handler(
         {
             case IP_EVENT_STA_GOT_IP:
                 LOG_INFO("IP_EVENT_STA_GOT_IP");
-                wifiman_msg_send_ev_got_ip(((const ip_event_got_ip_t *)p_event_data)->ip_info.ip.addr);
+                wifiman_msg_send_ev_got_ip(((const ip_event_got_ip_t*)p_event_data)->ip_info.ip.addr);
                 break;
             case IP_EVENT_AP_STAIPASSIGNED:
                 LOG_INFO("IP_EVENT_AP_STAIPASSIGNED");
@@ -355,7 +353,7 @@ wifi_manager_event_handler(
 }
 
 static void
-wifi_manager_set_ant_config(const wifi_manager_antenna_config_t *p_wifi_ant_config)
+wifi_manager_set_ant_config(const wifi_manager_antenna_config_t* p_wifi_ant_config)
 {
     if (NULL == p_wifi_ant_config)
     {
@@ -375,8 +373,8 @@ wifi_manager_set_ant_config(const wifi_manager_antenna_config_t *p_wifi_ant_conf
 
 static bool
 wifi_manager_init_start_wifi(
-    const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifiman_wifi_ssid_t *const           p_gw_wifi_ssid)
+    const wifi_manager_antenna_config_t* const p_wifi_ant_config,
+    const wifiman_wifi_ssid_t* const           p_gw_wifi_ssid)
 {
     if (!wifiman_msg_init())
     {
@@ -445,8 +443,6 @@ wifi_manager_init_start_wifi(
         LOG_ERR("%s failed", "esp_wifi_set_mode");
         return false;
     }
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
 
     err = esp_wifi_start();
     if (ESP_OK != err)
@@ -455,9 +451,9 @@ wifi_manager_init_start_wifi(
         return false;
     }
 
-    esp_netif_t *const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
-    LOG_INFO("Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
+    LOG_INFO("### Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
     err = esp_netif_set_hostname(p_netif_sta, p_gw_wifi_ssid->ssid_buf);
     if (ESP_OK != err)
     {
@@ -466,7 +462,7 @@ wifi_manager_init_start_wifi(
     }
 
     /* start wifi manager task */
-    const char *   task_name   = "wifi_manager";
+    const char*    task_name   = "wifi_manager";
     const uint32_t stack_depth = 4096U;
     if (!os_task_create_finite_without_param(&wifi_manager_task, task_name, stack_depth, WIFI_MANAGER_TASK_PRIORITY))
     {
@@ -476,13 +472,28 @@ wifi_manager_init_start_wifi(
     return true;
 }
 
+void
+wifi_manager_reconnect_sta(void)
+{
+    const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
+    if (is_ssid_configured)
+    {
+        LOG_INFO("WiFi manager init: Wi-Fi connection is requested and SSID is configured, try to connect");
+        LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
+    }
+    else
+    {
+        LOG_WARN("WiFi manager init: Wi-Fi connection is requested, but no SSID is configured");
+    }
+}
+
 bool
 wifi_manager_init(
-    const bool                                 flag_start_wifi,
-    const bool                                 flag_start_ap_only,
-    const wifiman_config_t *const              p_wifi_cfg,
-    const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifi_manager_callbacks_t *const      p_callbacks)
+    const bool                                 flag_connect_sta,
+    const wifiman_config_t* const              p_wifi_cfg,
+    const wifi_manager_antenna_config_t* const p_wifi_ant_config,
+    const wifi_manager_callbacks_t* const      p_callbacks)
 {
     LOG_INFO("WiFi manager init");
     if (wifi_manager_is_working())
@@ -535,32 +546,13 @@ wifi_manager_init(
     http_server_init();
     http_server_start();
 
-    LOG_INFO("WiFi manager init: start WiFi");
+    LOG_INFO("WiFi manager init: Start Wi-Fi task");
     const wifiman_wifi_ssid_t wifi_ap_ssid = wifiman_config_ap_get_ssid();
     wifi_manager_init_start_wifi(p_wifi_ant_config, &wifi_ap_ssid);
 
-    if (flag_start_wifi)
+    if (flag_connect_sta)
     {
-        const bool is_ssid_configured = wifiman_config_sta_is_ssid_configured();
-        if (is_ssid_configured && (!flag_start_ap_only))
-        {
-            LOG_INFO("Saved wifi found on startup. Will attempt to connect.");
-            LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_RESTORE_CONNECTION", __func__);
-            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_RESTORE_CONNECTION);
-        }
-        else
-        {
-            /* no Wi-Fi saved: start soft AP! This is what should happen during a first run */
-            if (flag_start_ap_only)
-            {
-                LOG_INFO("Force start WiFi hotspot on startup.");
-            }
-            else
-            {
-                LOG_INFO("No saved wifi found on startup. Starting access point.");
-            }
-            wifiman_msg_send_cmd_start_ap();
-        }
+        wifi_manager_reconnect_sta();
     }
     return true;
 }
@@ -577,19 +569,19 @@ wifi_manager_scan_timer_stop(void)
     os_timer_one_shot_without_arg_stop(g_p_wifi_scan_timer);
 }
 
-static const char *
+static const char*
 wifi_manager_generate_json_access_points(void)
 {
     if (wifi_manager_lock_with_timeout(pdMS_TO_TICKS(100)))
     {
-        const char *const p_buf = wifi_manager_generate_access_points_json();
+        const char* const p_buf = wifi_manager_generate_access_points_json();
         wifi_manager_unlock();
         return p_buf;
     }
     return NULL;
 }
 
-const char *
+const char*
 wifi_manager_scan_sync(void)
 {
     wifi_manager_lock();
@@ -608,7 +600,7 @@ wifi_manager_scan_sync(void)
     }
     wifi_manager_unlock();
 
-    while (!os_sema_wait_with_timeout(g_p_scan_sync_sema, pdMS_TO_TICKS(CONFIG_ESP_TASK_WDT_TIMEOUT_S * 1000U / 3U)))
+    while (!os_sema_wait_with_timeout(g_p_scan_sync_sema, WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS))
     {
         const esp_err_t err = esp_task_wdt_reset();
         if (ESP_OK != err)
@@ -619,7 +611,7 @@ wifi_manager_scan_sync(void)
 
     wifi_manager_lock();
     os_sema_delete(&g_p_scan_sync_sema);
-    const char *const p_buf = wifi_manager_generate_json_access_points();
+    const char* const p_buf = wifi_manager_generate_json_access_points();
     LOG_DBG("wifi_manager_scan_sync: p_buf: %s", p_buf ? p_buf : "NULL");
     wifi_manager_unlock();
 
@@ -636,20 +628,20 @@ wifi_callback_on_connect_eth_cmd(void)
 }
 
 void
-wifi_callback_on_ap_activated(void)
+wifi_callback_on_ap_started(void)
 {
-    if (NULL != g_wifi_callbacks.cb_on_ap_activated)
+    if (NULL != g_wifi_callbacks.cb_on_ap_started)
     {
-        g_wifi_callbacks.cb_on_ap_activated();
+        g_wifi_callbacks.cb_on_ap_started();
     }
 }
 
 void
-wifi_callback_on_ap_deactivated(void)
+wifi_callback_on_ap_stopped(void)
 {
-    if (NULL != g_wifi_callbacks.cb_on_ap_deactivated)
+    if (NULL != g_wifi_callbacks.cb_on_ap_stopped)
     {
-        g_wifi_callbacks.cb_on_ap_deactivated();
+        g_wifi_callbacks.cb_on_ap_stopped();
     }
 }
 
@@ -699,13 +691,13 @@ wifi_callback_on_disconnect_sta_cmd(void)
 }
 
 void
-wifi_manager_cb_save_wifi_config(const wifiman_config_t *const p_cfg)
+wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t* const p_cfg_sta)
 {
-    if (NULL == g_wifi_callbacks.cb_save_wifi_config)
+    if (NULL == g_wifi_callbacks.cb_save_wifi_config_sta)
     {
         return;
     }
-    g_wifi_callbacks.cb_save_wifi_config(p_cfg);
+    g_wifi_callbacks.cb_save_wifi_config_sta(p_cfg_sta);
 }
 
 void

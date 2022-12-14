@@ -14,6 +14,7 @@
 #include "cJSON.h"
 #include "esp_type_wrapper.h"
 #include "os_malloc.h"
+#include "wifi_manager_defs.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -21,6 +22,7 @@
 #define HTTP_SERVER_ECDH_AES_KEY_SIZE   (32)
 #define HTTP_SERVER_ECDH_AES_NUM_BITS   (HTTP_SERVER_ECDH_AES_KEY_SIZE * 8)
 #define HTTP_SERVER_ECDH_AES_BLOCK_SIZE (16)
+#define HTTP_SERVER_ECDH_SHA256_SIZE    (32)
 
 typedef struct http_server_ecdh_aes_key_t
 {
@@ -49,26 +51,25 @@ typedef struct http_server_ecdh_aes_iv_t
 
 typedef struct http_server_ecdh_array_buf_t
 {
-    uint8_t *p_buf;
+    uint8_t* p_buf;
     size_t   buf_size;
 } http_server_ecdh_array_buf_t;
 
 typedef struct http_server_ecdh_sha256_t
 {
-#define HTTP_SERVER_ECDH_SHA256_SIZE (32)
     uint8_t buf[HTTP_SERVER_ECDH_SHA256_SIZE];
 } http_server_ecdh_sha256_t;
 
-static const char *const TAG = "ECDH";
+static const char* const TAG = "ECDH";
 
-static int (*g_http_server_ecdh_f_rng)(void *, unsigned char *, size_t);
-static void *g_http_server_ecdh_p_rng;
+static wifi_manager_ecdh_f_rng g_http_server_ecdh_f_rng;
+static void*                   g_http_server_ecdh_p_rng;
 
 static mbedtls_ecdh_context       g_http_server_ecdh_ctx;
 static http_server_ecdh_aes_key_t g_http_server_ecdh_aes_key;
 
 bool
-http_server_ecdh_init(int (*f_rng)(void *, unsigned char *, size_t), void *p_rng)
+http_server_ecdh_init(wifi_manager_ecdh_f_rng f_rng, void* p_rng)
 {
     if ((NULL == f_rng) || (NULL == p_rng))
     {
@@ -84,16 +85,16 @@ http_server_ecdh_init(int (*f_rng)(void *, unsigned char *, size_t), void *p_rng
 
 static bool
 http_server_ecdh_b64_encode_pub_key(
-    const http_server_ecdh_pub_key_bin_t *const p_pub_key_bin,
-    http_server_ecdh_pub_key_b64_t *const       p_pub_key_b64)
+    const http_server_ecdh_pub_key_bin_t* const p_pub_key_bin,
+    http_server_ecdh_pub_key_b64_t* const       p_pub_key_b64)
 {
     size_t olen = 0;
     if (0
         != mbedtls_base64_encode(
-            (unsigned char *)p_pub_key_b64->buf,
+            (unsigned char*)p_pub_key_b64->buf,
             sizeof(p_pub_key_b64->buf),
             &olen,
-            (const unsigned char *)p_pub_key_bin->buf,
+            (const unsigned char*)p_pub_key_bin->buf,
             sizeof(p_pub_key_bin->buf)))
     {
         LOG_ERR("%s failed", "mbedtls_base64_encode");
@@ -112,8 +113,8 @@ http_server_ecdh_b64_encode_pub_key(
 
 static bool
 http_server_ecdh_b64_decode_pub_key_add_prefix_len(
-    const char *const                          p_pub_key_b64,
-    http_server_ecdh_pub_key_with_len_t *const p_pub_key_bin_with_len)
+    const char* const                          p_pub_key_b64,
+    http_server_ecdh_pub_key_with_len_t* const p_pub_key_bin_with_len)
 {
     size_t olen = 0;
     if (0
@@ -121,7 +122,7 @@ http_server_ecdh_b64_decode_pub_key_add_prefix_len(
             &p_pub_key_bin_with_len->buf[1],
             sizeof(p_pub_key_bin_with_len->buf) - 1,
             &olen,
-            (const unsigned char *)p_pub_key_b64,
+            (const unsigned char*)p_pub_key_b64,
             strlen(p_pub_key_b64)))
     {
         LOG_ERR("%s failed", "mbedtls_base64_encode");
@@ -140,16 +141,11 @@ http_server_ecdh_b64_decode_pub_key_add_prefix_len(
 }
 
 static bool
-http_server_ecdh_b64_decode_aes_iv(const char *const p_iv_b64, http_server_ecdh_aes_iv_t *const p_iv)
+http_server_ecdh_b64_decode_aes_iv(const char* const p_iv_b64, http_server_ecdh_aes_iv_t* const p_iv)
 {
     size_t olen = 0;
     if (0
-        != mbedtls_base64_decode(
-            p_iv->buf,
-            sizeof(p_iv->buf),
-            &olen,
-            (const unsigned char *)p_iv_b64,
-            strlen(p_iv_b64)))
+        != mbedtls_base64_decode(p_iv->buf, sizeof(p_iv->buf), &olen, (const unsigned char*)p_iv_b64, strlen(p_iv_b64)))
     {
         LOG_ERR("%s failed", "mbedtls_base64_encode");
         return false;
@@ -166,7 +162,7 @@ http_server_ecdh_b64_decode_aes_iv(const char *const p_iv_b64, http_server_ecdh_
 }
 
 static bool
-http_server_ecdh_b64_decode_hash(const char *const p_tag_b64, http_server_ecdh_sha256_t *const p_hash)
+http_server_ecdh_b64_decode_hash(const char* const p_tag_b64, http_server_ecdh_sha256_t* const p_hash)
 {
     size_t olen = 0;
     if (0
@@ -174,7 +170,7 @@ http_server_ecdh_b64_decode_hash(const char *const p_tag_b64, http_server_ecdh_s
             p_hash->buf,
             sizeof(p_hash->buf),
             &olen,
-            (const unsigned char *)p_tag_b64,
+            (const unsigned char*)p_tag_b64,
             strlen(p_tag_b64)))
     {
         LOG_ERR("%s failed", "mbedtls_base64_encode");
@@ -192,10 +188,10 @@ http_server_ecdh_b64_decode_hash(const char *const p_tag_b64, http_server_ecdh_s
 }
 
 static bool
-http_server_ecdh_b64_decode(const char *const p_b64_str, http_server_ecdh_array_buf_t *const p_arr_buf)
+http_server_ecdh_b64_decode(const char* const p_b64_str, http_server_ecdh_array_buf_t* const p_arr_buf)
 {
     size_t olen = 0;
-    mbedtls_base64_decode(NULL, 0, &olen, (const unsigned char *)p_b64_str, strlen(p_b64_str));
+    mbedtls_base64_decode(NULL, 0, &olen, (const unsigned char*)p_b64_str, strlen(p_b64_str));
     if (olen > HTTP_SERVER_ECDH_MAX_ENCRYPTED_LEN)
     {
         LOG_ERR(
@@ -216,10 +212,10 @@ http_server_ecdh_b64_decode(const char *const p_b64_str, http_server_ecdh_array_
     olen = 0;
     if (0
         != mbedtls_base64_decode(
-            (unsigned char *)p_arr_buf->p_buf,
+            (unsigned char*)p_arr_buf->p_buf,
             p_arr_buf->buf_size,
             &olen,
-            (const unsigned char *)p_b64_str,
+            (const unsigned char*)p_b64_str,
             strlen(p_b64_str)))
     {
         LOG_ERR("%s failed", "mbedtls_base64_decode");
@@ -232,9 +228,9 @@ http_server_ecdh_b64_decode(const char *const p_b64_str, http_server_ecdh_array_
 
 static void
 http_server_ecdh_calc_sha256(
-    const uint8_t *const             p_buf,
+    const uint8_t* const             p_buf,
     const size_t                     buf_size,
-    http_server_ecdh_sha256_t *const p_sha256)
+    http_server_ecdh_sha256_t* const p_sha256)
 {
     mbedtls_sha256_context sha256_ctx = { 0 };
     mbedtls_sha256_init(&sha256_ctx);
@@ -246,8 +242,8 @@ http_server_ecdh_calc_sha256(
 
 bool
 http_server_ecdh_handshake(
-    const http_server_ecdh_pub_key_b64_t *const p_pub_key_b64_cli,
-    http_server_ecdh_pub_key_b64_t *const       p_pub_key_b64_srv)
+    const http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_cli,
+    http_server_ecdh_pub_key_b64_t* const       p_pub_key_b64_srv)
 {
     LOG_INFO("pub_key_b64_cli: %s", p_pub_key_b64_cli->buf);
 
@@ -343,9 +339,9 @@ http_server_ecdh_handshake(
 
 static bool
 http_server_ecdh_aes_decrypt(
-    const http_server_ecdh_array_buf_t *const p_encrypted_buf,
-    http_server_ecdh_aes_iv_t *               p_aes_iv,
-    http_server_ecdh_array_buf_t *const       p_decrypted_buf)
+    const http_server_ecdh_array_buf_t* const p_encrypted_buf,
+    http_server_ecdh_aes_iv_t*                p_aes_iv,
+    http_server_ecdh_array_buf_t* const       p_decrypted_buf)
 {
     mbedtls_aes_context aes_ctx = { 0 };
     mbedtls_aes_init(&aes_ctx);
@@ -374,7 +370,7 @@ http_server_ecdh_aes_decrypt(
 }
 
 bool
-http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t *const p_enc_req, str_buf_t *p_str_buf)
+http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t* const p_enc_req, str_buf_t* p_str_buf)
 {
     LOG_DBG("IV: %s", p_enc_req->p_iv);
     LOG_DBG("Hash: %s", p_enc_req->p_hash);

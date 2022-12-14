@@ -10,7 +10,7 @@
 #include <string.h>
 
 http_req_info_t
-http_req_parse(char *p_req_buf)
+http_req_parse(char* const p_req_buf)
 {
     static const char g_two_crlf[] = "\r\n\r\n";
     static const char g_two_lf[]   = "\n\n";
@@ -25,6 +25,9 @@ http_req_parse(char *p_req_buf)
         .http_uri    = {
             .ptr = NULL,
         },
+        .http_uri_params = {
+            .ptr = NULL,
+        },
         .http_ver    = {
             .ptr = NULL,
         },
@@ -37,19 +40,19 @@ http_req_parse(char *p_req_buf)
     };
 
     // find body
-    char *p2 = strstr(p_req_buf, g_two_crlf);
-    if (NULL != p2)
+    char* p_ptr2 = strstr(p_req_buf, g_two_crlf);
+    if (NULL != p_ptr2)
     {
-        p2[strlen(g_one_crlf)] = '\0';
-        req_info.http_body.ptr = p2 + strlen(g_two_crlf);
+        p_ptr2[strlen(g_one_crlf)] = '\0';
+        req_info.http_body.ptr     = p_ptr2 + strlen(g_two_crlf);
     }
     else
     {
-        p2 = strstr(p_req_buf, g_two_lf);
-        if (NULL != p2)
+        p_ptr2 = strstr(p_req_buf, g_two_lf);
+        if (NULL != p_ptr2)
         {
-            p2[strlen(g_one_lf)]   = '\0';
-            req_info.http_body.ptr = p2 + strlen(g_two_lf);
+            p_ptr2[strlen(g_one_lf)] = '\0';
+            req_info.http_body.ptr   = p_ptr2 + strlen(g_two_lf);
         }
         else
         {
@@ -58,19 +61,19 @@ http_req_parse(char *p_req_buf)
     }
 
     // find header
-    p2 = strstr(p_req_buf, g_one_crlf);
-    if (NULL != p2)
+    p_ptr2 = strstr(p_req_buf, g_one_crlf);
+    if (NULL != p_ptr2)
     {
-        *p2                      = '\0';
-        req_info.http_header.ptr = p2 + strlen(g_one_crlf);
+        *p_ptr2                  = '\0';
+        req_info.http_header.ptr = p_ptr2 + strlen(g_one_crlf);
     }
     else
     {
-        p2 = strstr(p_req_buf, g_one_lf);
-        if (NULL != p2)
+        p_ptr2 = strstr(p_req_buf, g_one_lf);
+        if (NULL != p_ptr2)
         {
-            *p2                      = '\0';
-            req_info.http_header.ptr = p2 + strlen(g_one_lf);
+            *p_ptr2                  = '\0';
+            req_info.http_header.ptr = p_ptr2 + strlen(g_one_lf);
         }
         else
         {
@@ -78,31 +81,31 @@ http_req_parse(char *p_req_buf)
         }
     }
 
-    char *p1              = p_req_buf;
-    req_info.http_cmd.ptr = p1;
-    p2                    = strchr(p1, ' ');
-    if (NULL == p2)
+    char* p_ptr1          = p_req_buf;
+    req_info.http_cmd.ptr = p_ptr1;
+    p_ptr2                = strchr(p_ptr1, ' ');
+    if (NULL == p_ptr2)
     {
         return req_info;
     }
-    *p2 = '\0';
-    p1  = p2 + 1;
+    *p_ptr2 = '\0';
+    p_ptr1  = p_ptr2 + 1;
 
-    req_info.http_uri.ptr = p1;
-    p2                    = strchr(p1, ' ');
-    if (NULL == p2)
+    req_info.http_uri.ptr = p_ptr1;
+    p_ptr2                = strchr(p_ptr1, ' ');
+    if (NULL == p_ptr2)
     {
         return req_info;
     }
-    *p2 = '\0';
+    *p_ptr2 = '\0';
 
-    req_info.http_ver.ptr = p2 + 1;
+    req_info.http_ver.ptr = p_ptr2 + 1;
 
-    p2 = strchr(req_info.http_uri.ptr, '?');
-    if (NULL != p2)
+    p_ptr2 = strchr(req_info.http_uri.ptr, '?');
+    if (NULL != p_ptr2)
     {
-        *p2                          = '\0';
-        req_info.http_uri_params.ptr = p2 + 1;
+        *p_ptr2                      = '\0';
+        req_info.http_uri_params.ptr = p_ptr2 + 1;
     }
 
     req_info.is_success = true;
@@ -110,17 +113,17 @@ http_req_parse(char *p_req_buf)
     return req_info;
 }
 
-const char *
-http_req_header_get_field(const http_req_header_t req_header, const char *const p_field_name, uint32_t *const p_len)
+const char*
+http_req_header_get_field(const http_req_header_t req_header, const char* const p_field_name, uint32_t* const p_len)
 {
     *p_len = 0;
 
-    const char *p_start = strstr(req_header.ptr, p_field_name);
+    const char* p_start = strstr(req_header.ptr, p_field_name);
     if (NULL == p_start)
     {
         return NULL;
     }
-    const char *p_val = p_start + strlen(p_field_name);
+    const char* p_val = p_start + strlen(p_field_name);
     while (' ' == *p_val)
     {
         p_val += 1;
@@ -128,7 +131,7 @@ http_req_header_get_field(const http_req_header_t req_header, const char *const 
     if ('"' == *p_val)
     {
         p_val += 1;
-        const char *p_end = strpbrk(p_val, "\r\n");
+        const char* p_end = strpbrk(p_val, "\r\n");
         if (NULL == p_end)
         {
             return NULL;
@@ -146,7 +149,7 @@ http_req_header_get_field(const http_req_header_t req_header, const char *const 
     }
     else
     {
-        const char *p_end = strpbrk(p_val, "\r\n");
+        const char* p_end = strpbrk(p_val, "\r\n");
         if (NULL == p_end)
         {
             return NULL;

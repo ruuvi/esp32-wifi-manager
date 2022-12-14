@@ -6,17 +6,17 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
+#include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
 #include "os_malloc.h"
 #include "str_buf.h"
-#include "wifi_manager.h"
 #include "wifiman_config.h"
 #include "sta_ip.h"
 #include "http_req.h"
-#include "sta_ip_safe.h"
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
+#include "wifi_manager.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -36,12 +36,12 @@ static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
 
-static const char *
-get_http_body(const char *const p_msg, const uint32_t len, uint32_t *const p_body_len)
+static const char*
+get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)
 {
     static const char g_newlines[] = "\r\n\r\n";
 
-    const char *p_body = strstr(p_msg, g_newlines);
+    const char* p_body = strstr(p_msg, g_newlines);
     if (NULL == p_body)
     {
         LOG_DBG("http body not found: %s", p_msg);
@@ -57,12 +57,12 @@ get_http_body(const char *const p_msg, const uint32_t len, uint32_t *const p_bod
 
 static bool
 http_server_recv_and_handle(
-    struct netconn *const p_conn,
-    char *const           p_req_buf,
-    uint32_t *const       p_req_size,
-    bool *const           p_req_ready)
+    struct netconn* const p_conn,
+    char* const           p_req_buf,
+    uint32_t* const       p_req_size,
+    bool* const           p_req_ready)
 {
-    struct netbuf *p_netbuf_in = NULL;
+    struct netbuf* p_netbuf_in = NULL;
 
     const os_delta_ticks_t t0                    = xTaskGetTickCount();
     const err_t            err                   = netconn_recv(p_conn, &p_netbuf_in);
@@ -73,9 +73,9 @@ http_server_recv_and_handle(
         return false;
     }
 
-    char *p_buf  = NULL;
+    char* p_buf  = NULL;
     u16_t buflen = 0;
-    netbuf_data(p_netbuf_in, (void **)&p_buf, &buflen);
+    netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
 
     if ((*p_req_size + buflen) > FULLBUF_SIZE)
     {
@@ -94,12 +94,12 @@ http_server_recv_and_handle(
     const http_req_header_t req_header = {
         .ptr = p_req_buf,
     };
-    const char *p_content_len_str = http_req_header_get_field(req_header, "Content-Length:", &field_len);
+    const char* p_content_len_str = http_req_header_get_field(req_header, "Content-Length:", &field_len);
     if (NULL != p_content_len_str)
     {
         const uint32_t content_len = (uint32_t)strtoul(p_content_len_str, NULL, 10);
         uint32_t       body_len    = 0;
-        const char *   p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
+        const char*    p_body      = get_http_body(p_req_buf, *p_req_size, &body_len);
         if (NULL != p_body)
         {
             LOG_DBG("Header Content-Length: %d, HTTP body length: %d", content_len, body_len);
@@ -126,10 +126,53 @@ http_server_recv_and_handle(
     return true;
 }
 
+static const char*
+conv_lwip_err_to_str(const err_enum_t err)
+{
+    switch (err)
+    {
+        case ERR_OK:
+            return "No error";
+        case ERR_MEM:
+            return "Out of memory error";
+        case ERR_BUF:
+            return "Buffer error";
+        case ERR_TIMEOUT:
+            return "Timeout";
+        case ERR_RTE:
+            return "Routing problem";
+        case ERR_INPROGRESS:
+            return "Operation in progress";
+        case ERR_VAL:
+            return "Illegal value";
+        case ERR_WOULDBLOCK:
+            return "Operation would block";
+        case ERR_USE:
+            return "Address in use";
+        case ERR_ALREADY:
+            return "Already connecting";
+        case ERR_ISCONN:
+            return "Conn already established";
+        case ERR_CONN:
+            return "Not connected";
+        case ERR_IF:
+            return "Low-level netif error";
+        case ERR_ABRT:
+            return "Connection aborted";
+        case ERR_RST:
+            return "Connection reset";
+        case ERR_CLSD:
+            return "Connection closed";
+        case ERR_ARG:
+            return "Illegal argument";
+    }
+    return "Unknown error";
+}
+
 static bool
 http_server_netconn_write(
-    struct netconn *const p_conn,
-    const void *const     p_buf,
+    struct netconn* const p_conn,
+    const void* const     p_buf,
     const size_t          buf_len,
     const uint8_t         netconn_flags)
 {
@@ -146,20 +189,35 @@ http_server_netconn_write(
         http_server_sema_send_wait_immediate();
         const err_t err = netconn_write_partly(
             p_conn,
-            &((const uint8_t *)p_buf)[offset],
+            &((const uint8_t*)p_buf)[offset],
             buf_len - offset,
             netconn_flags | (uint8_t)NETCONN_DONTBLOCK,
             &bytes_written);
         if (ESP_OK != err)
         {
-            LOG_ERR_ESP(err, "netconn_write_partly failed");
+            LOG_ERR_ESP(
+                err,
+                "netconn_write_partly failed (%s), offset=%u, size=%u",
+                conv_lwip_err_to_str(err),
+                (printf_uint_t)offset,
+                (printf_uint_t)(buf_len - offset));
             return false;
         }
+        LOG_DBG(
+            "netconn_write_partly: offset=%u, bytes_written=%u",
+            (printf_uint_t)offset,
+            (printf_uint_t)bytes_written);
         offset += bytes_written;
         if (!http_server_sema_send_wait_timeout(p_conn->send_timeout))
         {
             LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
             return false;
+        }
+        LOG_DBG("Feed watchdog");
+        const esp_err_t err_wdt = esp_task_wdt_reset();
+        if (ESP_OK != err_wdt)
+        {
+            LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
         }
     } while (offset != buf_len);
     return true;
@@ -167,7 +225,7 @@ http_server_netconn_write(
 
 ATTR_PRINTF(3, 4)
 static bool
-http_server_netconn_printf(struct netconn *const p_conn, const bool flag_more, const char *const p_fmt, ...)
+http_server_netconn_printf(struct netconn* const p_conn, const bool flag_more, const char* const p_fmt, ...)
 {
     va_list args;
     va_start(args, p_fmt);
@@ -197,10 +255,10 @@ http_server_netconn_printf(struct netconn *const p_conn, const bool flag_more, c
     return true;
 }
 
-static const char *
+static const char*
 http_get_content_type_str(const http_content_type_e content_type)
 {
-    const char *p_content_type_str = "application/octet-stream";
+    const char* p_content_type_str = "application/octet-stream";
     switch (content_type)
     {
         case HTTP_CONENT_TYPE_TEXT_HTML:
@@ -231,10 +289,10 @@ http_get_content_type_str(const http_content_type_e content_type)
     return p_content_type_str;
 }
 
-const char *
-http_get_content_encoding_str(const http_server_resp_t *const p_resp)
+const char*
+http_get_content_encoding_str(const http_server_resp_t* const p_resp)
 {
-    const char *p_content_encoding_str = "";
+    const char* p_content_encoding_str = "";
     switch (p_resp->content_encoding)
     {
         case HTTP_CONENT_ENCODING_NONE:
@@ -247,10 +305,10 @@ http_get_content_encoding_str(const http_server_resp_t *const p_resp)
     return p_content_encoding_str;
 }
 
-static const char *
-http_get_cache_control_str(const http_server_resp_t *const p_resp)
+static const char*
+http_get_cache_control_str(const http_server_resp_t* const p_resp)
 {
-    const char *p_cache_control_str = "";
+    const char* p_cache_control_str = "";
     if (p_resp->flag_no_cache)
     {
         p_cache_control_str
@@ -261,7 +319,7 @@ http_get_cache_control_str(const http_server_resp_t *const p_resp)
 }
 
 static void
-write_content_from_memory(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
+write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
@@ -276,17 +334,17 @@ write_content_from_memory(struct netconn *const p_conn, const http_server_resp_t
 }
 
 static void
-write_content_from_heap(struct netconn *const p_conn, http_server_resp_t *const p_resp)
+write_content_from_heap(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     write_content_from_memory(p_conn, p_resp);
     os_free(p_resp->select_location.memory.p_buf);
 }
 
 static void
-write_content_from_fatfs(struct netconn *const p_conn, const http_server_resp_t *const p_resp)
+write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     const size_t tmp_buf_size = FULLBUF_SIZE;
-    char *       p_tmp_buf    = os_malloc(tmp_buf_size);
+    char*        p_tmp_buf    = os_malloc(tmp_buf_size);
     if (NULL == p_tmp_buf)
     {
         LOG_ERR("Can't allocate memory for temporary buffer");
@@ -337,13 +395,13 @@ http_server_gen_header_date_str(const bool flag_gen_date)
         const time_t cur_time = time(NULL);
         struct tm    tm_time  = { 0 };
         gmtime_r(&cur_time, &tm_time);
-        strftime(date_str.buf, sizeof(date_str.buf), "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm_time);
+        (void)strftime(date_str.buf, sizeof(date_str.buf), "Date: %a, %d %b %Y %H:%M:%S GMT\r\n", &tm_time);
     }
     return date_str;
 }
 
 static void
-http_server_write_content(struct netconn *const p_conn, http_server_resp_t *const p_resp)
+http_server_write_content(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
@@ -365,11 +423,11 @@ http_server_write_content(struct netconn *const p_conn, http_server_resp_t *cons
 
 static void
 http_server_netconn_resp_with_content(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields,
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
     const http_resp_code_e                  resp_code,
-    const char *const                       p_status_msg)
+    const char* const                       p_status_msg)
 {
     if (HTTP_RESP_CODE_200 == resp_code)
     {
@@ -389,7 +447,7 @@ http_server_netconn_resp_with_content(
     if (!http_server_netconn_printf(
             p_conn,
             true,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "%s"
             "Content-type: %s; charset=utf-8%s%s\r\n"
@@ -418,15 +476,15 @@ http_server_netconn_resp_with_content(
 
 static void
 http_server_netconn_resp_without_content(
-    struct netconn *const  p_conn,
+    struct netconn* const  p_conn,
     const http_resp_code_e resp_code,
-    const char *const      p_status_msg)
+    const char* const      p_status_msg)
 {
     LOG_WARN("Response: status %u (%s)", (printf_uint_t)resp_code, p_status_msg);
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 %u %s\r\n"
+            "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Content-Length: 0\r\n"
             "\r\n",
@@ -440,22 +498,22 @@ http_server_netconn_resp_without_content(
 
 static void
 http_server_netconn_resp_200(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_200, "OK");
 }
 
 static void
-http_server_netconn_resp_302(struct netconn *const p_conn)
+http_server_netconn_resp_302(struct netconn* const p_conn)
 {
     const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
     LOG_INFO("Response: status 302 (Found), URL=http://%s/", ap_ip_str.buf);
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/\r\n"
             "\r\n",
@@ -468,20 +526,20 @@ http_server_netconn_resp_302(struct netconn *const p_conn)
 
 static void
 http_server_netconn_resp_301_auth_html(
-    struct netconn *const                   p_conn,
-    const sta_ip_string_t *const            p_ip_str,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    const char* const                       p_hostname,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_ip_str->buf);
+    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 301 Moved Permanently\r\n"
+            "HTTP/1.0 301 Moved Permanently\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
             "\r\n",
-            p_ip_str->buf,
+            p_hostname,
             (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
@@ -491,20 +549,20 @@ http_server_netconn_resp_301_auth_html(
 
 static void
 http_server_netconn_resp_302_auth_html(
-    struct netconn *const                   p_conn,
-    const sta_ip_string_t *const            p_ip_str,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    const char* const                       p_hostname,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_ip_str->buf);
+    LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
-            "HTTP/1.1 302 Found\r\n"
+            "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
             "Location: http://%s/auth.html\r\n"
             "%s"
             "\r\n",
-            p_ip_str->buf,
+            p_hostname,
             (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : ""))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
@@ -513,58 +571,55 @@ http_server_netconn_resp_302_auth_html(
 }
 
 static void
-http_server_netconn_resp_400(struct netconn *const p_conn)
+http_server_netconn_resp_400(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
 }
 
 static void
 http_server_netconn_resp_401(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_401, "Unauthorized");
 }
 
 static void
 http_server_netconn_resp_403(
-    struct netconn *const                   p_conn,
-    http_server_resp_t *const               p_resp,
-    const http_header_extra_fields_t *const p_extra_header_fields)
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_403, "Forbidden");
 }
 
 static void
-http_server_netconn_resp_404(struct netconn *const p_conn)
+http_server_netconn_resp_404(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
 }
 
 static void
-http_server_netconn_resp_502(struct netconn *const p_conn)
+http_server_netconn_resp_502(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
 }
 
 static void
-http_server_netconn_resp_503(struct netconn *const p_conn)
+http_server_netconn_resp_503(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
 }
 
 static void
-http_server_netconn_resp_504(struct netconn *const p_conn)
+http_server_netconn_resp_504(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
 }
 
 static void
-http_server_netconn_resp(
-    struct netconn *const        p_conn,
-    http_server_resp_t *const    p_resp,
-    const sta_ip_string_t *const p_local_ip_str)
+http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const p_resp, const char* const p_hostname)
 {
     switch (p_resp->http_resp_code)
     {
@@ -572,10 +627,10 @@ http_server_netconn_resp(
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_301:
-            http_server_netconn_resp_301_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            http_server_netconn_resp_301_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_302:
-            http_server_netconn_resp_302_auth_html(p_conn, p_local_ip_str, &g_http_server_extra_header_fields);
+            http_server_netconn_resp_302_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_400:
             http_server_netconn_resp_400(p_conn);
@@ -603,67 +658,33 @@ http_server_netconn_resp(
     http_server_netconn_resp_503(p_conn);
 }
 
-/**
- * @brief Helper function that processes one HTTP request at a time.
- * @param p_conn - ptr to a connection object
- */
 static void
-http_server_netconn_serve(struct netconn *const p_conn)
+http_server_netconn_serve_handle_req(
+    struct netconn* const        p_conn,
+    char* const                  p_req_buf,
+    const sta_ip_string_t* const p_local_ip_str,
+    const sta_ip_string_t* const p_remote_ip_str)
 {
-    char     req_buf[FULLBUF_SIZE + 1];
-    uint32_t req_size  = 0;
-    bool     req_ready = false;
-
-    sta_ip_string_t local_ip_str  = { '\0' };
-    sta_ip_string_t remote_ip_str = { '\0' };
-
-    const struct tcp_pcb *const p_tcp = p_conn->pcb.tcp;
-    if (NULL == p_tcp)
-    {
-        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");
-        return;
-    }
-
-    const ip_addr_t local_ip  = p_tcp->local_ip;
-    const ip_addr_t remote_ip = p_tcp->remote_ip;
-
-    if (NULL == p_conn->pcb.tcp)
-    {
-        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(2)");
-        return;
-    }
-
-    ipaddr_ntoa_r(&local_ip, local_ip_str.buf, sizeof(local_ip_str.buf));
-    ipaddr_ntoa_r(&remote_ip, remote_ip_str.buf, sizeof(remote_ip_str.buf));
-
-    while (!req_ready)
-    {
-        if (!http_server_recv_and_handle(p_conn, &req_buf[0], &req_size, &req_ready))
-        {
-            break;
-        }
-    }
-
-    if (!req_ready)
-    {
-        LOG_WARN("The connection was closed by the client side");
-        return;
-    }
-    LOG_DBG("Request from %s to %s: %s", remote_ip_str.buf, local_ip_str.buf, req_buf);
-
-    const http_req_info_t req_info = http_req_parse(req_buf);
-
+    const http_req_info_t req_info = http_req_parse(p_req_buf);
     if (!req_info.is_success)
     {
-        LOG_ERR("Request from %s to %s: failed to parse request: %s", remote_ip_str.buf, local_ip_str.buf, req_buf);
+        LOG_ERR(
+            "Request from %s to %s: failed to parse request: %s",
+            p_remote_ip_str->buf,
+            p_local_ip_str->buf,
+            p_req_buf);
         http_server_netconn_resp_400(p_conn);
         return;
     }
+    uint32_t          host_len = 0;
+    const char* const p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
 
     LOG_INFO(
-        "Request from %s to %s: %s %s%s%s",
-        remote_ip_str.buf,
-        local_ip_str.buf,
+        "Request from %s to %s (Host: %.*s): %s %s%s%s",
+        p_remote_ip_str->buf,
+        p_local_ip_str->buf,
+        host_len,
+        (NULL != p_host) ? p_host : "",
         (NULL != req_info.http_cmd.ptr) ? req_info.http_cmd.ptr : "NULL",
         (NULL != req_info.http_uri.ptr) ? req_info.http_uri.ptr : "NULL",
         (NULL != req_info.http_uri_params.ptr) ? "?" : "",
@@ -678,18 +699,19 @@ http_server_netconn_serve(struct netconn *const p_conn)
 
     const wifiman_ip4_addr_str_t ap_ip_str = wifiman_config_ap_get_ip_str();
 
-    /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
-    uint32_t    host_len = 0;
-    const char *p_host   = http_req_header_get_field(req_info.http_header, "Host:", &host_len);
-
-    /* determine if Host is from the STA IP address */
-    const sta_ip_string_t ip_str = sta_ip_safe_get();
-
-    LOG_DBG("Host: %.*s, StaticIP: %s", host_len, p_host, ip_str.buf);
-
-    const bool flag_access_from_lan = (0 != strcmp(local_ip_str.buf, ap_ip_str.buf)) ? true : false;
-    if (!flag_access_from_lan)
+    const bool flag_access_from_lan = (0 != strcmp(p_local_ip_str->buf, ap_ip_str.buf)) ? true : false;
+    if (flag_access_from_lan)
     {
+        if (wifi_manager_is_ap_active())
+        {
+            LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
+            http_server_netconn_resp_503(p_conn);
+            return;
+        }
+    }
+    else
+    {
+        /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
         const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
         if (!is_request_to_ap_ip)
         {
@@ -702,7 +724,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
 
     http_server_resp_t resp = http_server_handle_req(
         &req_info,
-        &remote_ip_str,
+        p_remote_ip_str,
         http_server_get_auth(),
         &g_http_server_extra_header_fields,
         flag_access_from_lan);
@@ -714,7 +736,7 @@ http_server_netconn_serve(struct netconn *const p_conn)
         && ((HTTP_CONTENT_LOCATION_STATIC_MEM == resp.content_location)
             || (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)))
     {
-        const size_t content_len = strlen((const char *)resp.select_location.memory.p_buf);
+        const size_t content_len = strlen((const char*)resp.select_location.memory.p_buf);
         if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG)
         {
             LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
@@ -724,13 +746,64 @@ http_server_netconn_serve(struct netconn *const p_conn)
             LOG_INFO("Json resp: code=%u, content_len=%lu", resp.http_resp_code, (printf_ulong_t)content_len);
         }
     }
-    http_server_netconn_resp(p_conn, &resp, &local_ip_str);
+
+    str_buf_t hostname = ((NULL != p_host) && (0 != host_len)) ? str_buf_printf_with_alloc("%.*s", host_len, p_host)
+                                                               : str_buf_printf_with_alloc("%s", p_local_ip_str->buf);
+    http_server_netconn_resp(p_conn, &resp, hostname.buf);
+    str_buf_free_buf(&hostname);
+}
+
+/**
+ * @brief Helper function that processes one HTTP request at a time.
+ * @param p_conn - ptr to a connection object
+ */
+static void
+http_server_netconn_serve(struct netconn* const p_conn)
+{
+    char     req_buf[FULLBUF_SIZE + 1];
+    uint32_t req_size  = 0;
+    bool     req_ready = false;
+
+    sta_ip_string_t local_ip_str  = { '\0' };
+    sta_ip_string_t remote_ip_str = { '\0' };
+
+    const struct tcp_pcb* const p_tcp = p_conn->pcb.tcp;
+    if (NULL == p_tcp)
+    {
+        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(1)");
+        return;
+    }
+
+    const ip_addr_t local_ip  = p_tcp->local_ip;
+    const ip_addr_t remote_ip = p_tcp->remote_ip;
+    if (NULL == p_conn->pcb.tcp)
+    {
+        LOG_ERR("p_conn->pcb.tcp is NULL due to race condition(2)");
+        return;
+    }
+    ipaddr_ntoa_r(&local_ip, local_ip_str.buf, sizeof(local_ip_str.buf));
+    ipaddr_ntoa_r(&remote_ip, remote_ip_str.buf, sizeof(remote_ip_str.buf));
+
+    while (!req_ready)
+    {
+        if (!http_server_recv_and_handle(p_conn, &req_buf[0], &req_size, &req_ready))
+        {
+            break;
+        }
+    }
+    if (!req_ready)
+    {
+        LOG_WARN("The connection was closed by the client side");
+        return;
+    }
+
+    http_server_netconn_serve_handle_req(p_conn, &req_buf[0], &local_ip_str, &remote_ip_str);
 }
 
 os_delta_ticks_t
-http_server_accept_and_handle_conn(struct netconn *const p_conn)
+http_server_accept_and_handle_conn(struct netconn* const p_conn)
 {
-    struct netconn *p_new_conn = NULL;
+    struct netconn* p_new_conn = NULL;
 
     const err_t err = netconn_accept(p_conn, &p_new_conn);
 
@@ -762,7 +835,7 @@ http_server_accept_and_handle_conn(struct netconn *const p_conn)
             const err_t err_close = netconn_close(p_new_conn);
             if (ESP_OK != err_close)
             {
-                LOG_ERR_ESP(err_close, "%s failed", "netconn_close");
+                LOG_ERR_ESP(err_close, "%s failed (%s)", "netconn_close", conv_lwip_err_to_str(err_close));
             }
             LOG_DBG("call netconn_delete");
             const err_t err_delete = netconn_delete(p_new_conn);

@@ -49,30 +49,41 @@ struct wifi_manager_antenna_config_t
     wifi_ant_config_t      wifi_ant_config;
 };
 
-const wifiman_config_t *
-wifi_manager_default_config_init(const wifiman_wifi_ssid_t *const p_wifi_ssid);
+const wifiman_config_t*
+wifi_manager_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid);
 
 void
-wifi_manager_set_default_config(const wifiman_config_t *const p_wifi_cfg);
+wifi_manager_set_default_config(const wifiman_config_t* const p_wifi_cfg);
 
 bool
-wifi_manager_cfg_blob_read(wifiman_config_t *const p_cfg);
+wifi_manager_cfg_blob_read(wifiman_config_t* const p_cfg);
 
 bool
-wifi_manager_cfg_blob_erase_if_exist(void);
+wifi_manager_cfg_blob_mark_deprecated(void);
 
 /**
  * @brief Allocate heap memory for the wifi manager and start the wifi_manager RTOS task.
  */
 bool
 wifi_manager_start(
-    const bool                                 flag_start_wifi,
-    const bool                                 flag_start_ap_only,
-    const wifiman_config_t *const              p_wifi_cfg,
-    const wifi_manager_antenna_config_t *const p_wifi_ant_config,
-    const wifi_manager_callbacks_t *const      p_callbacks,
-    int (*f_rng)(void *, unsigned char *, size_t),
-    void *p_rng);
+    const bool                                 flag_connect_sta,
+    const wifiman_config_t* const              p_wifi_cfg,
+    const wifi_manager_antenna_config_t* const p_wifi_ant_config,
+    const wifi_manager_callbacks_t* const      p_callbacks,
+    wifi_manager_ecdh_f_rng                    f_rng,
+    void*                                      p_rng);
+
+bool
+wifi_manager_reconfigure(const bool flag_connect_sta, const wifiman_config_t* const p_wifi_cfg);
+
+void
+wifi_manager_set_config_ap(const wifiman_config_ap_t* const p_wifi_cfg_ap);
+
+void
+wifi_manager_set_config_sta(const wifiman_config_sta_t* const p_wifi_cfg_sta);
+
+void
+wifi_manager_reconnect_sta(void);
 
 /**
  * @brief Stop WiFi access-point
@@ -95,7 +106,7 @@ wifi_manager_connect_async(void);
 /**
  * @brief scan WiFi APs and return json
  */
-const char *
+const char*
 wifi_manager_scan_sync(void);
 
 /**
@@ -147,12 +158,12 @@ wifi_manager_is_sta_configured(void);
 void
 wifi_manager_update_network_connection_info(
     const update_reason_code_e       update_reason_code,
-    const wifiman_wifi_ssid_t *const p_ssid,
-    const esp_netif_ip_info_t *const p_ip_info,
-    const esp_ip4_addr_t *const      p_dhcp_ip);
+    const wifiman_wifi_ssid_t* const p_ssid,
+    const esp_netif_ip_info_t* const p_ip_info,
+    const esp_ip4_addr_t* const      p_dhcp_ip);
 
 void
-wifi_manager_set_extra_info_for_status_json(const char *const p_extra);
+wifi_manager_set_extra_info_for_status_json(const char* const p_extra);
 
 #ifdef __cplusplus
 }

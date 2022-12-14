@@ -45,7 +45,7 @@ extern "C" {
 typedef struct
 {
     QueueHandle_t handle;  /**< FreeRTOS queue handler */
-    void *        storage; /**< storage for FreeRTOS queue */
+    void*         storage; /**< storage for FreeRTOS queue */
 } wifi_static_queue_t;
 
 /**
@@ -103,7 +103,7 @@ typedef enum
  *    - others: refer to error code esp_err.h
  */
 esp_err_t
-esp_wifi_init_internal(const wifi_init_config_t *config);
+esp_wifi_init_internal(const wifi_init_config_t* config);
 
 /**
  * @brief Deinitialize Wi-Fi Driver
@@ -129,7 +129,7 @@ esp_wifi_deinit_internal(void);
  * @param  void* buffer: rx buffer pointer
  */
 void
-esp_wifi_internal_free_rx_buffer(void *buffer);
+esp_wifi_internal_free_rx_buffer(void* buffer);
 
 /**
  * @brief  transmit the buffer via wifi driver
@@ -154,19 +154,19 @@ esp_wifi_internal_free_rx_buffer(void *buffer);
  *    - ESP_ERR_WIFI_POST : caller fails to post event to WiFi task
  */
 int
-esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, uint16_t len);
+esp_wifi_internal_tx(wifi_interface_t wifi_if, void* buffer, uint16_t len);
 
 /**
  * @brief     The net stack buffer reference counter callback function
  *
  */
-typedef void (*wifi_netstack_buf_ref_cb_t)(void *netstack_buf);
+typedef void (*wifi_netstack_buf_ref_cb_t)(void* netstack_buf);
 
 /**
  * @brief     The net stack buffer free callback function
  *
  */
-typedef void (*wifi_netstack_buf_free_cb_t)(void *netstack_buf);
+typedef void (*wifi_netstack_buf_free_cb_t)(void* netstack_buf);
 
 /**
  * @brief  transmit the buffer by reference via wifi driver
@@ -194,7 +194,7 @@ typedef void (*wifi_netstack_buf_free_cb_t)(void *netstack_buf);
  *    - ESP_ERR_WIFI_POST : caller fails to post event to WiFi task
  */
 esp_err_t
-esp_wifi_internal_tx_by_ref(wifi_interface_t ifx, void *buffer, size_t len, void *netstack_buf);
+esp_wifi_internal_tx_by_ref(wifi_interface_t ifx, void* buffer, size_t len, void* netstack_buf);
 
 /**
  * @brief     Initialize WAPI function when wpa_supplicant initialize.
@@ -237,7 +237,7 @@ esp_wifi_internal_reg_netstack_buf_cb(wifi_netstack_buf_ref_cb_t ref, wifi_netst
  *
  *            Each time the WiFi need to forward the packets to high layer, the callback function will be called
  */
-typedef esp_err_t (*wifi_rxcb_t)(void *buffer, uint16_t len, void *eb);
+typedef esp_err_t (*wifi_rxcb_t)(void* buffer, uint16_t len, void* eb);
 
 /**
  * @brief     Set the WiFi RX callback
@@ -301,7 +301,7 @@ esp_wifi_internal_set_fix_rate(wifi_interface_t ifx, bool en, wifi_phy_rate_t ra
  *     - others: fail
  */
 esp_err_t
-esp_smartconfig_internal_start(const smartconfig_start_config_t *config);
+esp_smartconfig_internal_start(const smartconfig_start_config_t* config);
 
 /**
  * @brief     Stop SmartConfig, free the buffer taken by esp_smartconfig_start.
@@ -326,7 +326,7 @@ esp_smartconfig_internal_stop(void);
  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
  */
 esp_err_t
-esp_wifi_internal_osi_funcs_md5_check(const char *md5);
+esp_wifi_internal_osi_funcs_md5_check(const char* md5);
 
 /**
  * @brief     Check the MD5 values of the crypto types header files in IDF and WiFi library
@@ -338,7 +338,7 @@ esp_wifi_internal_osi_funcs_md5_check(const char *md5);
  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
  */
 esp_err_t
-esp_wifi_internal_crypto_funcs_md5_check(const char *md5);
+esp_wifi_internal_crypto_funcs_md5_check(const char* md5);
 
 /**
  * @brief     Check the MD5 values of the esp_wifi_types.h in IDF and WiFi library
@@ -350,7 +350,7 @@ esp_wifi_internal_crypto_funcs_md5_check(const char *md5);
  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
  */
 esp_err_t
-esp_wifi_internal_wifi_type_md5_check(const char *md5);
+esp_wifi_internal_wifi_type_md5_check(const char* md5);
 
 /**
  * @brief     Check the MD5 values of the esp_wifi.h in IDF and WiFi library
@@ -362,7 +362,7 @@ esp_wifi_internal_wifi_type_md5_check(const char *md5);
  *     - ESP_WIFI_INVALID_ARG : MD5 check fail
  */
 esp_err_t
-esp_wifi_internal_esp_wifi_md5_check(const char *md5);
+esp_wifi_internal_esp_wifi_md5_check(const char* md5);
 
 /**
  * @brief     Allocate a chunk of memory for WiFi driver
@@ -373,7 +373,7 @@ esp_wifi_internal_esp_wifi_md5_check(const char *md5);
  *
  * @return    A pointer to the memory allocated on success, NULL on failure
  */
-void *
+void*
 wifi_malloc(size_t size);
 
 /**
@@ -386,8 +386,8 @@ wifi_malloc(size_t size);
  *
  * @return    A pointer to the memory allocated on success, NULL on failure
  */
-void *
-wifi_realloc(void *ptr, size_t size);
+void*
+wifi_realloc(void* ptr, size_t size);
 
 /**
  * @brief     Callocate memory for WiFi driver
@@ -399,7 +399,7 @@ wifi_realloc(void *ptr, size_t size);
  *
  * @return    A pointer to the memory allocated on success, NULL on failure
  */
-void *
+void*
 wifi_calloc(size_t n, size_t size);
 
 /**
@@ -462,7 +462,7 @@ esp_wifi_internal_set_log_mod(wifi_log_module_t module, uint32_t submodule, bool
  *    - ESP_OK: succeed
  */
 esp_err_t
-esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
+esp_wifi_internal_get_log(wifi_log_level_t* log_level, uint32_t* log_mod);
 
 /**
  * @brief     A general API to set/get WiFi internal configuration, it's for debug only
@@ -475,7 +475,7 @@ esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
  *    - others: failed
  */
 esp_err_t
-esp_wifi_internal_ioctl(int cmd, wifi_ioctl_config_t *cfg);
+esp_wifi_internal_ioctl(int cmd, wifi_ioctl_config_t* cfg);
 
 /**
  * @brief     Get the user-configured channel info
@@ -488,7 +488,7 @@ esp_wifi_internal_ioctl(int cmd, wifi_ioctl_config_t *cfg);
  *    - ESP_OK: succeed
  */
 esp_err_t
-esp_wifi_internal_get_config_channel(wifi_interface_t ifx, uint8_t *primary, uint8_t *second);
+esp_wifi_internal_get_config_channel(wifi_interface_t ifx, uint8_t* primary, uint8_t* second);
 
 /**
  * @brief     Get the negotiated channel info after WiFi connection established
@@ -503,7 +503,7 @@ esp_wifi_internal_get_config_channel(wifi_interface_t ifx, uint8_t *primary, uin
  *    - ESP_OK: succeed
  */
 esp_err_t
-esp_wifi_internal_get_negotiated_channel(wifi_interface_t ifx, uint8_t aid, uint8_t *primary, uint8_t *second);
+esp_wifi_internal_get_negotiated_channel(wifi_interface_t ifx, uint8_t aid, uint8_t* primary, uint8_t* second);
 
 /**
  * @brief     Get the negotiated bandwidth info after WiFi connection established
@@ -515,7 +515,7 @@ esp_wifi_internal_get_negotiated_channel(wifi_interface_t ifx, uint8_t aid, uint
  *    - ESP_OK: succeed
  */
 esp_err_t
-esp_wifi_internal_get_negotiated_bandwidth(wifi_interface_t ifx, uint8_t aid, uint8_t *bw);
+esp_wifi_internal_get_negotiated_bandwidth(wifi_interface_t ifx, uint8_t aid, uint8_t* bw);
 
 #if SOC_WIFI_HW_TSF
 /**
@@ -568,7 +568,7 @@ pm_mac_wakeup(void);
  * @param    data_len Length of the data transmitted
  * @param    txStatus True:if the data was transmitted sucessfully False: if data transmission failed
  */
-typedef void (*wifi_tx_done_cb_t)(uint8_t ifidx, uint8_t *data, uint16_t *data_len, bool txStatus);
+typedef void (*wifi_tx_done_cb_t)(uint8_t ifidx, uint8_t* data, uint16_t* data_len, bool txStatus);
 
 /**
  * @brief    Register the txDone callback function of type wifi_tx_done_cb_t

@@ -37,7 +37,7 @@
  *         - ESP_ERR_NO_MEM
  */
 esp_err_t
-esp_netif_start(esp_netif_t *esp_netif);
+esp_netif_start(esp_netif_t* esp_netif);
 
 /**
  * @brief  Cause the TCP/IP stack to stop a network interface defined as ESP-NETIF instance
@@ -56,7 +56,7 @@ esp_netif_start(esp_netif_t *esp_netif);
  *         - ESP_ERR_ESP_NETIF_IF_NOT_READY
  */
 esp_err_t
-esp_netif_stop(esp_netif_t *esp_netif);
+esp_netif_stop(esp_netif_t* esp_netif);
 
 /**
  * @brief  Cause the TCP/IP stack to bring up an interface
@@ -71,7 +71,7 @@ esp_netif_stop(esp_netif_t *esp_netif);
  *         - ESP_ERR_ESP_NETIF_IF_NOT_READY
  */
 esp_err_t
-esp_netif_up(esp_netif_t *esp_netif);
+esp_netif_up(esp_netif_t* esp_netif);
 
 /**
  * @brief Cause the TCP/IP stack to shutdown an interface
@@ -86,7 +86,7 @@ esp_netif_up(esp_netif_t *esp_netif);
  *         - ESP_ERR_ESP_NETIF_INVALID_PARAMS - parameter error
  */
 esp_err_t
-esp_netif_down(esp_netif_t *esp_netif);
+esp_netif_down(esp_netif_t* esp_netif);
 
 /**
  * @brief Returns true if underlying TCP/IP stack finds the ip_info as valid static address
@@ -95,7 +95,7 @@ esp_netif_down(esp_netif_t *esp_netif);
  * @return true if address assumed to be valid static IP address
  */
 bool
-esp_netif_is_valid_static_ip(esp_netif_ip_info_t *ip_info);
+esp_netif_is_valid_static_ip(esp_netif_ip_info_t* ip_info);
 
 /**
  * @brief Adds created interface to the list of netifs
@@ -107,7 +107,7 @@ esp_netif_is_valid_static_ip(esp_netif_ip_info_t *ip_info);
  *         - ESP_ERR_NO_MEM -- Cannot be added due to memory allocation failure
  */
 esp_err_t
-esp_netif_add_to_list(esp_netif_t *netif);
+esp_netif_add_to_list(esp_netif_t* netif);
 
 /**
  * @brief Removes interface to be destroyed from the list of netifs
@@ -119,7 +119,7 @@ esp_netif_add_to_list(esp_netif_t *netif);
  *         - ESP_ERR_NOT_FOUND -- This netif was not found in the netif list
  */
 esp_err_t
-esp_netif_remove_from_list(esp_netif_t *netif);
+esp_netif_remove_from_list(esp_netif_t* netif);
 
 /**
  * @brief Iterates over list of interfaces without list locking. Returns first netif if NULL given as parameter
@@ -131,8 +131,8 @@ esp_netif_remove_from_list(esp_netif_t *netif);
  *
  * @return First netif from the list if supplied parameter is NULL, next one otherwise
  */
-esp_netif_t *
-esp_netif_next_unsafe(esp_netif_t *netif);
+esp_netif_t*
+esp_netif_next_unsafe(esp_netif_t* netif);
 
 /**
  * @brief Locking network interface list. Use only in connection with esp_netif_next_unsafe
@@ -157,6 +157,6 @@ esp_netif_list_unlock(void);
  * @return true if supplied interface is listed
  */
 bool
-esp_netif_is_netif_listed(esp_netif_t *esp_netif);
+esp_netif_is_netif_listed(esp_netif_t* esp_netif);
 
 #endif //_ESP_NETIF_PRIVATE_H_

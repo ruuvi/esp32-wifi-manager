@@ -144,8 +144,8 @@ typedef struct
 /** @brief Parameters for an SSID scan. */
 typedef struct
 {
-    uint8_t *        ssid;        /**< SSID of AP */
-    uint8_t *        bssid;       /**< MAC address of AP */
+    uint8_t*         ssid;        /**< SSID of AP */
+    uint8_t*         bssid;       /**< MAC address of AP */
     uint8_t          channel;     /**< channel, scan the specific channel */
     bool             show_hidden; /**< enable to scan AP whose SSID is hidden */
     wifi_scan_type_t scan_type;   /**< scan type, active or passive */
@@ -286,7 +286,7 @@ typedef struct
         threshold; /**< When sort_method is set, only APs which have an auth mode that is more secure than the selected
                       auth mode and a signal stronger than the minimum RSSI will be used. */
     wifi_pmf_config_t
-             pmf_cfg; /**< Configuration for Protected Management Frame. Will be advertized in RSN Capabilities in RSN IE. */
+        pmf_cfg; /**< Configuration for Protected Management Frame. Will be advertized in RSN Capabilities in RSN IE. */
     uint32_t rm_enabled : 1;  /**< Whether Radio Measurements are enabled for the connection */
     uint32_t btm_enabled : 1; /**< Whether BSS Transition Management is enabled for the connection */
     uint32_t reserved : 30;   /**< Reserved for future feature set */
@@ -516,7 +516,7 @@ typedef struct
     wifi_pkt_rx_ctrl_t rx_ctrl;            /**< received packet radio metadata header of the CSI data */
     uint8_t            mac[6];             /**< source MAC address of the CSI data */
     bool               first_word_invalid; /**< first four bytes of the CSI data is invalid or not */
-    int8_t *           buf;                /**< buffer of CSI data */
+    int8_t*            buf;                /**< buffer of CSI data */
     uint16_t           len;                /**< length of CSI data */
 } wifi_csi_info_t;
 
@@ -575,7 +575,7 @@ typedef struct
  * @param     channel channel number the frame is received on
  *
  */
-typedef int (*wifi_action_rx_cb_t)(uint8_t *hdr, uint8_t *payload, size_t len, uint8_t channel);
+typedef int (*wifi_action_rx_cb_t)(uint8_t* hdr, uint8_t* payload, size_t len, uint8_t channel);
 
 /**
  * @brief Action Frame Tx Request
@@ -813,8 +813,8 @@ typedef struct
     uint32_t          rtt_raw;     /**< Raw average Round-Trip-Time with peer in Nano-Seconds */
     uint32_t          rtt_est;     /**< Estimated Round-Trip-Time with peer in Nano-Seconds */
     uint32_t          dist_est;    /**< Estimated one-way distance in Centi-Meters */
-    wifi_ftm_report_entry_t
-        *   ftm_report_data;        /**< Pointer to FTM Report with multiple entries, should be freed after use */
+    wifi_ftm_report_entry_t*
+            ftm_report_data;        /**< Pointer to FTM Report with multiple entries, should be freed after use */
     uint8_t ftm_report_num_entries; /**< Number of entries in the FTM Report data */
 } wifi_event_ftm_report_t;
 

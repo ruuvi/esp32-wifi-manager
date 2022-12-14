@@ -153,7 +153,7 @@ struct esp_eth_mediator_s
      *       - ESP_FAIL: read PHY register failed because some error occurred
      *
      */
-    esp_err_t (*phy_reg_read)(esp_eth_mediator_t *eth, uint32_t phy_addr, uint32_t phy_reg, uint32_t *reg_value);
+    esp_err_t (*phy_reg_read)(esp_eth_mediator_t* eth, uint32_t phy_addr, uint32_t phy_reg, uint32_t* reg_value);
 
     /**
      * @brief Write PHY register
@@ -167,7 +167,7 @@ struct esp_eth_mediator_s
      *       - ESP_OK: write PHY register successfully
      *       - ESP_FAIL: write PHY register failed because some error occurred
      */
-    esp_err_t (*phy_reg_write)(esp_eth_mediator_t *eth, uint32_t phy_addr, uint32_t phy_reg, uint32_t reg_value);
+    esp_err_t (*phy_reg_write)(esp_eth_mediator_t* eth, uint32_t phy_addr, uint32_t phy_reg, uint32_t reg_value);
 
     /**
      * @brief Deliver packet to upper stack
@@ -181,7 +181,7 @@ struct esp_eth_mediator_s
      *       - ESP_FAIL: deliver packet failed because some error occurred
      *
      */
-    esp_err_t (*stack_input)(esp_eth_mediator_t *eth, uint8_t *buffer, uint32_t length);
+    esp_err_t (*stack_input)(esp_eth_mediator_t* eth, uint8_t* buffer, uint32_t length);
 
     /**
      * @brief Callback on Ethernet state changed
@@ -195,7 +195,7 @@ struct esp_eth_mediator_s
      *       - ESP_FAIL: process the new state failed because some error occurred
      *
      */
-    esp_err_t (*on_state_changed)(esp_eth_mediator_t *eth, esp_eth_state_t state, void *args);
+    esp_err_t (*on_state_changed)(esp_eth_mediator_t* eth, esp_eth_state_t state, void* args);
 };
 
 /**
@@ -228,7 +228,7 @@ ESP_EVENT_DECLARE_BASE(ETH_EVENT);
  *       - ESP_FAIL: detect phy address failed because some error occurred
  */
 esp_err_t
-esp_eth_detect_phy_addr(esp_eth_mediator_t *eth, int *detected_addr);
+esp_eth_detect_phy_addr(esp_eth_mediator_t* eth, int* detected_addr);
 
 #ifdef __cplusplus
 }

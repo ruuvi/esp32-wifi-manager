@@ -51,7 +51,7 @@ typedef struct wifiman_cfg_blob_t
 } wifiman_cfg_blob_t;
 
 void
-wifiman_cfg_blob_convert(const wifiman_cfg_blob_t *const p_cfg_blob_src, wifiman_config_t *const p_cfg_dst);
+wifiman_cfg_blob_convert(const wifiman_cfg_blob_t* const p_cfg_blob_src, wifiman_config_t* const p_cfg_dst);
 
 #ifdef __cplusplus
 }
