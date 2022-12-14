@@ -373,7 +373,6 @@ wifi_handle_ev_ap_sta_connected(void)
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_STA_CONNECTED_BIT");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
-    http_server_on_ap_sta_connected();
     wifi_callback_on_ap_sta_connected();
     if (!wifi_manager_is_connected_to_wifi())
     {
@@ -389,9 +388,8 @@ wifi_handle_ev_ap_sta_disconnected(void)
     xEventGroupClearBits(
         g_p_wifi_manager_event_group,
         WIFI_MANAGER_AP_STA_CONNECTED_BIT | WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
-    http_server_on_ap_sta_disconnected();
-    wifi_callback_on_ap_sta_disconnected();
     dns_server_stop();
+    wifi_callback_on_ap_sta_disconnected();
 }
 
 static void
@@ -400,7 +398,7 @@ wifi_handle_ev_ap_sta_ip_assigned(void)
     LOG_INFO("MESSAGE: EVENT_AP_STA_IP_ASSIGNED");
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
-    http_server_on_ap_sta_ip_assigned();
+    wifi_callback_on_ap_sta_ip_assigned();
 }
 
 static void

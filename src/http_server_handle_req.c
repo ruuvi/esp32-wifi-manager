@@ -106,8 +106,6 @@ http_server_handle_req_get_html_or_json(
     }
     if (0 == strcmp(p_file_name, "status.json"))
     {
-        http_server_update_last_http_status_request();
-
         http_server_resp_t                       http_resp = { 0 };
         http_server_gen_resp_status_json_param_t params    = {
                .p_http_resp          = &http_resp,
@@ -115,6 +113,7 @@ http_server_handle_req_get_html_or_json(
         };
         const os_delta_ticks_t ticks_to_wait = 10U;
         json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
+        wifi_manager_cb_on_request_status_json();
         return http_resp;
     }
     if (0 == strcmp(p_file_name, "auth.html"))

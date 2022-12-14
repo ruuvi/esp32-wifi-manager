@@ -664,6 +664,15 @@ wifi_callback_on_ap_sta_disconnected(void)
 }
 
 void
+wifi_callback_on_ap_sta_ip_assigned(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_ap_sta_ip_assigned)
+    {
+        g_wifi_callbacks.cb_on_ap_sta_ip_assigned();
+    }
+}
+
+void
 wifi_callback_on_disconnect_eth_cmd(void)
 {
     if (NULL != g_wifi_callbacks.cb_on_disconnect_eth_cmd)
@@ -689,6 +698,16 @@ wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t* const p_cfg_sta
         return;
     }
     g_wifi_callbacks.cb_save_wifi_config_sta(p_cfg_sta);
+}
+
+void
+wifi_manager_cb_on_request_status_json(void)
+{
+    if (NULL == g_wifi_callbacks.cb_on_request_status_json)
+    {
+        return;
+    }
+    g_wifi_callbacks.cb_on_request_status_json();
 }
 
 void
