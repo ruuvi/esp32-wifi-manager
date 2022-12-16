@@ -103,8 +103,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_allow"})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
@@ -132,8 +138,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_deny"})";
     ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
@@ -174,8 +186,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
@@ -215,8 +233,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -259,8 +283,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -303,8 +333,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -347,8 +383,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -395,8 +437,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
@@ -438,8 +486,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -485,8 +539,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -533,8 +593,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -581,8 +647,14 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    const http_server_resp_t resp
-        = http_server_handle_req_get_auth(true, http_header, &remote_ip, &auth_info, &ap_ssid, &extra_header_fields);
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -631,6 +703,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -705,6 +778,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -756,6 +830,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -811,6 +886,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -915,6 +991,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1019,6 +1096,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1123,6 +1201,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1227,6 +1306,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1331,6 +1411,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1435,6 +1516,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1539,6 +1621,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1642,6 +1725,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1746,6 +1830,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1849,6 +1934,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
 
         const http_server_resp_t resp = http_server_handle_req_get_auth(
             true,
+            false,
             http_header,
             &remote_ip,
             &auth_info,
@@ -1941,16 +2027,204 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields,
+        &flag_access_by_bearer_token);
+    const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp.length(), resp.content_len);
+    ASSERT_EQ(string(""), string(extra_header_fields.buf));
+
+    ASSERT_TRUE(flag_access_by_bearer_token);
+}
+
+TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_ro_success) // NOLINT
+{
+    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
+    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
+        raw_user_pass.c_str(),
+        raw_user_pass.length());
+
+    std::array<uint32_t, 128> random_values = { 0 };
+    for (uint32_t i = 0; i < random_values.size(); ++i)
+    {
+        random_values[i] = 0xAABBCC00U + i * 17;
+    }
+    this->set_random_values(random_values.begin(), random_values.size());
+
+    const string            bearer_auth_api_key("wH3F9SIiAA3rhG32aJki2Z7ekdFc0vtxuDhxl39zFvw=");
+    const string            bearer_auth_api_key_rw("KAv9oAT0c1XzbCF9N/Bnj2mgVR7R4QbBn/L3Wq5/zuI=");
+    http_server_auth_info_t auth_info = {
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        "user1",
+        "",
+        "",
+    };
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
+    snprintf(
+        auth_info.auth_api_key_rw.buf,
+        sizeof(auth_info.auth_api_key_rw.buf),
+        "%s",
+        bearer_auth_api_key_rw.c_str());
+
+    const string               auth_header = string("Authorization: Bearer ") + bearer_auth_api_key_rw + string("\r\n");
+    const http_req_header_t    http_header = { auth_header.c_str() };
+    http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
+    const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
+
+    bool flag_access_by_bearer_token = false;
+
+    const http_server_resp_t resp = http_server_handle_req_check_auth(
+        true,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields,
+        &flag_access_by_bearer_token);
+    const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp.length(), resp.content_len);
+    ASSERT_EQ(string(""), string(extra_header_fields.buf));
+
+    ASSERT_TRUE(flag_access_by_bearer_token);
+}
+
+TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_rw_success) // NOLINT
+{
+    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
+    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
+        raw_user_pass.c_str(),
+        raw_user_pass.length());
+
+    std::array<uint32_t, 128> random_values = { 0 };
+    for (uint32_t i = 0; i < random_values.size(); ++i)
+    {
+        random_values[i] = 0xAABBCC00U + i * 17;
+    }
+    this->set_random_values(random_values.begin(), random_values.size());
+
+    const string            bearer_auth_api_key("wH3F9SIiAA3rhG32aJki2Z7ekdFc0vtxuDhxl39zFvw=");
+    const string            bearer_auth_api_key_rw("KAv9oAT0c1XzbCF9N/Bnj2mgVR7R4QbBn/L3Wq5/zuI=");
+    http_server_auth_info_t auth_info = {
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        "user1",
+        "",
+        "",
+    };
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
+    snprintf(
+        auth_info.auth_api_key_rw.buf,
+        sizeof(auth_info.auth_api_key_rw.buf),
+        "%s",
+        bearer_auth_api_key_rw.c_str());
+
+    const string               auth_header = string("Authorization: Bearer ") + bearer_auth_api_key_rw + string("\r\n");
+    const http_req_header_t    http_header = { auth_header.c_str() };
+    http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
+    const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
+
+    bool flag_access_by_bearer_token = false;
+
+    const http_server_resp_t resp = http_server_handle_req_check_auth(
+        true,
         true,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
+    const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp.length(), resp.content_len);
+    ASSERT_EQ(string(""), string(extra_header_fields.buf));
+
+    ASSERT_TRUE(flag_access_by_bearer_token);
+}
+
+TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_rw_fail) // NOLINT
+{
+    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
+    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
+        raw_user_pass.c_str(),
+        raw_user_pass.length());
+
+    std::array<uint32_t, 128> random_values = { 0 };
+    for (uint32_t i = 0; i < random_values.size(); ++i)
+    {
+        random_values[i] = 0xAABBCC00U + i * 17;
+    }
+    this->set_random_values(random_values.begin(), random_values.size());
+
+    const string            bearer_auth_api_key("wH3F9SIiAA3rhG32aJki2Z7ekdFc0vtxuDhxl39zFvw=");
+    const string            bearer_auth_api_key_rw("KAv9oAT0c1XzbCF9N/Bnj2mgVR7R4QbBn/L3Wq5/zuI=");
+    http_server_auth_info_t auth_info = {
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        "user1",
+        "",
+        "",
+    };
+    snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", user_pass_md5.buf);
+    snprintf(auth_info.auth_api_key.buf, sizeof(auth_info.auth_api_key.buf), "%s", bearer_auth_api_key.c_str());
+    snprintf(
+        auth_info.auth_api_key_rw.buf,
+        sizeof(auth_info.auth_api_key_rw.buf),
+        "%s",
+        bearer_auth_api_key_rw.c_str());
+
+    const string               auth_header = string("Authorization: Bearer ") + bearer_auth_api_key + string("\r\n");
+    const http_req_header_t    http_header = { auth_header.c_str() };
+    http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
+    const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
+
+    bool flag_access_by_bearer_token = false;
+
+    const http_server_resp_t resp = http_server_handle_req_check_auth(
+        true,
+        true,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &ap_ssid,
+        &extra_header_fields,
+        &flag_access_by_bearer_token);
+    const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -1958,13 +2232,11 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    const string exp_json_resp
-        = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_ALLOWED, allow_access_by_api_key);
+    ASSERT_TRUE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_different_api_key) // NOLINT
@@ -2000,16 +2272,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2017,13 +2290,12 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    const string exp_json_resp
-        = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
+    const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_PROHIBITED, allow_access_by_api_key);
+    ASSERT_TRUE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_api_key_len) // NOLINT
@@ -2056,16 +2328,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2073,13 +2346,12 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    const string exp_json_resp
-        = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
+    const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_PROHIBITED, allow_access_by_api_key);
+    ASSERT_TRUE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
@@ -2111,16 +2383,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2128,13 +2401,12 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    const string exp_json_resp
-        = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
+    const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_PROHIBITED, allow_access_by_api_key);
+    ASSERT_TRUE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
@@ -2165,16 +2437,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2182,13 +2455,12 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
     ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
-    const string exp_json_resp
-        = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
+    const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_PROHIBITED, allow_access_by_api_key);
+    ASSERT_TRUE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOLINT
@@ -2218,16 +2490,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2241,7 +2514,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_NOT_USED, allow_access_by_api_key);
+    ASSERT_FALSE(flag_access_by_bearer_token);
 }
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // NOLINT
@@ -2272,16 +2545,17 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
 
-    http_server_auth_api_key_e allow_access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
+    bool flag_access_by_bearer_token = false;
 
     const http_server_resp_t resp = http_server_handle_req_check_auth(
         true,
+        false,
         http_header,
         &remote_ip,
         &auth_info,
         &ap_ssid,
         &extra_header_fields,
-        &allow_access_by_api_key);
+        &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2295,5 +2569,5 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
 
-    ASSERT_EQ(HTTP_SERVER_AUTH_API_KEY_NOT_USED, allow_access_by_api_key);
+    ASSERT_FALSE(flag_access_by_bearer_token);
 }

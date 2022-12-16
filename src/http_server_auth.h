@@ -23,6 +23,7 @@ typedef struct http_server_auth_info_t
     http_server_auth_user_t    auth_user;
     http_server_auth_pass_t    auth_pass;
     http_server_auth_api_key_t auth_api_key;
+    http_server_auth_api_key_t auth_api_key_rw;
 } http_server_auth_info_t;
 
 typedef union http_server_auth_t

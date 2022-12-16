@@ -44,6 +44,7 @@ http_server_resp_401_auth_basic(
 static http_server_auth_api_key_e
 http_server_handle_req_check_auth_bearer(
     const http_req_header_t              http_header,
+    const bool                           flag_check_rw_access,
     const http_server_auth_info_t* const p_auth_info)
 {
     uint32_t          len_authorization = 0;
@@ -61,19 +62,18 @@ http_server_handle_req_check_auth_bearer(
     const char* const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
-    if ('\0' == p_auth_info->auth_api_key.buf[0])
+    if (('\0' != p_auth_info->auth_api_key_rw.buf[0]) && (auth_token_len == strlen(p_auth_info->auth_api_key_rw.buf))
+        && (0 == strncmp(p_auth_token, p_auth_info->auth_api_key_rw.buf, auth_token_len)))
     {
-        return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
+        return HTTP_SERVER_AUTH_API_KEY_ALLOWED;
     }
-    if (auth_token_len != strlen(p_auth_info->auth_api_key.buf))
+    if ((!flag_check_rw_access) && ('\0' != p_auth_info->auth_api_key.buf[0])
+        && (auth_token_len == strlen(p_auth_info->auth_api_key.buf))
+        && (0 == strncmp(p_auth_token, p_auth_info->auth_api_key.buf, auth_token_len)))
     {
-        return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
+        return HTTP_SERVER_AUTH_API_KEY_ALLOWED;
     }
-    if (0 != strncmp(p_auth_token, p_auth_info->auth_api_key.buf, auth_token_len))
-    {
-        return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
-    }
-    return HTTP_SERVER_AUTH_API_KEY_ALLOWED;
+    return HTTP_SERVER_AUTH_API_KEY_PROHIBITED;
 }
 
 static http_server_resp_t
@@ -225,16 +225,32 @@ http_server_handle_req_get_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid)
 static http_server_resp_t
 http_server_handle_req_get_or_check_auth(
     const http_req_header_t              http_header,
+    const bool                           flag_check_rw_access_with_bearer_token,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
     const wifiman_wifi_ssid_t* const     p_ap_ssid,
     const bool                           flag_check,
     http_header_extra_fields_t* const    p_extra_header_fields,
-    http_server_auth_api_key_e* const    p_allow_access_by_api_key)
+    bool* const                          p_flag_access_by_bearer_token)
 {
-    if (NULL != p_allow_access_by_api_key)
+    if (NULL != p_flag_access_by_bearer_token)
     {
-        *p_allow_access_by_api_key = http_server_handle_req_check_auth_bearer(http_header, p_auth_info);
+        http_server_auth_api_key_e access_by_bearer_token = http_server_handle_req_check_auth_bearer(
+            http_header,
+            flag_check_rw_access_with_bearer_token,
+            p_auth_info);
+        switch (access_by_bearer_token)
+        {
+            case HTTP_SERVER_AUTH_API_KEY_NOT_USED:
+                *p_flag_access_by_bearer_token = false;
+                break;
+            case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
+                *p_flag_access_by_bearer_token = true;
+                return http_server_resp_200_json(http_server_fill_auth_json_bearer_success(p_ap_ssid)->buf);
+            case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
+                *p_flag_access_by_bearer_token = true;
+                return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_ap_ssid));
+        }
     }
     switch (p_auth_info->auth_type)
     {
@@ -269,12 +285,13 @@ http_server_handle_req_get_or_check_auth(
 http_server_resp_t
 http_server_handle_req_check_auth(
     const bool                           flag_access_from_lan,
+    const bool                           flag_check_rw_access_with_bearer_token,
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
     const wifiman_wifi_ssid_t* const     p_ap_ssid,
     http_header_extra_fields_t* const    p_extra_header_fields,
-    http_server_auth_api_key_e* const    p_allow_access_by_api_key)
+    bool* const                          p_flag_access_by_bearer_token)
 {
     if (!flag_access_from_lan)
     {
@@ -282,17 +299,19 @@ http_server_handle_req_check_auth(
     }
     return http_server_handle_req_get_or_check_auth(
         http_header,
+        flag_check_rw_access_with_bearer_token,
         p_remote_ip,
         p_auth_info,
         p_ap_ssid,
         true,
         p_extra_header_fields,
-        p_allow_access_by_api_key);
+        p_flag_access_by_bearer_token);
 }
 
 http_server_resp_t
 http_server_handle_req_get_auth(
     const bool                           flag_access_from_lan,
+    const bool                           flag_check_rw_access_with_bearer_token,
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
@@ -305,6 +324,7 @@ http_server_handle_req_get_auth(
     }
     return http_server_handle_req_get_or_check_auth(
         http_header,
+        flag_check_rw_access_with_bearer_token,
         p_remote_ip,
         p_auth_info,
         p_ap_ssid,

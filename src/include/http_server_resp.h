@@ -121,6 +121,9 @@ http_server_fill_auth_json(
     const http_server_auth_type_e    lan_auth_type);
 
 const http_server_resp_auth_json_t*
+http_server_fill_auth_json_bearer_success(const wifiman_wifi_ssid_t* const p_ap_ssid);
+
+const http_server_resp_auth_json_t*
 http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t* const p_ap_ssid);
 
 #ifdef __cplusplus

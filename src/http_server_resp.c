@@ -283,9 +283,21 @@ http_server_fill_auth_json(
 }
 
 const http_server_resp_auth_json_t*
+http_server_fill_auth_json_bearer_success(const wifiman_wifi_ssid_t* const p_ap_ssid)
+{
+    (void)snprintf(
+        g_auth_json.buf,
+        sizeof(g_auth_json.buf),
+        "{\"success\": %s, \"gateway_name\": \"%s\"}",
+        "true",
+        p_ap_ssid->ssid_buf);
+    return &g_auth_json;
+}
+
+const http_server_resp_auth_json_t*
 http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t* const p_ap_ssid)
 {
-    snprintf(
+    (void)snprintf(
         g_auth_json.buf,
         sizeof(g_auth_json.buf),
         "{\"success\": %s, \"gateway_name\": \"%s\"}",
