@@ -69,125 +69,6 @@ http_server_gen_resp_status_json(const json_network_info_t* const p_info, void* 
 }
 
 static http_server_resp_t
-http_server_handle_req_get_html_or_json(
-    const bool                           flag_access_from_lan,
-    const char* const                    p_file_name,
-    const http_server_auth_info_t* const p_auth_info,
-    const http_server_resp_t* const      p_resp_auth_check,
-    http_header_extra_fields_t* const    p_extra_header_fields)
-{
-    if ((HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code) && (0 != strcmp(p_file_name, "auth.html")))
-    {
-        if ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
-            || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type)
-            || (HTTP_SERVER_AUTH_TYPE_DENY == p_auth_info->auth_type))
-        {
-            snprintf(
-                p_extra_header_fields->buf,
-                sizeof(p_extra_header_fields->buf),
-                "Set-Cookie: %s=/%s",
-                HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
-                p_file_name);
-            return http_server_resp_302();
-        }
-        return *p_resp_auth_check;
-    }
-
-    if (0 == strcmp(p_file_name, "ap.json"))
-    {
-        const char* const p_buff = wifi_manager_scan_sync();
-        if (NULL == p_buff)
-        {
-            LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
-            return http_server_resp_503();
-        }
-        LOG_INFO("ap.json: %s", p_buff);
-        return http_server_resp_200_json_in_heap(p_buff);
-    }
-    if (0 == strcmp(p_file_name, "status.json"))
-    {
-        http_server_resp_t                       http_resp = { 0 };
-        http_server_gen_resp_status_json_param_t params    = {
-               .p_http_resp          = &http_resp,
-               .flag_access_from_lan = flag_access_from_lan,
-        };
-        const os_delta_ticks_t ticks_to_wait = 10U;
-        json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
-        wifi_manager_cb_on_request_status_json();
-        return http_resp;
-    }
-    if (0 == strcmp(p_file_name, "auth.html"))
-    {
-        return wifi_manager_cb_on_http_get(p_file_name, NULL, flag_access_from_lan, p_resp_auth_check);
-    }
-    return http_server_resp_404();
-}
-
-static http_server_resp_t
-http_server_handle_req_get_path_without_extension_api_key_not_used(
-    const char* const                    p_file_name,
-    const http_server_auth_info_t* const p_auth_info,
-    const http_server_resp_t* const      p_resp_auth_check,
-    http_header_extra_fields_t* const    p_extra_header_fields)
-{
-    if (HTTP_RESP_CODE_200 != p_resp_auth_check->http_resp_code)
-    {
-        if ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
-            || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type))
-        {
-            snprintf(
-                p_extra_header_fields->buf,
-                sizeof(p_extra_header_fields->buf),
-                "Set-Cookie: %s=/%s",
-                HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
-                p_file_name);
-            return http_server_resp_302();
-        }
-        return *p_resp_auth_check;
-    }
-    const bool flag_no_cache = true;
-    return http_server_resp_data_in_flash(
-        HTTP_CONENT_TYPE_TEXT_PLAIN,
-        NULL,
-        0,
-        HTTP_CONENT_ENCODING_NONE,
-        NULL,
-        flag_no_cache);
-}
-
-static http_server_resp_t
-http_server_handle_req_get_path_without_extension(
-    const char* const                    p_file_name,
-    const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
-    const http_server_resp_t* const      p_resp_auth_check,
-    const http_server_auth_api_key_e     access_by_api_key,
-    http_header_extra_fields_t* const    p_extra_header_fields)
-{
-    switch (access_by_api_key)
-    {
-        case HTTP_SERVER_AUTH_API_KEY_NOT_USED:
-            return http_server_handle_req_get_path_without_extension_api_key_not_used(
-                p_file_name,
-                p_auth_info,
-                p_resp_auth_check,
-                p_extra_header_fields);
-        case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
-            break;
-        case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
-            return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_ap_ssid));
-    }
-    const bool flag_no_cache = true;
-    return http_server_resp_data_in_flash(
-        HTTP_CONENT_TYPE_TEXT_PLAIN,
-        NULL,
-        0,
-        HTTP_CONENT_ENCODING_NONE,
-        NULL,
-        flag_no_cache);
-}
-
-static http_server_resp_t
 http_server_handle_req_get(
     const char* const                    p_file_name_unchecked,
     const char* const                    p_uri_params,
@@ -201,14 +82,14 @@ http_server_handle_req_get(
 
     const char* const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
 
-    const char* const p_file_ext = strrchr(p_file_name, '.');
-
     const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        const http_server_resp_t resp_auth = http_server_handle_req_get_auth(
+        const bool               flag_check_rw_access_with_bearer_token = false;
+        const http_server_resp_t resp_auth                              = http_server_handle_req_get_auth(
             flag_access_from_lan,
+            flag_check_rw_access_with_bearer_token,
             http_header,
             p_remote_ip,
             p_auth_info,
@@ -216,47 +97,74 @@ http_server_handle_req_get(
             p_extra_header_fields);
         return resp_auth;
     }
-
-    http_server_auth_api_key_e access_by_api_key = HTTP_SERVER_AUTH_API_KEY_NOT_USED;
-    const http_server_resp_t   resp_auth_check   = http_server_handle_req_check_auth(
-        flag_access_from_lan,
-        http_header,
-        p_remote_ip,
-        p_auth_info,
-        &ap_ssid,
-        p_extra_header_fields,
-        &access_by_api_key);
-
-    if (NULL != p_file_ext)
+    if (0 == strcmp(p_file_name, "auth.html"))
     {
-        if ((0 == strcmp(p_file_ext, ".html")) || (0 == strcmp(p_file_ext, ".json")))
-        {
-            const http_server_resp_t resp_auth_check_for_html_or_json = http_server_handle_req_get_html_or_json(
-                flag_access_from_lan,
-                p_file_name,
-                p_auth_info,
-                &resp_auth_check,
-                p_extra_header_fields);
-            if (HTTP_RESP_CODE_404 != resp_auth_check_for_html_or_json.http_resp_code)
-            {
-                return resp_auth_check_for_html_or_json;
-            }
-        }
+        return wifi_manager_cb_on_http_get(p_file_name, NULL, flag_access_from_lan, NULL);
     }
-    else
+
+    bool flag_check_rw_access_with_bearer_token = false;
+    if (0 == strcmp(p_file_name, "ap.json"))
     {
-        const http_server_resp_t resp_auth_check_with_api_key = http_server_handle_req_get_path_without_extension(
-            p_file_name,
+        flag_check_rw_access_with_bearer_token = true;
+    }
+
+    const char* const p_file_ext = strrchr(p_file_name, '.');
+    if ((NULL == p_file_ext)
+        || ((NULL != p_file_ext) && ((0 == strcmp(p_file_ext, ".html")) || (0 == strcmp(p_file_ext, ".json")))))
+    {
+        bool                     flag_access_by_bearer_token = false;
+        const http_server_resp_t resp_auth_check             = http_server_handle_req_check_auth(
+            flag_access_from_lan,
+            flag_check_rw_access_with_bearer_token,
+            http_header,
+            p_remote_ip,
             p_auth_info,
             &ap_ssid,
-            &resp_auth_check,
-            access_by_api_key,
-            p_extra_header_fields);
-        if (HTTP_RESP_CODE_200 != resp_auth_check_with_api_key.http_resp_code)
+            p_extra_header_fields,
+            &flag_access_by_bearer_token);
+        if ((!flag_access_by_bearer_token) && (HTTP_RESP_CODE_401 == resp_auth_check.http_resp_code)
+            && ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
+                || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type)))
         {
-            return resp_auth_check_with_api_key;
+            (void)snprintf(
+                p_extra_header_fields->buf,
+                sizeof(p_extra_header_fields->buf),
+                "Set-Cookie: %s=/%s",
+                HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
+                p_file_name);
+            return http_server_resp_302();
+        }
+        if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
+        {
+            return resp_auth_check;
         }
     }
+
+    if (0 == strcmp(p_file_name, "ap.json"))
+    {
+        const char* const p_buff = wifi_manager_scan_sync();
+        if (NULL == p_buff)
+        {
+            LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
+            return http_server_resp_503();
+        }
+        LOG_INFO("ap.json: %s", p_buff);
+        return http_server_resp_200_json_in_heap(p_buff);
+    }
+
+    if (0 == strcmp(p_file_name, "status.json"))
+    {
+        http_server_resp_t                       http_resp = { 0 };
+        http_server_gen_resp_status_json_param_t params    = {
+               .p_http_resp          = &http_resp,
+               .flag_access_from_lan = flag_access_from_lan,
+        };
+        const os_delta_ticks_t ticks_to_wait = 10U;
+        json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
+        wifi_manager_cb_on_request_status_json();
+        return http_resp;
+    }
+
     return wifi_manager_cb_on_http_get(p_file_name, p_uri_params, flag_access_from_lan, NULL);
 }
 
@@ -272,18 +180,21 @@ http_server_handle_req_delete(
     LOG_INFO("DELETE /%s", p_file_name);
     const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
 
-    const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
+    const bool               flag_check_rw_access_with_bearer_token = true;
+    bool                     flag_access_by_bearer_token            = false;
+    const http_server_resp_t resp_auth_check                        = http_server_handle_req_check_auth(
         flag_access_from_lan,
+        flag_check_rw_access_with_bearer_token,
         http_header,
         p_remote_ip,
         p_auth_info,
         &ap_ssid,
         p_extra_header_fields,
-        NULL);
+        &flag_access_by_bearer_token);
 
     if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
     {
-        return http_server_resp_302();
+        return resp_auth_check;
     }
 
     if (0 == strcmp(p_file_name, "auth"))
@@ -554,18 +465,21 @@ http_server_handle_req_post(
             p_extra_header_fields);
     }
 
-    const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
+    const bool               flag_check_rw_access_with_bearer_token = true;
+    bool                     flag_access_by_bearer_token            = false;
+    const http_server_resp_t resp_auth_check                        = http_server_handle_req_check_auth(
         flag_access_from_lan,
+        flag_check_rw_access_with_bearer_token,
         http_header,
         p_remote_ip,
         p_auth_info,
         &ap_ssid,
         p_extra_header_fields,
-        NULL);
+        &flag_access_by_bearer_token);
 
     if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
     {
-        return http_server_resp_302();
+        return resp_auth_check;
     }
 
     if (0 == strcmp(p_file_name, "connect.json"))

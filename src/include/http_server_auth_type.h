@@ -60,7 +60,8 @@ http_server_set_auth(
     const http_server_auth_type_e           auth_type,
     const http_server_auth_user_t* const    p_auth_user,
     const http_server_auth_pass_t* const    p_auth_pass,
-    const http_server_auth_api_key_t* const p_auth_api_key);
+    const http_server_auth_api_key_t* const p_auth_api_key,
+    const http_server_auth_api_key_t* const p_auth_api_key_rw);
 
 #ifdef __cplusplus
 }

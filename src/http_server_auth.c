@@ -58,7 +58,8 @@ http_server_set_auth(
     const http_server_auth_type_e           auth_type,
     const http_server_auth_user_t* const    p_auth_user,
     const http_server_auth_pass_t* const    p_auth_pass,
-    const http_server_auth_api_key_t* const p_auth_api_key)
+    const http_server_auth_api_key_t* const p_auth_api_key,
+    const http_server_auth_api_key_t* const p_auth_api_key_rw)
 {
     http_server_auth_info_t* const p_auth_info                    = &g_auth_info;
     const char* const              p_auth_user_safe               = (NULL != p_auth_user) ? p_auth_user->buf : "";
@@ -71,12 +72,12 @@ http_server_set_auth(
     }
     if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_user_safe))
     {
-        snprintf(p_auth_info->auth_user.buf, sizeof(p_auth_info->auth_user.buf), "%s", p_auth_user_safe);
+        (void)snprintf(p_auth_info->auth_user.buf, sizeof(p_auth_info->auth_user.buf), "%s", p_auth_user_safe);
         flag_clear_authorized_sessions = true;
     }
     if (0 != strcmp(p_auth_info->auth_pass.buf, p_auth_pass_safe))
     {
-        snprintf(p_auth_info->auth_pass.buf, sizeof(p_auth_info->auth_pass.buf), "%s", p_auth_pass_safe);
+        (void)snprintf(p_auth_info->auth_pass.buf, sizeof(p_auth_info->auth_pass.buf), "%s", p_auth_pass_safe);
         flag_clear_authorized_sessions = true;
     }
 
@@ -85,11 +86,17 @@ http_server_set_auth(
         http_server_auth_clear_authorized_sessions();
     }
 
-    snprintf(
+    (void)snprintf(
         p_auth_info->auth_api_key.buf,
         sizeof(p_auth_info->auth_api_key.buf),
         "%s",
         (NULL != p_auth_api_key) ? p_auth_api_key->buf : "");
+
+    (void)snprintf(
+        p_auth_info->auth_api_key_rw.buf,
+        sizeof(p_auth_info->auth_api_key_rw.buf),
+        "%s",
+        (NULL != p_auth_api_key_rw) ? p_auth_api_key_rw->buf : "");
     return true;
 }
 
