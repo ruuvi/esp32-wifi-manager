@@ -174,6 +174,9 @@ void
 wifi_callback_on_ap_sta_disconnected(void);
 
 void
+wifi_callback_on_ap_sta_ip_assigned(void);
+
+void
 wifi_callback_on_disconnect_eth_cmd(void);
 
 void
@@ -181,6 +184,9 @@ wifi_callback_on_disconnect_sta_cmd(void);
 
 void
 wifi_manager_cb_save_wifi_config_sta(const wifiman_config_sta_t* const p_cfg_sta);
+
+void
+wifi_manager_cb_on_request_status_json(void);
 
 void
 wifi_manger_notify_scan_done(void);

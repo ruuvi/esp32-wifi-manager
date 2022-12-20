@@ -305,8 +305,10 @@ typedef void (*wifi_manager_callback_on_cmd_disconnect_sta_t)(void);
 typedef void (*wifi_manager_callback_on_ap_started_t)(void);
 typedef void (*wifi_manager_callback_on_ap_stopped_t)(void);
 typedef void (*wifi_manager_callback_on_ap_sta_connected_t)(void);
+typedef void (*wifi_manager_callback_on_ap_sta_ip_assigned_t)(void);
 typedef void (*wifi_manager_callback_on_ap_sta_disconnected_t)(void);
 typedef void (*wifi_manager_callback_save_wifi_config_sta_t)(const wifiman_config_sta_t* const p_wifi_cfg_sta);
+typedef void (*wifi_manager_callback_on_request_status_json_t)(void);
 
 typedef struct wifi_manager_callbacks_t
 {
@@ -320,8 +322,10 @@ typedef struct wifi_manager_callbacks_t
     wifi_manager_callback_on_ap_started_t          cb_on_ap_started;
     wifi_manager_callback_on_ap_stopped_t          cb_on_ap_stopped;
     wifi_manager_callback_on_ap_sta_connected_t    cb_on_ap_sta_connected;
+    wifi_manager_callback_on_ap_sta_ip_assigned_t  cb_on_ap_sta_ip_assigned;
     wifi_manager_callback_on_ap_sta_disconnected_t cb_on_ap_sta_disconnected;
     wifi_manager_callback_save_wifi_config_sta_t   cb_save_wifi_config_sta;
+    wifi_manager_callback_on_request_status_json_t cb_on_request_status_json;
 } wifi_manager_callbacks_t;
 
 typedef struct wifi_settings_ap_t

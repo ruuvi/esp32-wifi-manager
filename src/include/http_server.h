@@ -62,9 +62,6 @@ http_server_sema_send_wait_immediate(void);
 bool
 http_server_sema_send_wait_timeout(const uint32_t send_timeout_ms);
 
-void
-http_server_disable_ap_stopping_by_timeout(void);
-
 /**
  * @brief Create the task for the http server.
  */
@@ -80,18 +77,6 @@ http_server_stop(void);
 
 void
 http_server_user_req(const http_server_user_req_code_e req_code);
-
-void
-http_server_on_ap_sta_connected(void);
-
-void
-http_server_on_ap_sta_disconnected(void);
-
-void
-http_server_on_ap_sta_ip_assigned(void);
-
-void
-http_server_update_last_http_status_request(void);
 
 #ifdef __cplusplus
 }
