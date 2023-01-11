@@ -601,6 +601,12 @@ http_server_netconn_resp_404(struct netconn* const p_conn)
 }
 
 static void
+http_server_netconn_resp_500(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_500, "Internal Server Error");
+}
+
+static void
 http_server_netconn_resp_502(struct netconn* const p_conn)
 {
     http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
