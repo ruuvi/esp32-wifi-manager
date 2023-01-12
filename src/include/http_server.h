@@ -38,6 +38,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include <stdint.h>
 #include "http_server_auth_type.h"
 #include "attribs.h"
+#include "str_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,6 +78,16 @@ http_server_stop(void);
 
 void
 http_server_user_req(const http_server_user_req_code_e req_code);
+
+bool
+http_server_decrypt(const char* const p_http_body, str_buf_t* const p_str_buf);
+
+bool
+http_server_decrypt_by_params(
+    const char* const p_encrypted_val,
+    const char* const p_iv,
+    const char* const p_hash,
+    str_buf_t* const  p_str_buf);
 
 #ifdef __cplusplus
 }

@@ -288,10 +288,10 @@ http_server_parse_encrypted_req(const cJSON* const p_json_root, http_server_ecdh
     return true;
 }
 
-static bool
-http_server_decrypt(const http_req_body_t http_body, str_buf_t* p_str_buf)
+bool
+http_server_decrypt(const char* const p_http_body, str_buf_t* const p_str_buf)
 {
-    cJSON* p_json_root = cJSON_Parse(http_body.ptr);
+    cJSON* p_json_root = cJSON_Parse(p_http_body);
     if (NULL == p_json_root)
     {
         LOG_ERR("Failed to parse json or no memory");
@@ -312,6 +312,26 @@ http_server_decrypt(const http_req_body_t http_body, str_buf_t* p_str_buf)
     }
     cJSON_Delete(p_json_root);
     LOG_DBG("Decrypted: %s", p_str_buf->buf);
+    return true;
+}
+
+bool
+http_server_decrypt_by_params(
+    const char* const p_encrypted_val,
+    const char* const p_iv,
+    const char* const p_hash,
+    str_buf_t* const  p_str_buf)
+{
+    http_server_ecdh_encrypted_req_t enc_req = {
+        .p_encrypted = p_encrypted_val,
+        .p_iv        = p_iv,
+        .p_hash      = p_hash,
+    };
+    if (!http_server_ecdh_decrypt(&enc_req, p_str_buf))
+    {
+        LOG_ERR("Failed to decrypt request");
+        return false;
+    }
     return true;
 }
 
@@ -386,7 +406,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 {
     LOG_INFO("http_server_netconn_serve: POST /connect.json");
     str_buf_t decrypted_content = STR_BUF_INIT_NULL();
-    if (!http_server_decrypt(http_body, &decrypted_content))
+    if (!http_server_decrypt(http_body.ptr, &decrypted_content))
     {
         return http_server_resp_400();
     }
@@ -559,7 +579,7 @@ http_server_handle_req(
         };
         if (flag_encrypted)
         {
-            if (!http_server_decrypt(p_req_info->http_body, &decrypted_str_buf))
+            if (!http_server_decrypt(p_req_info->http_body.ptr, &decrypted_str_buf))
             {
                 return http_server_resp_400();
             }
