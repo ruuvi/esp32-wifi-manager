@@ -31,6 +31,12 @@ typedef struct http_server_resp_auth_json_t
 } http_server_resp_auth_json_t;
 
 http_server_resp_t
+http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char* const p_json_content);
+
+http_server_resp_t
+http_server_resp_err(const http_resp_code_e http_resp_code);
+
+http_server_resp_t
 http_server_resp_200_json(const char* p_json_content);
 
 http_server_resp_t
@@ -75,6 +81,17 @@ http_server_resp_data_in_static_mem(
 
 http_server_resp_t
 http_server_resp_data_in_heap(
+    const http_resp_code_e        resp_code,
+    const http_content_type_e     content_type,
+    const char*                   p_content_type_param,
+    const size_t                  content_len,
+    const http_content_encoding_e content_encoding,
+    const uint8_t*                p_buf,
+    const bool                    flag_no_cache,
+    const bool                    flag_add_header_date);
+
+http_server_resp_t
+http_server_resp_200_data_in_heap(
     const http_content_type_e     content_type,
     const char*                   p_content_type_param,
     const size_t                  content_len,

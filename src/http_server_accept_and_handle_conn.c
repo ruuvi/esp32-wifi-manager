@@ -571,9 +571,16 @@ http_server_netconn_resp_302_auth_html(
 }
 
 static void
-http_server_netconn_resp_400(struct netconn* const p_conn)
+http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_400, "Bad Request");
+    }
 }
 
 static void
@@ -595,33 +602,68 @@ http_server_netconn_resp_403(
 }
 
 static void
-http_server_netconn_resp_404(struct netconn* const p_conn)
+http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_404, "Not Found");
+    }
 }
 
 static void
-http_server_netconn_resp_500(struct netconn* const p_conn)
+http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_500, "Internal Server Error");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_500, "Internal Server Error");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_500, "Internal Server Error");
+    }
 }
 
 static void
-http_server_netconn_resp_502(struct netconn* const p_conn)
+http_server_netconn_resp_502(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_502, "Bad Gateway");
+    }
 }
 
 static void
-http_server_netconn_resp_503(struct netconn* const p_conn)
+http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_503, "Service Unavailable");
+    }
 }
 
 static void
-http_server_netconn_resp_504(struct netconn* const p_conn)
+http_server_netconn_resp_504(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_504, "Gateway timeout");
+    }
 }
 
 static void
@@ -639,7 +681,7 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             http_server_netconn_resp_302_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_400:
-            http_server_netconn_resp_400(p_conn);
+            http_server_netconn_resp_400(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_401:
             http_server_netconn_resp_401(p_conn, p_resp, &g_http_server_extra_header_fields);
@@ -648,20 +690,23 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             http_server_netconn_resp_403(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_404:
-            http_server_netconn_resp_404(p_conn);
+            http_server_netconn_resp_404(p_conn, p_resp);
+            return;
+        case HTTP_RESP_CODE_500:
+            http_server_netconn_resp_500(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_502:
-            http_server_netconn_resp_502(p_conn);
+            http_server_netconn_resp_502(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_503:
-            http_server_netconn_resp_503(p_conn);
+            http_server_netconn_resp_503(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_504:
-            http_server_netconn_resp_504(p_conn);
+            http_server_netconn_resp_504(p_conn, p_resp);
             return;
     }
     assert(0);
-    http_server_netconn_resp_503(p_conn);
+    http_server_netconn_resp_503(p_conn, p_resp);
 }
 
 static void
@@ -679,7 +724,7 @@ http_server_netconn_serve_handle_req(
             p_remote_ip_str->buf,
             p_local_ip_str->buf,
             p_req_buf);
-        http_server_netconn_resp_400(p_conn);
+        http_server_netconn_resp_400(p_conn, NULL);
         return;
     }
     uint32_t          host_len = 0;
@@ -711,7 +756,7 @@ http_server_netconn_serve_handle_req(
         if (wifi_manager_is_ap_active())
         {
             LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
-            http_server_netconn_resp_503(p_conn);
+            http_server_netconn_resp_503(p_conn, NULL);
             return;
         }
     }

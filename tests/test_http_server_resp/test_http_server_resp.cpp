@@ -218,6 +218,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_with_caching) // NOLINT
     const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_heap(
+        HTTP_RESP_CODE_200,
         HTTP_CONENT_TYPE_APPLICATION_JSON,
         nullptr,
         strlen(p_content),
@@ -242,6 +243,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
     const bool  flag_add_date = false;
 
     const http_server_resp_t resp = http_server_resp_data_in_heap(
+        HTTP_RESP_CODE_200,
         HTTP_CONENT_TYPE_APPLICATION_JSON,
         nullptr,
         strlen(p_content),
