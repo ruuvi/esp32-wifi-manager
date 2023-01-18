@@ -443,7 +443,7 @@ http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t* const p_enc_req
 
     *p_str_buf = str_buf_printf_with_alloc(
         "%.*s",
-        (printf_int_t)(decrypted_arr_buf.buf_size + 1),
+        (printf_int_t)decrypted_arr_buf.buf_size,
         decrypted_arr_buf.p_buf);
     os_free(decrypted_arr_buf.p_buf);
     if (NULL == p_str_buf->buf)
