@@ -615,6 +615,19 @@ http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 static void
+http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+{
+    if ((NULL == p_resp) || (0 == p_resp->content_len))
+    {
+        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_429, "Too Many Requests");
+    }
+    else
+    {
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_429, "Too Many Requests");
+    }
+}
+
+static void
 http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     if ((NULL == p_resp) || (0 == p_resp->content_len))
@@ -691,6 +704,9 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             return;
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn, p_resp);
+            return;
+        case HTTP_RESP_CODE_429:
+            http_server_netconn_resp_429(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_500:
             http_server_netconn_resp_500(p_conn, p_resp);
