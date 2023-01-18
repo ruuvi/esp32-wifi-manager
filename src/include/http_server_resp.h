@@ -55,6 +55,9 @@ http_server_resp_t
 http_server_resp_404(void);
 
 http_server_resp_t
+http_server_resp_500(void);
+
+http_server_resp_t
 http_server_resp_503(void);
 
 http_server_resp_t
