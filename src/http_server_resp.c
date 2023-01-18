@@ -122,6 +122,12 @@ http_server_resp_404(void)
 }
 
 http_server_resp_t
+http_server_resp_500(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_500);
+}
+
+http_server_resp_t
 http_server_resp_503(void)
 {
     return http_server_resp_err(HTTP_RESP_CODE_503);
