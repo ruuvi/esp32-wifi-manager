@@ -216,10 +216,10 @@ wifiman_msg_send_cmd_task_watchdog_feed(void)
 }
 
 bool
-wifiman_msg_send_cmd_start_ap(void)
+wifiman_msg_send_cmd_start_ap(const bool flag_block_req_from_lan)
 {
     const wifiman_msg_param_t msg_param = {
-        .ptr = NULL,
+        .val = flag_block_req_from_lan,
     };
     return wifiman_msg_send(ORDER_START_AP, msg_param);
 }

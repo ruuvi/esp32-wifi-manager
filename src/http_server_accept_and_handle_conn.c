@@ -769,7 +769,7 @@ http_server_netconn_serve_handle_req(
     const bool flag_access_from_lan = (0 != strcmp(p_local_ip_str->buf, ap_ip_str.buf)) ? true : false;
     if (flag_access_from_lan)
     {
-        if (wifi_manager_is_ap_active())
+        if (wifi_manager_is_req_from_lan_blocked_while_ap_is_active())
         {
             LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
             http_server_netconn_resp_503(p_conn, NULL);

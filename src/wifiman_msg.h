@@ -53,7 +53,7 @@ void
 wifiman_msg_send_cmd_task_watchdog_feed(void);
 
 bool
-wifiman_msg_send_cmd_start_ap(void);
+wifiman_msg_send_cmd_start_ap(const bool flag_block_req_from_lan);
 
 bool
 wifiman_msg_send_cmd_stop_ap(void);

@@ -95,7 +95,7 @@ wifi_manager_stop_ap(void);
  * @brief Start WiFi access-point
  */
 void
-wifi_manager_start_ap(void);
+wifi_manager_start_ap(const bool flag_block_req_from_lan);
 
 /**
  * @brief requests a connection to an access point that will be process in the main task thread.
@@ -132,6 +132,9 @@ wifi_manager_is_working(void);
 
 bool
 wifi_manager_is_ap_active(void);
+
+bool
+wifi_manager_is_req_from_lan_blocked_while_ap_is_active(void);
 
 bool
 wifi_manager_is_connected_to_wifi(void);
