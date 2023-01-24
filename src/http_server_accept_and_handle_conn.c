@@ -195,13 +195,17 @@ http_server_netconn_write(
             &bytes_written);
         if (ESP_OK != err)
         {
-            LOG_ERR_ESP(
-                err,
-                "netconn_write_partly failed (%s), offset=%u, size=%u",
-                conv_lwip_err_to_str(err),
-                (printf_uint_t)offset,
-                (printf_uint_t)(buf_len - offset));
-            return false;
+            if (ERR_WOULDBLOCK != err)
+            {
+                LOG_ERR_ESP(
+                    err,
+                    "netconn_write_partly failed (%s), offset=%u, size=%u",
+                    conv_lwip_err_to_str(err),
+                    (printf_uint_t)offset,
+                    (printf_uint_t)(buf_len - offset));
+                return false;
+            }
+            vTaskDelay(pdMS_TO_TICKS(20));
         }
         LOG_DBG(
             "netconn_write_partly: offset=%u, bytes_written=%u",
