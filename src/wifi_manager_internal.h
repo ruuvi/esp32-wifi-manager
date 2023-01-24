@@ -50,6 +50,9 @@ extern "C" {
 /* @brief indicate that WiFi access point is active. */
 #define WIFI_MANAGER_AP_ACTIVE ((uint32_t)(BIT10))
 
+/* @brief Block requests from LAN while WiFi access point is active. */
+#define WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE ((uint32_t)(BIT11))
+
 #define WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS (200U)
 
 #define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL (1U)

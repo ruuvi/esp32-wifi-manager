@@ -237,10 +237,10 @@ wifi_manager_stop_ap(void)
 }
 
 void
-wifi_manager_start_ap(void)
+wifi_manager_start_ap(const bool flag_block_req_from_lan)
 {
     LOG_INFO("%s", __func__);
-    wifiman_msg_send_cmd_start_ap();
+    wifiman_msg_send_cmd_start_ap(flag_block_req_from_lan);
 }
 
 static void
@@ -339,6 +339,15 @@ bool
 wifi_manager_is_ap_active(void)
 {
     return (0 != (xEventGroupGetBits(g_p_wifi_manager_event_group) & WIFI_MANAGER_AP_ACTIVE));
+}
+
+bool
+wifi_manager_is_req_from_lan_blocked_while_ap_is_active(void)
+{
+    return (
+        (WIFI_MANAGER_AP_ACTIVE | WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE)
+        == (xEventGroupGetBits(g_p_wifi_manager_event_group)
+            & (WIFI_MANAGER_AP_ACTIVE | WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE)));
 }
 
 bool

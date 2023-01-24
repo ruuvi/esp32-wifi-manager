@@ -291,7 +291,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
 }
 
 static void
-wifi_handle_cmd_start_ap(void)
+wifi_handle_cmd_start_ap(const bool flag_block_req_from_lan)
 {
     LOG_INFO("MESSAGE: ORDER_START_AP");
     LOG_INFO("### Configure WiFi mode: AP and Station");
@@ -301,7 +301,9 @@ wifi_handle_cmd_start_ap(void)
         LOG_ERR_ESP(err, "esp_wifi_set_mode failed");
     }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    xEventGroupSetBits(
+        g_p_wifi_manager_event_group,
+        WIFI_MANAGER_AP_ACTIVE | (flag_block_req_from_lan ? WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE : 0));
     wifi_callback_on_ap_started();
 }
 
@@ -316,7 +318,9 @@ wifi_handle_cmd_stop_ap(void)
         LOG_ERR_ESP(err, "esp_wifi_set_mode failed");
     }
     LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_ACTIVE");
-    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_ACTIVE);
+    xEventGroupClearBits(
+        g_p_wifi_manager_event_group,
+        WIFI_MANAGER_AP_ACTIVE | WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE);
     wifi_callback_on_ap_stopped();
 }
 
@@ -582,7 +586,7 @@ wifi_manager_recv_and_handle_msg(void)
             wifi_handle_cmd_disconnect_sta();
             break;
         case ORDER_START_AP:
-            wifi_handle_cmd_start_ap();
+            wifi_handle_cmd_start_ap((bool)msg.msg_param.val);
             break;
         case ORDER_STOP_AP:
             wifi_handle_cmd_stop_ap();
