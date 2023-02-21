@@ -374,7 +374,7 @@ wifi_manager_set_ant_config(const wifi_manager_antenna_config_t* p_wifi_ant_conf
 static bool
 wifi_manager_init_start_wifi(
     const wifi_manager_antenna_config_t* const p_wifi_ant_config,
-    const wifiman_wifi_ssid_t* const           p_gw_wifi_ssid)
+    const wifiman_hostname_t* const            p_hostname)
 {
     if (!wifiman_msg_init())
     {
@@ -453,8 +453,8 @@ wifi_manager_init_start_wifi(
 
     esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
-    LOG_INFO("### Set hostname for WiFi interface: %s", p_gw_wifi_ssid->ssid_buf);
-    err = esp_netif_set_hostname(p_netif_sta, p_gw_wifi_ssid->ssid_buf);
+    LOG_INFO("### Set hostname for WiFi interface: %s", p_hostname->hostname_buf);
+    err = esp_netif_set_hostname(p_netif_sta, p_hostname->hostname_buf);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_netif_set_hostname");
@@ -547,8 +547,8 @@ wifi_manager_init(
     http_server_start();
 
     LOG_INFO("WiFi manager init: Start Wi-Fi task");
-    const wifiman_wifi_ssid_t wifi_ap_ssid = wifiman_config_ap_get_ssid();
-    wifi_manager_init_start_wifi(p_wifi_ant_config, &wifi_ap_ssid);
+    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
+    wifi_manager_init_start_wifi(p_wifi_ant_config, &hostname);
 
     if (flag_connect_sta)
     {

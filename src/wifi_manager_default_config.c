@@ -9,9 +9,11 @@
 #include "wifiman_config.h"
 
 const wifiman_config_t*
-wifi_manager_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid)
+wifi_manager_default_config_init(
+    const wifiman_wifi_ssid_t* const p_wifi_ssid,
+    const wifiman_hostname_t* const  p_hostname)
 {
-    return wifiman_default_config_init(p_wifi_ssid);
+    return wifiman_default_config_init(p_wifi_ssid, p_hostname);
 }
 
 void

@@ -111,7 +111,7 @@ _Static_assert(
     "sizeof(g_wifiman_config.wifi_config_sta.password) == MAX_PASSWORD_SIZE");
 
 const wifiman_config_t*
-wifiman_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid)
+wifiman_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid, const wifiman_hostname_t* const p_hostname)
 {
     g_wifiman_config_default = g_wifiman_config_default_const;
     (void)snprintf(
@@ -119,6 +119,11 @@ wifiman_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid)
         sizeof(g_wifiman_config_default.ap.wifi_config_ap.ssid),
         "%s",
         p_wifi_ssid->ssid_buf);
+    (void)snprintf(
+        (char*)g_wifiman_config_default.sta.hostname.hostname_buf,
+        sizeof(g_wifiman_config_default.sta.hostname.hostname_buf),
+        "%s",
+        p_hostname->hostname_buf);
 
     g_wifiman_config_default.ap.wifi_config_ap.authmode = ('\0'
                                                            == g_wifiman_config_default.ap.wifi_config_ap.password[0])
@@ -345,6 +350,25 @@ wifiman_config_sta_set_ssid_and_password(
         .p_password = p_password,
     };
     wifiman_config_safe_transaction_with_const_param(&wifiman_config_sta_do_set_ssid_and_password, &info);
+}
+
+static void
+wifiman_config_sta_do_get_hostname(const wifiman_config_t* const p_cfg, void* const p_param)
+{
+    wifiman_hostname_t* const p_hostname = p_param;
+    (void)snprintf(
+        &p_hostname->hostname_buf[0],
+        sizeof(p_hostname->hostname_buf),
+        "%s",
+        (const char*)&p_cfg->sta.hostname.hostname_buf);
+}
+
+wifiman_hostname_t
+wifiman_config_sta_get_hostname(void)
+{
+    wifiman_hostname_t hostname = { 0 };
+    wifiman_const_config_safe_transaction(&wifiman_config_sta_do_get_hostname, &hostname);
+    return hostname;
 }
 
 static void
