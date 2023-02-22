@@ -57,6 +57,20 @@ typedef struct wifiman_wifi_ssid_t
 } wifiman_wifi_ssid_t;
 
 /**
+ * @brief Defines the maximum size of a hostname according to DHCP Option 12.
+ * @details The name starts with a letter, ends with a letter or a digit, and can have letters, hyphens,
+ *          or digits in between the first and last characters.
+ *          The maximum size supported for a hostname is 30 characters.
+ *          The minimum number of characters supported for a hostname is one character.
+ */
+#define MAX_HOSTNAME_SIZE 30
+
+typedef struct wifiman_hostname_t
+{
+    char hostname_buf[MAX_HOSTNAME_SIZE];
+} wifiman_hostname_t;
+
+/**
  * @brief Defines the maximum size of a WPA2 passkey. 64 is IEEE standard.
  * @warning limit is also hard coded in wifi_config_t. Never extend this value.
  */
@@ -355,6 +369,7 @@ struct wifiman_config_sta_t
 {
     wifi_sta_config_t   wifi_config_sta;
     wifi_settings_sta_t wifi_settings_sta;
+    wifiman_hostname_t  hostname;
 };
 
 struct wifiman_config_t
