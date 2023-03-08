@@ -71,11 +71,40 @@ http_server_resp_err(const http_resp_code_e http_resp_code)
 }
 
 static http_server_resp_t
-http_server_resp_err_json(const http_resp_code_e http_resp_code, const char* const p_json_content)
+http_server_resp_err_json_in_static_mem(const http_resp_code_e http_resp_code, const char* const p_json_content)
 {
+    if (NULL == p_json_content)
+    {
+        return http_server_resp_err(http_resp_code);
+    }
     const http_server_resp_t resp = {
         .http_resp_code       = http_resp_code,
         .content_location     = HTTP_CONTENT_LOCATION_STATIC_MEM,
+        .flag_no_cache        = true,
+        .flag_add_header_date = true,
+        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .p_content_type_param = NULL,
+        .content_len          = strlen(p_json_content),
+        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .select_location      = {
+            .memory = {
+                .p_buf = (const uint8_t*)p_json_content,
+            },
+        },
+    };
+    return resp;
+}
+
+static http_server_resp_t
+http_server_resp_err_json_in_heap(const http_resp_code_e http_resp_code, const char* const p_json_content)
+{
+    if (NULL == p_json_content)
+    {
+        return http_server_resp_err(http_resp_code);
+    }
+    const http_server_resp_t resp = {
+        .http_resp_code       = http_resp_code,
+        .content_location     = HTTP_CONTENT_LOCATION_HEAP,
         .flag_no_cache        = true,
         .flag_add_header_date = true,
         .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
@@ -106,13 +135,13 @@ http_server_resp_400(void)
 http_server_resp_t
 http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
-    return http_server_resp_err_json(HTTP_RESP_CODE_401, p_auth_json->buf);
+    return http_server_resp_err_json_in_static_mem(HTTP_RESP_CODE_401, p_auth_json->buf);
 }
 
 http_server_resp_t
 http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
-    return http_server_resp_err_json(HTTP_RESP_CODE_403, p_auth_json->buf);
+    return http_server_resp_err_json_in_static_mem(HTTP_RESP_CODE_403, p_auth_json->buf);
 }
 
 http_server_resp_t
@@ -125,6 +154,18 @@ http_server_resp_t
 http_server_resp_500(void)
 {
     return http_server_resp_err(HTTP_RESP_CODE_500);
+}
+
+http_server_resp_t
+http_server_resp_502(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_502);
+}
+
+http_server_resp_t
+http_server_resp_502_json_in_heap(const char* const p_json)
+{
+    return http_server_resp_err_json_in_heap(HTTP_RESP_CODE_502, p_json);
 }
 
 http_server_resp_t

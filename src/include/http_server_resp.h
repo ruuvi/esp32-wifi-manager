@@ -58,6 +58,12 @@ http_server_resp_t
 http_server_resp_500(void);
 
 http_server_resp_t
+http_server_resp_502(void);
+
+http_server_resp_t
+http_server_resp_502_json_in_heap(const char* const p_json);
+
+http_server_resp_t
 http_server_resp_503(void);
 
 http_server_resp_t
