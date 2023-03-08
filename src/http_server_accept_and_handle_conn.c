@@ -485,18 +485,23 @@ http_server_netconn_resp_without_content(
     const char* const      p_status_msg)
 {
     LOG_WARN("Response: status %u (%s)", (printf_uint_t)resp_code, p_status_msg);
+    const char* const p_empty_json = "{}";
     if (!http_server_netconn_printf(
             p_conn,
             false,
             "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n",
+            "Content-type: %s; charset=utf-8\r\n"
+            "Content-Length: %lu\r\n"
+            "\r\n"
+            "%s",
             (printf_uint_t)resp_code,
-            p_status_msg))
+            p_status_msg,
+            http_get_content_type_str(HTTP_CONENT_TYPE_APPLICATION_JSON),
+            (printf_ulong_t)strlen(p_empty_json),
+            p_empty_json))
     {
         LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
     }
 }
 
