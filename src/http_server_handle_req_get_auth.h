@@ -31,7 +31,7 @@ http_server_handle_req_check_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields,
     bool* const                          p_flag_access_by_bearer_token);
 
@@ -42,7 +42,7 @@ http_server_handle_req_get_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields);
 
 #ifdef __cplusplus

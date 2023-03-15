@@ -82,7 +82,7 @@ http_server_handle_req_get(
 
     const char* const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
 
-    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
+    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
@@ -93,7 +93,7 @@ http_server_handle_req_get(
             http_header,
             p_remote_ip,
             p_auth_info,
-            &ap_ssid,
+            &hostname,
             p_extra_header_fields);
         return resp_auth;
     }
@@ -119,7 +119,7 @@ http_server_handle_req_get(
             http_header,
             p_remote_ip,
             p_auth_info,
-            &ap_ssid,
+            &hostname,
             p_extra_header_fields,
             &flag_access_by_bearer_token);
         if ((!flag_access_by_bearer_token) && (HTTP_RESP_CODE_401 == resp_auth_check.http_resp_code)
@@ -178,7 +178,7 @@ http_server_handle_req_delete(
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     LOG_INFO("DELETE /%s", p_file_name);
-    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
+    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
 
     const bool               flag_check_rw_access_with_bearer_token = true;
     bool                     flag_access_by_bearer_token            = false;
@@ -188,7 +188,7 @@ http_server_handle_req_delete(
         http_header,
         p_remote_ip,
         p_auth_info,
-        &ap_ssid,
+        &hostname,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 
@@ -199,7 +199,7 @@ http_server_handle_req_delete(
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        return http_server_handle_req_delete_auth(http_header, p_remote_ip, p_auth_info, &ap_ssid);
+        return http_server_handle_req_delete_auth(http_header, p_remote_ip, p_auth_info, &hostname);
     }
     if (0 == strcmp(p_file_name, "connect.json"))
     {
@@ -471,7 +471,7 @@ http_server_handle_req_post(
 {
     LOG_INFO("POST /%s", p_file_name);
 
-    const wifiman_wifi_ssid_t ap_ssid = wifiman_config_ap_get_ssid();
+    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
@@ -481,7 +481,7 @@ http_server_handle_req_post(
             p_remote_ip,
             http_body,
             p_auth_info,
-            &ap_ssid,
+            &hostname,
             p_extra_header_fields);
     }
 
@@ -493,7 +493,7 @@ http_server_handle_req_post(
         http_header,
         p_remote_ip,
         p_auth_info,
-        &ap_ssid,
+        &hostname,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 
