@@ -418,24 +418,3 @@ wifiman_config_ap_get_ip(void)
     };
     return ip_addr;
 }
-
-static void
-wifiman_config_ap_do_get_ssid(const wifiman_config_t* const p_cfg, void* const p_param)
-{
-    (void)p_cfg;
-    wifiman_wifi_ssid_t* const p_wifi_ap_ssid = p_param;
-
-    (void)snprintf(
-        &p_wifi_ap_ssid->ssid_buf[0],
-        sizeof(p_wifi_ap_ssid->ssid_buf),
-        "%s",
-        (const char*)p_cfg->ap.wifi_config_ap.ssid);
-}
-
-wifiman_wifi_ssid_t
-wifiman_config_ap_get_ssid(void)
-{
-    wifiman_wifi_ssid_t ap_ssid = { 0 };
-    wifiman_const_config_safe_transaction(&wifiman_config_ap_do_get_ssid, &ap_ssid);
-    return ap_ssid;
-}

@@ -121,36 +121,36 @@ http_server_resp_data_from_file(
 
 http_server_resp_t
 http_server_resp_401_auth_digest(
-    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    const wifiman_hostname_t* const   p_hostname,
     http_header_extra_fields_t* const p_extra_header_fields);
 
 http_server_resp_t
 http_server_resp_401_auth_ruuvi_with_new_session_id(
     const sta_ip_string_t* const      p_remote_ip,
-    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    const wifiman_hostname_t* const   p_hostname,
     http_header_extra_fields_t* const p_extra_header_fields,
     const bool                        flag_auth_default);
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifiman_wifi_ssid_t* const p_ap_ssid, const bool flag_auth_default);
+http_server_resp_401_auth_ruuvi(const wifiman_hostname_t* const p_hostname, const bool flag_auth_default);
 
 http_server_resp_t
-http_server_resp_403_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid);
+http_server_resp_403_auth_deny(const wifiman_hostname_t* const p_hostname);
 
 http_server_resp_t
 http_server_resp_403_forbidden(void);
 
 const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
-    const bool                       is_successful,
-    const wifiman_wifi_ssid_t* const p_ap_ssid,
-    const http_server_auth_type_e    lan_auth_type);
+    const bool                      is_successful,
+    const wifiman_hostname_t* const p_hostname,
+    const http_server_auth_type_e   lan_auth_type);
 
 const http_server_resp_auth_json_t*
-http_server_fill_auth_json_bearer_success(const wifiman_wifi_ssid_t* const p_ap_ssid);
+http_server_fill_auth_json_bearer_success(const wifiman_hostname_t* const p_hostname);
 
 const http_server_resp_auth_json_t*
-http_server_fill_auth_json_bearer_failed(const wifiman_wifi_ssid_t* const p_ap_ssid);
+http_server_fill_auth_json_bearer_failed(const wifiman_hostname_t* const p_hostname);
 
 #ifdef __cplusplus
 }

@@ -14,30 +14,30 @@
 #include "str_buf.h"
 
 static http_server_resp_t
-http_server_handle_req_get_auth_allow(const wifiman_wifi_ssid_t* const p_ap_ssid)
+http_server_handle_req_get_auth_allow(const wifiman_hostname_t* const p_hostname)
 {
     const bool                                is_successful = true;
     const http_server_resp_auth_json_t* const p_auth_json   = http_server_fill_auth_json(
         is_successful,
-        p_ap_ssid,
+        p_hostname,
         HTTP_SERVER_AUTH_TYPE_ALLOW);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
 static http_server_resp_t
 http_server_resp_401_auth_basic(
-    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    const wifiman_hostname_t* const   p_hostname,
     http_header_extra_fields_t* const p_extra_header_fields)
 {
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         false,
-        p_ap_ssid,
+        p_hostname,
         HTTP_SERVER_AUTH_TYPE_BASIC);
-    snprintf(
+    (void)snprintf(
         p_extra_header_fields->buf,
         sizeof(p_extra_header_fields->buf),
         "WWW-Authenticate: Basic realm=\"%s\", charset=\"UTF-8\"\r\n",
-        p_ap_ssid->ssid_buf);
+        p_hostname->hostname_buf);
     return http_server_resp_401_json(p_auth_json);
 }
 
@@ -80,36 +80,36 @@ static http_server_resp_t
 http_server_handle_req_get_auth_basic(
     const http_req_header_t              http_header,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     uint32_t          len_authorization = 0;
     const char* const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
     {
-        return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_basic(p_hostname, p_extra_header_fields);
     }
     const char* const p_auth_prefix   = "Basic ";
     const size_t      auth_prefix_len = strlen(p_auth_prefix);
     if (0 != strncmp(p_authorization, p_auth_prefix, auth_prefix_len))
     {
-        return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_basic(p_hostname, p_extra_header_fields);
     }
     const char* const p_auth_token   = &p_authorization[auth_prefix_len];
     const size_t      auth_token_len = len_authorization - auth_prefix_len;
 
     if (auth_token_len != strlen(p_auth_info->auth_pass.buf))
     {
-        return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_basic(p_hostname, p_extra_header_fields);
     }
     if (0 != strncmp(p_auth_token, p_auth_info->auth_pass.buf, auth_token_len))
     {
-        return http_server_resp_401_auth_basic(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_basic(p_hostname, p_extra_header_fields);
     }
 
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
-        p_ap_ssid,
+        p_hostname,
         HTTP_SERVER_AUTH_TYPE_BASIC);
     return http_server_resp_200_json(p_auth_json->buf);
 }
@@ -118,23 +118,23 @@ static http_server_resp_t
 http_server_handle_req_get_auth_digest(
     const http_req_header_t              http_header,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     uint32_t          len_authorization = 0;
     const char* const p_authorization   = http_req_header_get_field(http_header, "Authorization:", &len_authorization);
     if (NULL == p_authorization)
     {
-        return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_digest(p_hostname, p_extra_header_fields);
     }
     http_server_auth_digest_req_t* const p_auth_req = http_server_auth_digest_get_info();
     if (!http_server_parse_digest_authorization_str(p_authorization, len_authorization, p_auth_req))
     {
-        return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_digest(p_hostname, p_extra_header_fields);
     }
     if (0 != strcmp(p_auth_req->username, p_auth_info->auth_user.buf))
     {
-        return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_digest(p_hostname, p_extra_header_fields);
     }
 
     const char ha2_prefix[] = "GET:";
@@ -161,12 +161,12 @@ http_server_handle_req_get_auth_digest(
 
     if (0 != strcmp(p_auth_req->response, response_md5.buf))
     {
-        return http_server_resp_401_auth_digest(p_ap_ssid, p_extra_header_fields);
+        return http_server_resp_401_auth_digest(p_hostname, p_extra_header_fields);
     }
 
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
-        p_ap_ssid,
+        p_hostname,
         HTTP_SERVER_AUTH_TYPE_DIGEST);
     return http_server_resp_200_json(p_auth_json->buf);
 }
@@ -175,7 +175,7 @@ static http_server_resp_t
 http_server_handle_req_get_auth_ruuvi(
     const http_req_header_t           http_header,
     const sta_ip_string_t* const      p_remote_ip,
-    const wifiman_wifi_ssid_t* const  p_ap_ssid,
+    const wifiman_hostname_t* const   p_hostname,
     const bool                        flag_check,
     const bool                        flag_auth_default,
     http_header_extra_fields_t* const p_extra_header_fields)
@@ -185,11 +185,11 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_ap_ssid, flag_auth_default);
+            return http_server_resp_401_auth_ruuvi(p_hostname, flag_auth_default);
         }
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -200,26 +200,26 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_ap_ssid, flag_auth_default);
+            return http_server_resp_401_auth_ruuvi(p_hostname, flag_auth_default);
         }
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
 
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         true,
-        p_ap_ssid,
+        p_hostname,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
 static http_server_resp_t
-http_server_handle_req_get_auth_deny(const wifiman_wifi_ssid_t* const p_ap_ssid)
+http_server_handle_req_get_auth_deny(const wifiman_hostname_t* const p_hostname)
 {
-    return http_server_resp_403_auth_deny(p_ap_ssid);
+    return http_server_resp_403_auth_deny(p_hostname);
 }
 
 static http_server_resp_t
@@ -228,7 +228,7 @@ http_server_handle_req_get_or_check_auth(
     const bool                           flag_check_rw_access_with_bearer_token,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     const bool                           flag_check,
     http_header_extra_fields_t* const    p_extra_header_fields,
     bool* const                          p_flag_access_by_bearer_token)
@@ -246,35 +246,35 @@ http_server_handle_req_get_or_check_auth(
                 break;
             case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
                 *p_flag_access_by_bearer_token = true;
-                return http_server_resp_200_json(http_server_fill_auth_json_bearer_success(p_ap_ssid)->buf);
+                return http_server_resp_200_json(http_server_fill_auth_json_bearer_success(p_hostname)->buf);
             case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
                 *p_flag_access_by_bearer_token = true;
-                return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_ap_ssid));
+                return http_server_resp_401_json(http_server_fill_auth_json_bearer_failed(p_hostname));
         }
     }
     switch (p_auth_info->auth_type)
     {
         case HTTP_SERVER_AUTH_TYPE_ALLOW:
-            return http_server_handle_req_get_auth_allow(p_ap_ssid);
+            return http_server_handle_req_get_auth_allow(p_hostname);
         case HTTP_SERVER_AUTH_TYPE_BASIC:
-            return http_server_handle_req_get_auth_basic(http_header, p_auth_info, p_ap_ssid, p_extra_header_fields);
+            return http_server_handle_req_get_auth_basic(http_header, p_auth_info, p_hostname, p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DIGEST:
-            return http_server_handle_req_get_auth_digest(http_header, p_auth_info, p_ap_ssid, p_extra_header_fields);
+            return http_server_handle_req_get_auth_digest(http_header, p_auth_info, p_hostname, p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_RUUVI:
             return http_server_handle_req_get_auth_ruuvi(
                 http_header,
                 p_remote_ip,
-                p_ap_ssid,
+                p_hostname,
                 flag_check,
                 false,
                 p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DENY:
-            return http_server_handle_req_get_auth_deny(p_ap_ssid);
+            return http_server_handle_req_get_auth_deny(p_hostname);
         case HTTP_SERVER_AUTH_TYPE_DEFAULT:
             return http_server_handle_req_get_auth_ruuvi(
                 http_header,
                 p_remote_ip,
-                p_ap_ssid,
+                p_hostname,
                 flag_check,
                 true,
                 p_extra_header_fields);
@@ -289,20 +289,20 @@ http_server_handle_req_check_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields,
     bool* const                          p_flag_access_by_bearer_token)
 {
     if (!flag_access_from_lan)
     {
-        return http_server_handle_req_get_auth_allow(p_ap_ssid);
+        return http_server_handle_req_get_auth_allow(p_hostname);
     }
     return http_server_handle_req_get_or_check_auth(
         http_header,
         flag_check_rw_access_with_bearer_token,
         p_remote_ip,
         p_auth_info,
-        p_ap_ssid,
+        p_hostname,
         true,
         p_extra_header_fields,
         p_flag_access_by_bearer_token);
@@ -315,19 +315,19 @@ http_server_handle_req_get_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if (!flag_access_from_lan)
     {
-        return http_server_handle_req_get_auth_allow(p_ap_ssid);
+        return http_server_handle_req_get_auth_allow(p_hostname);
     }
     return http_server_handle_req_get_or_check_auth(
         http_header,
         flag_check_rw_access_with_bearer_token,
         p_remote_ip,
         p_auth_info,
-        p_ap_ssid,
+        p_hostname,
         false,
         p_extra_header_fields,
         NULL);

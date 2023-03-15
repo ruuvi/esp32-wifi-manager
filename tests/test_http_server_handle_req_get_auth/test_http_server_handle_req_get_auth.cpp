@@ -97,7 +97,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
         "",
         "",
     };
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
@@ -109,7 +109,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_allow"})";
@@ -132,7 +132,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
         "",
         "",
     };
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
@@ -144,7 +144,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_deny"})";
@@ -179,7 +179,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass + string("\r\n");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -192,7 +192,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
@@ -227,7 +227,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const http_req_header_t    http_header         = { "" };
     http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
@@ -239,7 +239,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
@@ -276,7 +276,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: unknown ") + encoded_pass;
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -289,7 +289,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
@@ -326,7 +326,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic ") + encoded_pass.substr(0, 2);
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -339,7 +339,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
@@ -376,7 +376,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         "",
     };
     snprintf(auth_info.auth_pass.buf, sizeof(auth_info.auth_pass.buf), "%s", encoded_pass.c_str());
-    const wifiman_wifi_ssid_t ap_ssid = { "RuuviGatewayEEFF" };
+    const wifiman_hostname_t hostname = { "RuuviGatewayEEFF" };
 
     const string               auth_header         = string("Authorization: Basic qqqqwwwweeee");
     const http_req_header_t    http_header         = { auth_header.c_str() };
@@ -389,7 +389,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_basic"})";
@@ -409,8 +409,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -443,7 +443,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
@@ -461,8 +461,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authorization) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -492,7 +492,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
@@ -514,8 +514,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_authorization) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -545,7 +545,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
@@ -567,8 +567,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":abc");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":abc");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -599,7 +599,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
@@ -621,8 +621,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user2:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user2:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -653,7 +653,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields);
     const string exp_json_resp
         = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_digest"})";
@@ -675,8 +675,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -707,7 +707,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -754,7 +754,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp = R"({})";
         ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
@@ -782,7 +782,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": true, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -808,7 +808,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid);
+            &hostname);
         const string exp_json_resp = R"({})";
         ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
@@ -834,7 +834,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -858,8 +858,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -890,7 +890,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -916,7 +916,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":QWE");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":QWE");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -939,7 +939,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -963,8 +963,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -995,7 +995,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1021,7 +1021,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user2:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user2:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1044,7 +1044,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1068,8 +1068,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1100,7 +1100,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1126,7 +1126,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string(":") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string(":") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1149,7 +1149,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1173,8 +1173,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1205,7 +1205,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1254,7 +1254,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1278,8 +1278,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1310,7 +1310,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1336,7 +1336,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1359,7 +1359,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1383,8 +1383,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1415,7 +1415,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1441,7 +1441,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIA)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1464,7 +1464,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1488,8 +1488,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1520,7 +1520,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1546,7 +1546,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1569,7 +1569,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1593,8 +1593,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1625,7 +1625,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1650,7 +1650,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
     {
         const http_req_header_t http_header = { "" };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1673,7 +1673,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1697,8 +1697,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quote) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1729,7 +1729,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1755,7 +1755,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1778,7 +1778,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1802,8 +1802,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1834,7 +1834,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1860,7 +1860,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         const string            http_header_str = string(R"(Cookie: RUUVISESSION=EVMDULCTKBSJARIZ)");
         const http_req_header_t http_header     = { http_header_str.c_str() };
 
-        const string incorrect_raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+        const string incorrect_raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
         const wifiman_md5_digest_hex_str_t incorrect_user_pass_md5 = wifiman_md5_calc_hex_str(
             incorrect_raw_user_pass.c_str(),
             incorrect_raw_user_pass.length());
@@ -1882,7 +1882,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1906,8 +1906,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -1938,7 +1938,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
             http_header,
             &remote_ip,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1975,7 +1975,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
             &remote_ip,
             http_body,
             &auth_info,
-            &ap_ssid,
+            &hostname,
             &extra_header_fields);
         const string exp_json_resp
             = R"({"success": false, "gateway_name": "RuuviGatewayEEFF", "lan_auth_type": "lan_auth_ruuvi"})";
@@ -1999,8 +1999,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2035,7 +2035,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
@@ -2055,8 +2055,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_ro_success) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2097,7 +2097,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
@@ -2117,8 +2117,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_rw_success) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2159,7 +2159,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp = R"({"success": true, "gateway_name": "RuuviGatewayEEFF"})";
@@ -2179,8 +2179,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_rw_fail) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2221,7 +2221,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_r
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp = R"({"success": false, "gateway_name": "RuuviGatewayEEFF"})";
@@ -2241,8 +2241,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_r
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_different_api_key) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2280,7 +2280,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -2300,8 +2300,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_api_key_len) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2336,7 +2336,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -2356,8 +2356,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2391,7 +2391,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -2411,8 +2411,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2445,7 +2445,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -2465,8 +2465,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2498,7 +2498,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
@@ -2519,8 +2519,8 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
 
 TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // NOLINT
 {
-    const wifiman_wifi_ssid_t          ap_ssid       = { "RuuviGatewayEEFF" };
-    const string                       raw_user_pass = string("user1:") + string(ap_ssid.ssid_buf) + string(":qwe");
+    const wifiman_hostname_t hostname      = { "RuuviGatewayEEFF" };
+    const string             raw_user_pass = string("user1:") + string(hostname.hostname_buf) + string(":qwe");
     const wifiman_md5_digest_hex_str_t user_pass_md5 = wifiman_md5_calc_hex_str(
         raw_user_pass.c_str(),
         raw_user_pass.length());
@@ -2553,7 +2553,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
         http_header,
         &remote_ip,
         &auth_info,
-        &ap_ssid,
+        &hostname,
         &extra_header_fields,
         &flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);

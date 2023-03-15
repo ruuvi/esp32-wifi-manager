@@ -13,7 +13,7 @@ http_server_handle_req_delete_auth(
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid)
+    const wifiman_hostname_t* const      p_hostname)
 {
     if ((HTTP_SERVER_AUTH_TYPE_RUUVI != p_auth_info->auth_type)
         && (HTTP_SERVER_AUTH_TYPE_DEFAULT != p_auth_info->auth_type))
@@ -24,7 +24,7 @@ http_server_handle_req_delete_auth(
     if (!http_server_auth_ruuvi_get_session_id_from_cookies(http_header, &session_id))
     {
         return http_server_resp_401_auth_ruuvi(
-            p_ap_ssid,
+            p_hostname,
             (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
     }
     http_server_auth_ruuvi_authorized_session_t* const p_authorized_session
@@ -33,7 +33,7 @@ http_server_handle_req_delete_auth(
     if (NULL == p_authorized_session)
     {
         return http_server_resp_401_auth_ruuvi(
-            p_ap_ssid,
+            p_hostname,
             (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
     }
 

@@ -135,7 +135,7 @@ http_server_handle_req_post_auth_check_login_session(
     const http_server_auth_ruuvi_login_session_t* const p_login_session,
     const http_server_auth_ruuvi_session_id_t*          p_session_id,
     const sta_ip_string_t* const                        p_remote_ip,
-    const wifiman_wifi_ssid_t* const                    p_ap_ssid,
+    const wifiman_hostname_t* const                     p_hostname,
     const bool                                          flag_auth_default,
     http_header_extra_fields_t* const                   p_extra_header_fields,
     http_server_resp_t* const                           p_resp)
@@ -145,7 +145,7 @@ http_server_handle_req_post_auth_check_login_session(
         LOG_WARN("session_id is empty");
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
         return false;
@@ -158,7 +158,7 @@ http_server_handle_req_post_auth_check_login_session(
             p_login_session->session_id.buf);
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
         return false;
@@ -168,7 +168,7 @@ http_server_handle_req_post_auth_check_login_session(
         LOG_WARN("RemoteIP does not match with the session_id");
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
         return false;
@@ -183,7 +183,7 @@ http_server_handle_req_post_auth(
     const sta_ip_string_t* const         p_remote_ip,
     const http_req_body_t                http_body,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_wifi_ssid_t* const     p_ap_ssid,
+    const wifiman_hostname_t* const      p_hostname,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if (!flag_access_from_lan)
@@ -205,7 +205,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("There is no session_id in cookies");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -218,7 +218,7 @@ http_server_handle_req_post_auth(
             &p_auth_ruuvi->login_session,
             &session_id,
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             flag_auth_default,
             p_extra_header_fields,
             &resp))
@@ -232,7 +232,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("Failed to parse auth request body");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -241,7 +241,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("User name is empty");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -250,7 +250,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("User name in auth_info does not match the username from auth_req");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -263,7 +263,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("Failed to generate hashed password");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
@@ -272,7 +272,7 @@ http_server_handle_req_post_auth(
         LOG_WARN("Password does not match");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_ap_ssid,
+            p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }

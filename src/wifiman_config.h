@@ -67,9 +67,6 @@ wifiman_config_ap_get_ip_str(void);
 esp_ip4_addr_t
 wifiman_config_ap_get_ip(void);
 
-wifiman_wifi_ssid_t
-wifiman_config_ap_get_ssid(void);
-
 #ifdef __cplusplus
 }
 #endif
