@@ -78,7 +78,7 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
         )
 
     target_compile_options(${COMPONENT_LIB} PRIVATE
-            -Wstack-usage=512
+            -Wstack-usage=350
             -fstack-usage
             )
 else()

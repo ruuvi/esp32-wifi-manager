@@ -11,6 +11,7 @@
 #include "mbedtls/sha256.h"
 #include "http_server_auth.h"
 #include "cJSON.h"
+#include "os_malloc.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -226,28 +227,38 @@ http_server_handle_req_post_auth(
         return resp;
     }
 
-    http_server_auth_ruuvi_req_t auth_req = { 0 };
-    if (!json_ruuvi_auth_parse_http_body(http_body.ptr, &auth_req))
+    http_server_auth_ruuvi_req_t* p_auth_req;
+    p_auth_req = os_calloc(1, sizeof(*p_auth_req));
+    if (NULL == p_auth_req)
+    {
+        LOG_ERR("Can't allocate memory for auth_req");
+        return http_server_resp_500();
+    }
+
+    if (!json_ruuvi_auth_parse_http_body(http_body.ptr, p_auth_req))
     {
         LOG_WARN("Failed to parse auth request body");
+        os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
-    if ('\0' == auth_req.username.buf[0])
+    if ('\0' == p_auth_req->username.buf[0])
     {
         LOG_WARN("User name is empty");
+        os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
-    if (0 != strcmp(p_auth_info->auth_user.buf, auth_req.username.buf))
+    if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_req->username.buf))
     {
         LOG_WARN("User name in auth_info does not match the username from auth_req");
+        os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostname,
@@ -261,21 +272,25 @@ http_server_handle_req_post_auth(
             &password_hash))
     {
         LOG_WARN("Failed to generate hashed password");
+        os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
-    if (0 != strcmp(password_hash.buf, auth_req.password.buf))
+    if (0 != strcmp(password_hash.buf, p_auth_req->password.buf))
     {
         LOG_WARN("Password does not match");
+        os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostname,
             p_extra_header_fields,
             flag_auth_default);
     }
+    os_free(p_auth_req);
+
     http_server_auth_ruuvi_add_authorized_session(p_auth_ruuvi, &session_id, p_remote_ip);
     http_server_auth_ruuvi_login_session_clear(&p_auth_ruuvi->login_session);
     if ('\0' != prev_url.buf[0])
