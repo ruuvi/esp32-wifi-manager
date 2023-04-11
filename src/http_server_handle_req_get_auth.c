@@ -137,12 +137,15 @@ http_server_handle_req_get_auth_digest(
         return http_server_resp_401_auth_digest(p_hostname, p_extra_header_fields);
     }
 
-    const char ha2_prefix[] = "GET:";
-    char       ha2_str[sizeof(ha2_prefix) + HTTP_SERVER_AUTH_DIGEST_URI_SIZE];
-    snprintf(ha2_str, sizeof(ha2_str), "%s%s", ha2_prefix, p_auth_req->uri);
-    const wifiman_md5_digest_hex_str_t ha2_md5 = wifiman_md5_calc_hex_str(ha2_str, strlen(ha2_str));
+    str_buf_t str_buf = str_buf_printf_with_alloc("GET:%s", p_auth_req->uri);
+    if (NULL == str_buf.buf)
+    {
+        return http_server_resp_503();
+    }
+    const wifiman_md5_digest_hex_str_t ha2_md5 = wifiman_md5_calc_hex_str(str_buf.buf, strlen(str_buf.buf));
+    str_buf_free_buf(&str_buf);
 
-    str_buf_t str_buf_response = str_buf_printf_with_alloc(
+    str_buf = str_buf_printf_with_alloc(
         "%s:%s:%s:%s:%s:%s",
         p_auth_info->auth_pass.buf,
         p_auth_req->nonce,
@@ -150,14 +153,12 @@ http_server_handle_req_get_auth_digest(
         p_auth_req->cnonce,
         p_auth_req->qop,
         ha2_md5.buf);
-    if (NULL == str_buf_response.buf)
+    if (NULL == str_buf.buf)
     {
         return http_server_resp_503();
     }
-    const wifiman_md5_digest_hex_str_t response_md5 = wifiman_md5_calc_hex_str(
-        str_buf_response.buf,
-        str_buf_get_len(&str_buf_response));
-    str_buf_free_buf(&str_buf_response);
+    const wifiman_md5_digest_hex_str_t response_md5 = wifiman_md5_calc_hex_str(str_buf.buf, str_buf_get_len(&str_buf));
+    str_buf_free_buf(&str_buf);
 
     if (0 != strcmp(p_auth_req->response, response_md5.buf))
     {
