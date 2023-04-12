@@ -60,6 +60,16 @@ typedef struct http_server_ecdh_sha256_t
     uint8_t buf[HTTP_SERVER_ECDH_SHA256_SIZE];
 } http_server_ecdh_sha256_t;
 
+typedef struct http_server_ecdh_handshake_tmp_buffers_t
+{
+    http_server_ecdh_pub_key_with_len_t      pub_key_cli_with_len;
+    http_server_ecdh_tls_handshake_message_t handshake_message;
+    size_t                                   handshake_message_len;
+    http_server_ecdh_shared_secret_t         shared_secret;
+    size_t                                   shared_secret_len;
+    http_server_ecdh_sha256_t                sha256;
+} http_server_ecdh_handshake_tmp_buffers_t;
+
 static const char* const TAG = "ECDH";
 
 static wifi_manager_ecdh_f_rng g_http_server_ecdh_f_rng;
@@ -240,15 +250,15 @@ http_server_ecdh_calc_sha256(
     mbedtls_sha256_free(&sha256_ctx);
 }
 
-bool
-http_server_ecdh_handshake(
-    const http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_cli,
-    http_server_ecdh_pub_key_b64_t* const       p_pub_key_b64_srv)
+static bool
+http_server_ecdh_handshake_internal(
+    const http_server_ecdh_pub_key_b64_t* const     p_pub_key_b64_cli,
+    http_server_ecdh_pub_key_b64_t* const           p_pub_key_b64_srv,
+    http_server_ecdh_handshake_tmp_buffers_t* const p_tmp_buf)
 {
     LOG_INFO("pub_key_b64_cli: %s", p_pub_key_b64_cli->buf);
 
-    http_server_ecdh_pub_key_with_len_t pub_key_cli_with_len = { 0 };
-    if (!http_server_ecdh_b64_decode_pub_key_add_prefix_len(p_pub_key_b64_cli->buf, &pub_key_cli_with_len))
+    if (!http_server_ecdh_b64_decode_pub_key_add_prefix_len(p_pub_key_b64_cli->buf, &p_tmp_buf->pub_key_cli_with_len))
     {
         LOG_ERR("Can't decode pub_key_b64_cli: %s", p_pub_key_b64_cli->buf);
         return false;
@@ -264,29 +274,28 @@ http_server_ecdh_handshake(
         return false;
     }
 
-    size_t                                   handshake_message_len = 0;
-    http_server_ecdh_tls_handshake_message_t handshake_message     = { 0 };
+    p_tmp_buf->handshake_message_len = 0;
     if (0
         != mbedtls_ecdh_make_params(
             &g_http_server_ecdh_ctx,
-            &handshake_message_len,
-            handshake_message.buf,
-            sizeof(handshake_message.buf),
+            &p_tmp_buf->handshake_message_len,
+            p_tmp_buf->handshake_message.buf,
+            sizeof(p_tmp_buf->handshake_message.buf),
             g_http_server_ecdh_f_rng,
             g_http_server_ecdh_p_rng))
     {
         LOG_ERR("%s failed", "mbedtls_ecdh_make_params");
         return false;
     }
-    if (handshake_message_len != sizeof(handshake_message.buf))
+    if (p_tmp_buf->handshake_message_len != sizeof(p_tmp_buf->handshake_message.buf))
     {
-        LOG_ERR("mbedtls_ecdh_make_params return incorrect olen=%u", (printf_uint_t)handshake_message_len);
+        LOG_ERR("mbedtls_ecdh_make_params return incorrect olen=%u", (printf_uint_t)p_tmp_buf->handshake_message_len);
         return false;
     }
     http_server_ecdh_pub_key_bin_t pub_key_bin_srv;
     memcpy(
         pub_key_bin_srv.buf,
-        &handshake_message.buf[HTTP_SERVER_ECDH_TLS_HANDSHAKE_MESSAGE_OFFSET_PUB_KEY],
+        &p_tmp_buf->handshake_message.buf[HTTP_SERVER_ECDH_TLS_HANDSHAKE_MESSAGE_OFFSET_PUB_KEY],
         sizeof(pub_key_bin_srv.buf));
     LOG_DUMP_DBG(pub_key_bin_srv.buf, sizeof(pub_key_bin_srv.buf), "PubKey_srv");
 
@@ -301,40 +310,60 @@ http_server_ecdh_handshake(
     if (0
         != mbedtls_ecdh_read_public(
             &g_http_server_ecdh_ctx,
-            pub_key_cli_with_len.buf,
-            sizeof(pub_key_cli_with_len.buf)))
+            &p_tmp_buf->pub_key_cli_with_len.buf[0],
+            sizeof(p_tmp_buf->pub_key_cli_with_len.buf)))
     {
         LOG_ERR("%s failed", "mbedtls_ecdh_read_public");
         return false;
     }
 
-    size_t                           len_shared_secret = 0;
-    http_server_ecdh_shared_secret_t shared_secret;
+    p_tmp_buf->shared_secret_len = 0;
     if (0
         != mbedtls_ecdh_calc_secret(
             &g_http_server_ecdh_ctx,
-            &len_shared_secret,
-            shared_secret.buf,
-            sizeof(shared_secret.buf),
+            &p_tmp_buf->shared_secret_len,
+            p_tmp_buf->shared_secret.buf,
+            sizeof(p_tmp_buf->shared_secret.buf),
             g_http_server_ecdh_f_rng,
             g_http_server_ecdh_p_rng))
     {
         LOG_ERR("%s failed", "mbedtls_ecdh_calc_secret");
         return false;
     }
-    if (sizeof(shared_secret.buf) != len_shared_secret)
+    if (sizeof(p_tmp_buf->shared_secret.buf) != p_tmp_buf->shared_secret_len)
     {
         LOG_ERR("%s failed", "mbedtls_ecdh_calc_secret");
         return false;
     }
     LOG_DUMP_DBG(shared_secret.buf, sizeof(shared_secret.buf), "Shared secret");
 
-    http_server_ecdh_sha256_t sha256 = { 0 };
-    http_server_ecdh_calc_sha256(shared_secret.buf, sizeof(shared_secret.buf), &sha256);
-    memcpy(g_http_server_ecdh_aes_key.buf, sha256.buf, sizeof(g_http_server_ecdh_aes_key.buf));
+    http_server_ecdh_calc_sha256(
+        p_tmp_buf->shared_secret.buf,
+        sizeof(p_tmp_buf->shared_secret.buf),
+        &p_tmp_buf->sha256);
+    memcpy(g_http_server_ecdh_aes_key.buf, p_tmp_buf->sha256.buf, sizeof(g_http_server_ecdh_aes_key.buf));
     LOG_DUMP_DBG(g_http_server_ecdh_aes_key.buf, sizeof(g_http_server_ecdh_aes_key.buf), "AES key");
 
     return true;
+}
+
+bool
+http_server_ecdh_handshake(
+    const http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_cli,
+    http_server_ecdh_pub_key_b64_t* const       p_pub_key_b64_srv)
+{
+    http_server_ecdh_handshake_tmp_buffers_t* p_tmp_buf = os_calloc(1, sizeof(*p_tmp_buf));
+    if (NULL == p_tmp_buf)
+    {
+        LOG_ERR("Can't allocate memory");
+        return false;
+    }
+
+    const bool res = http_server_ecdh_handshake_internal(p_pub_key_b64_cli, p_pub_key_b64_srv, p_tmp_buf);
+
+    os_free(p_tmp_buf);
+
+    return res;
 }
 
 static bool

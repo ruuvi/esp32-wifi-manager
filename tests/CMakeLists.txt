@@ -4,6 +4,7 @@ project(ruuvi_esp32-wifi-manager-tests)
 
 add_definitions(
         -DRUUVI_TESTS=1
+        -D_GNU_SOURCE
 )
 
 enable_testing()

@@ -76,6 +76,11 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
         PRIV_INCLUDE_DIRS
             ../ruuvi.esp_wrappers.c/include
         )
+
+    target_compile_options(${COMPONENT_LIB} PRIVATE
+            -Wstack-usage=280
+            -fstack-usage
+            )
 else()
     set(COMPONENT_SRCDIRS src)
     set(COMPONENT_ADD_INCLUDEDIRS src)

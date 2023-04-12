@@ -59,6 +59,7 @@ static bool
 http_server_recv_and_handle(
     struct netconn* const p_conn,
     char* const           p_req_buf,
+    const size_t          req_buf_size,
     uint32_t* const       p_req_size,
     bool* const           p_req_ready)
 {
@@ -77,15 +78,15 @@ http_server_recv_and_handle(
     u16_t buflen = 0;
     netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
 
-    if ((*p_req_size + buflen) > FULLBUF_SIZE)
+    if ((*p_req_size + buflen) >= req_buf_size)
     {
-        LOG_WARN("fullbuf full, fullsize: %u, buflen: %d", *p_req_size, buflen);
+        LOG_WARN("tmp buffer is full, req_size: %u, buf_len: %u", (printf_uint_t)*p_req_size, (printf_uint_t)buflen);
         netbuf_delete(p_netbuf_in);
         return false;
     }
     memcpy(&p_req_buf[*p_req_size], p_buf, buflen);
     *p_req_size += buflen;
-    p_req_buf[*p_req_size] = 0; // zero terminated string
+    p_req_buf[*p_req_size] = '\0'; // zero terminated string
 
     netbuf_delete(p_netbuf_in);
 
@@ -836,7 +837,6 @@ http_server_netconn_serve_handle_req(
 static void
 http_server_netconn_serve(struct netconn* const p_conn)
 {
-    char     req_buf[FULLBUF_SIZE + 1];
     uint32_t req_size  = 0;
     bool     req_ready = false;
 
@@ -860,9 +860,17 @@ http_server_netconn_serve(struct netconn* const p_conn)
     ipaddr_ntoa_r(&local_ip, local_ip_str.buf, sizeof(local_ip_str.buf));
     ipaddr_ntoa_r(&remote_ip, remote_ip_str.buf, sizeof(remote_ip_str.buf));
 
+    const size_t req_buf_size = FULLBUF_SIZE + 1;
+    char*        p_req_buf    = os_malloc(req_buf_size);
+    if (NULL == p_req_buf)
+    {
+        LOG_ERR("Can't allocate %u bytes for tmp buffer", (printf_uint_t)req_buf_size);
+        return;
+    }
+
     while (!req_ready)
     {
-        if (!http_server_recv_and_handle(p_conn, &req_buf[0], &req_size, &req_ready))
+        if (!http_server_recv_and_handle(p_conn, p_req_buf, req_buf_size, &req_size, &req_ready))
         {
             break;
         }
@@ -870,10 +878,12 @@ http_server_netconn_serve(struct netconn* const p_conn)
     if (!req_ready)
     {
         LOG_WARN("The connection was closed by the client side");
+        os_free(p_req_buf);
         return;
     }
 
-    http_server_netconn_serve_handle_req(p_conn, &req_buf[0], &local_ip_str, &remote_ip_str);
+    http_server_netconn_serve_handle_req(p_conn, p_req_buf, &local_ip_str, &remote_ip_str);
+    os_free(p_req_buf);
 }
 
 os_delta_ticks_t

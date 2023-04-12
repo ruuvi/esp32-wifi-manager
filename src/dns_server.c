@@ -52,12 +52,23 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 #include "os_mutex.h"
 #include "os_timer_sig.h"
 #include "wifi_manager_internal.h"
+#include "os_malloc.h"
 
 typedef enum dns_server_sig_e
 {
     DNS_SERVER_SIG_STOP               = OS_SIGNAL_NUM_0,
     DNS_SERVER_SIG_TASK_WATCHDOG_FEED = OS_SIGNAL_NUM_1,
 } dns_server_sig_e;
+
+typedef struct dns_server_tmp_buf_t
+{
+    struct sockaddr_in client;
+    socklen_t          client_len;
+    uint8_t            data[DNS_QUERY_MAX_SIZE + 1];  /* dns query buffer */
+    uint8_t            response[DNS_ANSWER_MAX_SIZE]; /* dns response buffer */
+    char ip_address[INET_ADDRSTRLEN]; /* buffer to store IPs as text. This is only used for debug and serves no other
+                                                         purpose */
+} dns_server_tmp_buf_t;
 
 #define DNS_SERVER_SIG_FIRST (DNS_SERVER_SIG_STOP)
 #define DNS_SERVER_SIG_LAST  (DNS_SERVER_SIG_TASK_WATCHDOG_FEED)
@@ -153,18 +164,22 @@ replace_non_ascii_with_dots(char* p_domain)
 }
 
 static void
-dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t* const p_ip_resolved)
+dns_server_handle_req(
+    const socket_t              socket_fd,
+    const esp_ip4_addr_t* const p_ip_resolved,
+    dns_server_tmp_buf_t* const p_tmp_buf)
 {
-    struct sockaddr_in client     = { 0 };
-    socklen_t          client_len = sizeof(client);
-    uint8_t            data[DNS_QUERY_MAX_SIZE + 1];  /* dns query buffer */
-    uint8_t            response[DNS_ANSWER_MAX_SIZE]; /* dns response buffer */
-    char ip_address[INET_ADDRSTRLEN]; /* buffer to store IPs as text. This is only used for debug and serves no other
-                                         purpose */
+    memset(&p_tmp_buf->client, 0, sizeof(p_tmp_buf->client));
+    p_tmp_buf->client_len = sizeof(p_tmp_buf->client);
 
-    memset(data, 0x00, sizeof(data));
-    const socket_recv_result_t length
-        = recvfrom(socket_fd, data, DNS_QUERY_MAX_SIZE, 0, (struct sockaddr*)&client, &client_len);
+    memset(p_tmp_buf->data, 0x00, sizeof(p_tmp_buf->data));
+    const socket_recv_result_t length = recvfrom(
+        socket_fd,
+        p_tmp_buf->data,
+        DNS_QUERY_MAX_SIZE,
+        0,
+        (struct sockaddr*)&p_tmp_buf->client,
+        &p_tmp_buf->client_len);
 
     /*if the query is bigger than the buffer size we simply ignore it. This case should only happen in case of
      * multiple queries within the same DNS packet and is not supported by this simple DNS hijack. */
@@ -185,11 +200,11 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t* const p_ip_resol
         LOG_ERR("recvfrom got length %d > max allowed %u", length, (uint32_t)max_allowed_len);
         return;
     }
-    data[length] = '\0'; /*in case there's a bogus domain name that isn't null terminated */
+    p_tmp_buf->data[length] = '\0'; /*in case there's a bogus domain name that isn't null terminated */
 
     /* Generate header message */
-    memcpy(response, data, sizeof(dns_header_t));
-    dns_header_t* dns_header              = (dns_header_t*)response;
+    memcpy(p_tmp_buf->response, p_tmp_buf->data, sizeof(dns_header_t));
+    dns_header_t* dns_header              = (dns_header_t*)p_tmp_buf->response;
     dns_header->flag_query_response       = 1;                          /*response bit */
     dns_header->operation_code            = DNS_OPCODE_QUERY;           /* no support for other type of response */
     dns_header->flag_authoritative_answer = 1;                          /*authoritative answer */
@@ -201,16 +216,19 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t* const p_ip_resol
     dns_header->additional_record_count   = 0x0000;                     /* resource records = 0 */
 
     /* copy the rest of the query in the response */
-    memcpy(response + sizeof(dns_header_t), data + sizeof(dns_header_t), length - sizeof(dns_header_t));
+    memcpy(
+        p_tmp_buf->response + sizeof(dns_header_t),
+        p_tmp_buf->data + sizeof(dns_header_t),
+        length - sizeof(dns_header_t));
 
     /* extract domain name and request IP for debug */
-    inet_ntop(AF_INET, &(client.sin_addr), ip_address, INET_ADDRSTRLEN);
-    char* p_domain = (char*)&data[sizeof(dns_header_t) + 1];
+    inet_ntop(AF_INET, &(p_tmp_buf->client.sin_addr), p_tmp_buf->ip_address, INET_ADDRSTRLEN);
+    char* p_domain = (char*)&p_tmp_buf->data[sizeof(dns_header_t) + 1];
     replace_non_ascii_with_dots(p_domain);
-    LOG_INFO("Replying to DNS request for %s from %s", p_domain, ip_address);
+    LOG_INFO("Replying to DNS request for %s from %s", p_domain, p_tmp_buf->ip_address);
 
     /* create DNS answer at the end of the query*/
-    dns_answer_t* p_dns_answer = (dns_answer_t*)&response[length];
+    dns_answer_t* p_dns_answer = (dns_answer_t*)&p_tmp_buf->response[length];
     p_dns_answer->domain_name  = htons(
         0xC00C); /* This is a pointer to the beginning of the question.
                    * As per DNS standard, first two bits must be set to 11 for some odd reason hence 0xC0 */
@@ -221,8 +239,13 @@ dns_server_handle_req(socket_t socket_fd, const esp_ip4_addr_t* const p_ip_resol
     p_dns_answer->dns_response_data_length = htons(0x0004); /* 4 byte => size of an ipv4 address */
     p_dns_answer->dns_response_data        = p_ip_resolved->addr;
 
-    const socket_send_result_t err
-        = sendto(socket_fd, response, length + sizeof(dns_answer_t), 0, (struct sockaddr*)&client, client_len);
+    const socket_send_result_t err = sendto(
+        socket_fd,
+        p_tmp_buf->response,
+        length + sizeof(dns_answer_t),
+        0,
+        (struct sockaddr*)&p_tmp_buf->client,
+        p_tmp_buf->client_len);
     if (err < 0)
     {
         LOG_ERR("UDP sendto failed: %d", err);
@@ -311,6 +334,35 @@ dns_server_handle_sig_events(os_signal_events_t* const p_sig_events)
     return flag_stop;
 }
 
+static bool
+dns_server_set_socket_recv_timeout(const socket_t socket_fd)
+{
+    struct timeval recv_timeout = { .tv_sec = 1, .tv_usec = 0 };
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout)) < 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+static bool
+dns_server_bind_socket(const socket_t socket_fd)
+{
+    struct sockaddr_in bind_addr = { 0 };
+    /* Bind to port 53 (typical DNS Server port) */
+    esp_netif_ip_info_t ip_info     = { 0 };
+    esp_netif_t*        p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+    esp_netif_get_ip_info(p_netif_sta, &ip_info);
+    bind_addr.sin_family      = AF_INET;
+    bind_addr.sin_addr.s_addr = ip_info.ip.addr;
+    bind_addr.sin_port        = htons(53);
+    if (SOCKET_BIND_ERROR == bind(socket_fd, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in)))
+    {
+        return false;
+    }
+    return true;
+}
+
 static void
 dns_server_task(void)
 {
@@ -330,24 +382,26 @@ dns_server_task(void)
         return;
     }
 
-    struct timeval recv_timeout = { .tv_sec = 1, .tv_usec = 0 };
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout)) < 0)
+    if (!dns_server_set_socket_recv_timeout(socket_fd))
     {
         LOG_ERR("setsockopt(SO_RCVTIMEO) failed");
+        close(socket_fd);
         dns_server_sig_unregister_cur_thread();
         return;
     }
-    struct sockaddr_in bind_addr = { 0 };
-    /* Bind to port 53 (typical DNS Server port) */
-    esp_netif_ip_info_t ip_info     = { 0 };
-    esp_netif_t*        p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    esp_netif_get_ip_info(p_netif_sta, &ip_info);
-    bind_addr.sin_family      = AF_INET;
-    bind_addr.sin_addr.s_addr = ip_info.ip.addr;
-    bind_addr.sin_port        = htons(53);
-    if (SOCKET_BIND_ERROR == bind(socket_fd, (struct sockaddr*)&bind_addr, sizeof(struct sockaddr_in)))
+
+    if (!dns_server_bind_socket(socket_fd))
     {
         LOG_ERR("Failed to bind to 53/udp");
+        close(socket_fd);
+        dns_server_sig_unregister_cur_thread();
+        return;
+    }
+
+    dns_server_tmp_buf_t* p_tmp_buf = os_calloc(1, sizeof(*p_tmp_buf));
+    if (NULL == p_tmp_buf)
+    {
+        LOG_ERR("Can't allocate memory");
         close(socket_fd);
         dns_server_sig_unregister_cur_thread();
         return;
@@ -379,13 +433,14 @@ dns_server_task(void)
                 break;
             }
         }
-        dns_server_handle_req(socket_fd, &ip_resolved);
+        dns_server_handle_req(socket_fd, &ip_resolved, p_tmp_buf);
 
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. DNS daemon should not be taxing on the
                         system */
     }
     LOG_INFO("### Stop DNS Server");
 
+    os_free(p_tmp_buf);
     LOG_INFO("TaskWatchdog: Unregister current thread");
     esp_task_wdt_delete(xTaskGetCurrentTaskHandle());
     LOG_INFO("TaskWatchdog: Stop timer");

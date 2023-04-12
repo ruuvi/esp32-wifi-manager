@@ -232,20 +232,10 @@ http_server_json_get_string_val_ptr(const cJSON* const p_json_root, const char* 
 
 static bool
 http_server_handle_ruuvi_ecdh_pub_key(
-    const http_req_header_t               http_header,
+    const char* const                     p_ruuvi_ecdh_pub_key,
+    const uint32_t                        len_ruuvi_ecdh_pub_key,
     http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_srv)
 {
-    uint32_t          len_ruuvi_ecdh_pub_key = 0;
-    const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
-        http_header,
-        "ruuvi_ecdh_pub_key:",
-        &len_ruuvi_ecdh_pub_key);
-
-    if (NULL == p_ruuvi_ecdh_pub_key)
-    {
-        return false;
-    }
-
     LOG_INFO("Found ruuvi_ecdh_pub_key: %.*s", (printf_int_t)len_ruuvi_ecdh_pub_key, p_ruuvi_ecdh_pub_key);
 
     http_server_ecdh_pub_key_b64_t pub_key_b64_cli = { 0 };
@@ -258,7 +248,12 @@ http_server_handle_ruuvi_ecdh_pub_key(
         return false;
     }
 
-    snprintf(pub_key_b64_cli.buf, sizeof(pub_key_b64_cli.buf), "%.*s", len_ruuvi_ecdh_pub_key, p_ruuvi_ecdh_pub_key);
+    (void)snprintf(
+        pub_key_b64_cli.buf,
+        sizeof(pub_key_b64_cli.buf),
+        "%.*s",
+        len_ruuvi_ecdh_pub_key,
+        p_ruuvi_ecdh_pub_key);
     if (!http_server_ecdh_handshake(&pub_key_b64_cli, p_pub_key_b64_srv))
     {
         LOG_ERR("%s failed", "http_server_ecdh_handshake");
@@ -528,7 +523,7 @@ http_server_handle_req(
 
     if (0 == strcmp("GET", p_req_info->http_cmd.ptr))
     {
-        const http_server_resp_t resp = http_server_handle_req_get(
+        http_server_resp_t resp = http_server_handle_req_get(
             path,
             p_req_info->http_uri_params.ptr,
             flag_access_from_lan,
@@ -537,11 +532,27 @@ http_server_handle_req(
             p_auth_info,
             p_extra_header_fields);
 
-        http_server_ecdh_pub_key_b64_t pub_key_b64_srv = { 0 };
-        if (http_server_handle_ruuvi_ecdh_pub_key(p_req_info->http_header, &pub_key_b64_srv))
+        uint32_t          len_ruuvi_ecdh_pub_key = 0;
+        const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
+            p_req_info->http_header,
+            "ruuvi_ecdh_pub_key:",
+            &len_ruuvi_ecdh_pub_key);
+
+        if (NULL != p_ruuvi_ecdh_pub_key)
         {
+            http_server_ecdh_pub_key_b64_t pub_key_b64_srv = { 0 };
+            if (!http_server_handle_ruuvi_ecdh_pub_key(p_ruuvi_ecdh_pub_key, len_ruuvi_ecdh_pub_key, &pub_key_b64_srv))
+            {
+                LOG_ERR("http_server_handle_ruuvi_ecdh_pub_key failed");
+                if ((HTTP_CONTENT_LOCATION_HEAP == resp.content_location)
+                    && (NULL != resp.select_location.memory.p_buf))
+                {
+                    os_free(resp.select_location.memory.p_buf);
+                }
+                return http_server_resp_500();
+            }
             const size_t offset = strlen(p_extra_header_fields->buf);
-            snprintf(
+            (void)snprintf(
                 &p_extra_header_fields->buf[offset],
                 sizeof(p_extra_header_fields->buf) - offset,
                 "ruuvi_ecdh_pub_key: %s\r\n",
