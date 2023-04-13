@@ -23,7 +23,7 @@ http_server_handle_req_post_auth(
     const sta_ip_string_t* const         p_remote_ip,
     const http_req_body_t                http_body,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_hostname_t* const      p_hostname,
+    const wifiman_hostinfo_t* const      p_hostinfo,
     http_header_extra_fields_t* const    p_extra_header_fields);
 
 #ifdef __cplusplus

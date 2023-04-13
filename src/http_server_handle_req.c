@@ -82,24 +82,21 @@ http_server_handle_req_get(
 
     const char* const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
 
-    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
+    const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        const bool               flag_check_rw_access_with_bearer_token = false;
-        const http_server_resp_t resp_auth                              = http_server_handle_req_get_auth(
+        const bool flag_check_rw_access_with_bearer_token = false;
+
+        const http_server_resp_t resp_auth = http_server_handle_req_get_auth(
             flag_access_from_lan,
             flag_check_rw_access_with_bearer_token,
             http_header,
             p_remote_ip,
             p_auth_info,
-            &hostname,
+            &hostinfo,
             p_extra_header_fields);
         return resp_auth;
-    }
-    if (0 == strcmp(p_file_name, "auth.html"))
-    {
-        return wifi_manager_cb_on_http_get(p_file_name, NULL, flag_access_from_lan, NULL);
     }
 
     bool flag_check_rw_access_with_bearer_token = false;
@@ -109,29 +106,32 @@ http_server_handle_req_get(
     }
 
     const char* const p_file_ext = strrchr(p_file_name, '.');
-    if ((NULL == p_file_ext)
-        || ((NULL != p_file_ext) && ((0 == strcmp(p_file_ext, ".html")) || (0 == strcmp(p_file_ext, ".json")))))
+    if ((NULL == p_file_ext) || ((NULL != p_file_ext) && (0 == strcmp(p_file_ext, ".json"))))
     {
-        bool                     flag_access_by_bearer_token = false;
-        const http_server_resp_t resp_auth_check             = http_server_handle_req_check_auth(
+        bool flag_access_by_bearer_token = false;
+
+        const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
             flag_access_from_lan,
             flag_check_rw_access_with_bearer_token,
             http_header,
             p_remote_ip,
             p_auth_info,
-            &hostname,
+            &hostinfo,
             p_extra_header_fields,
             &flag_access_by_bearer_token);
         if ((!flag_access_by_bearer_token) && (HTTP_RESP_CODE_401 == resp_auth_check.http_resp_code)
             && ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
                 || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type)))
         {
-            (void)snprintf(
-                p_extra_header_fields->buf,
-                sizeof(p_extra_header_fields->buf),
-                "Set-Cookie: %s=/%s",
-                HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
-                p_file_name);
+            if ((0 != strcmp(p_file_name, "ap.json") && (0 != strcmp(p_file_name, "status.json"))))
+            {
+                (void)snprintf(
+                    p_extra_header_fields->buf,
+                    sizeof(p_extra_header_fields->buf),
+                    "Set-Cookie: %s=/%s",
+                    HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL,
+                    p_file_name);
+            }
             return http_server_resp_302();
         }
         if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
@@ -178,7 +178,7 @@ http_server_handle_req_delete(
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     LOG_INFO("DELETE /%s", p_file_name);
-    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
+    const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
 
     const bool               flag_check_rw_access_with_bearer_token = true;
     bool                     flag_access_by_bearer_token            = false;
@@ -188,7 +188,7 @@ http_server_handle_req_delete(
         http_header,
         p_remote_ip,
         p_auth_info,
-        &hostname,
+        &hostinfo,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 
@@ -199,7 +199,7 @@ http_server_handle_req_delete(
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        return http_server_handle_req_delete_auth(http_header, p_remote_ip, p_auth_info, &hostname);
+        return http_server_handle_req_delete_auth(http_header, p_remote_ip, p_auth_info, &hostinfo);
     }
     if (0 == strcmp(p_file_name, "connect.json"))
     {
@@ -466,7 +466,7 @@ http_server_handle_req_post(
 {
     LOG_INFO("POST /%s", p_file_name);
 
-    const wifiman_hostname_t hostname = wifiman_config_sta_get_hostname();
+    const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
@@ -476,7 +476,7 @@ http_server_handle_req_post(
             p_remote_ip,
             http_body,
             p_auth_info,
-            &hostname,
+            &hostinfo,
             p_extra_header_fields);
     }
 
@@ -488,7 +488,7 @@ http_server_handle_req_post(
         http_header,
         p_remote_ip,
         p_auth_info,
-        &hostname,
+        &hostinfo,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 

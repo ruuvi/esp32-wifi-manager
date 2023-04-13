@@ -32,8 +32,12 @@ protected:
         esp_log_wrapper_init();
         g_pTestClass                        = this;
         const wifiman_wifi_ssid_t wifi_ssid = { "Configure Ruuvi Gateway AABB" };
-        const wifiman_hostname_t  hostname  = { "RuuviGatewayAABB" };
-        wifiman_default_config_init(&wifi_ssid, &hostname);
+        const wifiman_hostinfo_t  hostinfo  = {
+              .hostname     = { "RuuviGatewayAABB" },
+              .fw_ver       = { "1.13.0" },
+              .nrf52_fw_ver = { "1.0.0" },
+        };
+        wifiman_default_config_init(&wifi_ssid, &hostinfo);
     }
 
     void
@@ -118,7 +122,7 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_empty) // NOLINT
     ASSERT_EQ(
         string("Configure Ruuvi Gateway AABB"),
         string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostname.hostname_buf)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostinfo.hostname.buf)));
     ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.channel);
@@ -186,7 +190,7 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_default) // NOLINT
     ASSERT_EQ(
         string("Configure Ruuvi Gateway AABB"),
         string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostname.hostname_buf)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostinfo.hostname.buf)));
     ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.channel);
@@ -252,7 +256,7 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_non_default) // NOLINT
     ASSERT_EQ(
         string("Configure Ruuvi Gateway AABB"),
         string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostname.hostname_buf)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostinfo.hostname.buf)));
     ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(14, cfg.ap.wifi_config_ap.channel);
@@ -318,7 +322,7 @@ TEST_F(TestWifiManCfgBlobConvert, test_blob_invalid) // NOLINT
     ASSERT_EQ(
         string("Configure Ruuvi Gateway AABB"),
         string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.ssid)));
-    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostname.hostname_buf)));
+    ASSERT_EQ(string("RuuviGatewayAABB"), string(reinterpret_cast<const char*>(cfg.sta.hostinfo.hostname.buf)));
     ASSERT_EQ(string(""), string(reinterpret_cast<const char*>(cfg.ap.wifi_config_ap.password)));
     ASSERT_EQ(0, cfg.ap.wifi_config_ap.ssid_len);
     ASSERT_EQ(1, cfg.ap.wifi_config_ap.channel); // force set to 1

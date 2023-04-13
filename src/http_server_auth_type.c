@@ -15,6 +15,7 @@
 #define HTTP_SERVER_AUTH_TYPE_STR_RUUVI   "lan_auth_ruuvi"
 #define HTTP_SERVER_AUTH_TYPE_STR_DENY    "lan_auth_deny"
 #define HTTP_SERVER_AUTH_TYPE_STR_DEFAULT "lan_auth_default"
+#define HTTP_SERVER_AUTH_TYPE_STR_BEARER  "lan_auth_bearer"
 
 http_server_auth_type_e
 http_server_auth_type_from_str(const char* const p_auth_type)
@@ -69,6 +70,8 @@ http_server_auth_type_to_str(const http_server_auth_type_e auth_type)
             return HTTP_SERVER_AUTH_TYPE_STR_DENY;
         case HTTP_SERVER_AUTH_TYPE_DEFAULT:
             return HTTP_SERVER_AUTH_TYPE_STR_DEFAULT;
+        case HTTP_SERVER_AUTH_TYPE_BEARER:
+            return HTTP_SERVER_AUTH_TYPE_STR_BEARER;
     }
     assert(0);
     return HTTP_SERVER_AUTH_TYPE_STR_DEFAULT;

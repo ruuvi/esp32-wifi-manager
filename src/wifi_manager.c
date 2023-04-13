@@ -146,9 +146,9 @@ wifi_manager_reconfigure(const bool flag_connect_sta, const wifiman_config_t* co
     wifi_manager_set_config_sta(&p_wifi_cfg->sta);
 
     esp_netif_t* const       p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    const wifiman_hostname_t hostname    = wifiman_config_sta_get_hostname();
-    LOG_INFO("### Set hostname for WiFi interface: %s", hostname.hostname_buf);
-    esp_err_t err = esp_netif_set_hostname(p_netif_sta, hostname.hostname_buf);
+    const wifiman_hostinfo_t hostinfo    = wifiman_config_sta_get_hostinfo();
+    LOG_INFO("### Set hostinfo for WiFi interface: %s", hostinfo.hostname.buf);
+    esp_err_t err = esp_netif_set_hostname(p_netif_sta, hostinfo.hostname.buf);
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_netif_set_hostname");

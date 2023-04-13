@@ -136,7 +136,7 @@ http_server_handle_req_post_auth_check_login_session(
     const http_server_auth_ruuvi_login_session_t* const p_login_session,
     const http_server_auth_ruuvi_session_id_t*          p_session_id,
     const sta_ip_string_t* const                        p_remote_ip,
-    const wifiman_hostname_t* const                     p_hostname,
+    const wifiman_hostinfo_t* const                     p_hostinfo,
     const bool                                          flag_auth_default,
     http_header_extra_fields_t* const                   p_extra_header_fields,
     http_server_resp_t* const                           p_resp)
@@ -146,9 +146,10 @@ http_server_handle_req_post_auth_check_login_session(
         LOG_WARN("session_id is empty");
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
         return false;
     }
     if (0 != strcmp(p_login_session->session_id.buf, p_session_id->buf))
@@ -159,9 +160,10 @@ http_server_handle_req_post_auth_check_login_session(
             p_login_session->session_id.buf);
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
         return false;
     }
     if (!sta_ip_cmp(&p_login_session->remote_ip, p_remote_ip))
@@ -169,9 +171,10 @@ http_server_handle_req_post_auth_check_login_session(
         LOG_WARN("RemoteIP does not match with the session_id");
         *p_resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
         return false;
     }
     return true;
@@ -184,12 +187,16 @@ http_server_handle_req_post_auth(
     const sta_ip_string_t* const         p_remote_ip,
     const http_req_body_t                http_body,
     const http_server_auth_info_t* const p_auth_info,
-    const wifiman_hostname_t* const      p_hostname,
+    const wifiman_hostinfo_t* const      p_hostinfo,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
     if (!flag_access_from_lan)
     {
-        return http_server_resp_200_json("{}");
+        const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
+            p_hostinfo,
+            p_auth_info->auth_type,
+            NULL);
+        return http_server_resp_200_json(p_auth_json->buf);
     }
     if ((HTTP_SERVER_AUTH_TYPE_RUUVI != p_auth_info->auth_type)
         && (HTTP_SERVER_AUTH_TYPE_DEFAULT != p_auth_info->auth_type))
@@ -206,9 +213,10 @@ http_server_handle_req_post_auth(
         LOG_WARN("There is no session_id in cookies");
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
     }
     const http_server_auth_ruuvi_prev_url_t prev_url = http_server_auth_ruuvi_get_prev_url_from_cookies(http_header);
 
@@ -219,7 +227,7 @@ http_server_handle_req_post_auth(
             &p_auth_ruuvi->login_session,
             &session_id,
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             flag_auth_default,
             p_extra_header_fields,
             &resp))
@@ -241,29 +249,32 @@ http_server_handle_req_post_auth(
         os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
     }
     if ('\0' == p_auth_req->username.buf[0])
     {
-        LOG_WARN("User name is empty");
+        LOG_WARN("Username is empty");
         os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            "The username is empty");
     }
     if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_req->username.buf))
     {
-        LOG_WARN("User name in auth_info does not match the username from auth_req");
+        LOG_WARN("Username in auth_info does not match the username from auth_req");
         os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            "Incorrect username");
     }
     wifiman_sha256_digest_hex_str_t password_hash = { 0 };
     if (!http_server_auth_ruuvi_gen_hashed_password(
@@ -275,19 +286,24 @@ http_server_handle_req_post_auth(
         os_free(p_auth_req);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            NULL);
     }
     if (0 != strcmp(password_hash.buf, p_auth_req->password.buf))
     {
         LOG_WARN("Password does not match");
+        LOG_DBG("Expected password: %s, actual password: %s", password_hash.buf, p_auth_req->password.buf);
+        LOG_DBG("Challenge: %s, password: %s", p_auth_ruuvi->login_session.challenge.buf, p_auth_info->auth_pass.buf);
         os_free(p_auth_req);
+
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
-            p_hostname,
+            p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default);
+            flag_auth_default,
+            "Incorrect password");
     }
     os_free(p_auth_req);
 
@@ -303,5 +319,9 @@ http_server_handle_req_post_auth(
             prev_url.buf,
             HTTP_SERVER_AUTH_RUUVI_COOKIE_PREV_URL);
     }
-    return http_server_resp_200_json("{}");
+    const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
+        p_hostinfo,
+        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        NULL);
+    return http_server_resp_200_json(p_auth_json->buf);
 }

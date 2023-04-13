@@ -540,13 +540,13 @@ http_server_netconn_resp_301_auth_html(
     const char* const                       p_hostname,
     const http_header_extra_fields_t* const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/auth.html", p_hostname);
+    LOG_INFO("Response: status 301 (Moved Permanently), URL=http://%s/#auth", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
             "HTTP/1.0 301 Moved Permanently\r\n"
             "Server: Ruuvi Gateway\r\n"
-            "Location: http://%s/auth.html\r\n"
+            "Location: http://%s/#auth\r\n"
             "%s"
             "\r\n",
             p_hostname,
@@ -563,13 +563,13 @@ http_server_netconn_resp_302_auth_html(
     const char* const                       p_hostname,
     const http_header_extra_fields_t* const p_extra_header_fields)
 {
-    LOG_INFO("Response: status 302 (Found), URL=http://%s/auth.html", p_hostname);
+    LOG_INFO("Response: status 302 (Found), URL=http://%s/#auth", p_hostname);
     if (!http_server_netconn_printf(
             p_conn,
             false,
             "HTTP/1.0 302 Found\r\n"
             "Server: Ruuvi Gateway\r\n"
-            "Location: http://%s/auth.html\r\n"
+            "Location: http://%s/#auth\r\n"
             "%s"
             "\r\n",
             p_hostname,

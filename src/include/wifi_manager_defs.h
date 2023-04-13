@@ -67,8 +67,22 @@ typedef struct wifiman_wifi_ssid_t
 
 typedef struct wifiman_hostname_t
 {
-    char hostname_buf[MAX_HOSTNAME_SIZE];
+    char buf[MAX_HOSTNAME_SIZE];
 } wifiman_hostname_t;
+
+#define WIFIMAN_FW_VERSION_SIZE (33)
+
+typedef struct wifiman_fw_version_t
+{
+    char buf[WIFIMAN_FW_VERSION_SIZE];
+} wifiman_fw_version_t;
+
+typedef struct wifiman_hostinfo_t
+{
+    wifiman_hostname_t   hostname;
+    wifiman_fw_version_t fw_ver;
+    wifiman_fw_version_t nrf52_fw_ver;
+} wifiman_hostinfo_t;
 
 /**
  * @brief Defines the maximum size of a WPA2 passkey. 64 is IEEE standard.
@@ -369,7 +383,7 @@ struct wifiman_config_sta_t
 {
     wifi_sta_config_t   wifi_config_sta;
     wifi_settings_sta_t wifi_settings_sta;
-    wifiman_hostname_t  hostname;
+    wifiman_hostinfo_t  hostinfo;
 };
 
 struct wifiman_config_t

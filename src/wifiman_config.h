@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 const wifiman_config_t*
-wifiman_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid, const wifiman_hostname_t* const p_hostname);
+wifiman_default_config_init(const wifiman_wifi_ssid_t* const p_wifi_ssid, const wifiman_hostinfo_t* const p_hostinfo);
 
 const wifiman_config_t*
 wifiman_default_config_get(void);
@@ -52,8 +52,8 @@ wifiman_config_sta_set_ssid_and_password(
     const wifiman_wifi_ssid_t* const     p_ssid,
     const wifiman_wifi_password_t* const p_password);
 
-wifiman_hostname_t
-wifiman_config_sta_get_hostname(void);
+wifiman_hostinfo_t
+wifiman_config_sta_get_hostinfo(void);
 
 wifi_ap_config_t
 wifiman_config_ap_get_config(void);
