@@ -400,16 +400,10 @@ static http_server_resp_t
 http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 {
     LOG_INFO("http_server_netconn_serve: POST /connect.json");
-    str_buf_t decrypted_content = STR_BUF_INIT_NULL();
-    if (!http_server_decrypt(http_body.ptr, &decrypted_content))
-    {
-        return http_server_resp_400();
-    }
-    LOG_DBG("http_server_netconn_serve: decrypted: %s", decrypted_content.buf);
+    LOG_DBG("http_server_netconn_serve: %s", http_body.ptr);
     wifi_ssid_password_t login_info = { 0 };
-    if (!http_server_parse_json_wifi_ssid_password(decrypted_content.buf, &login_info))
+    if (!http_server_parse_json_wifi_ssid_password(http_body.ptr, &login_info))
     {
-        str_buf_free_buf(&decrypted_content);
         return http_server_resp_400();
     }
 
