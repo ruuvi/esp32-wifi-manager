@@ -62,7 +62,7 @@ http_server_gen_resp_status_json(const json_network_info_t* const p_info, void* 
     }
     else
     {
-        json_network_info_do_generate_internal(p_info, &g_resp_status_json, p_params->flag_access_from_lan);
+        json_network_info_do_generate_internal(p_info, &g_resp_status_json);
         LOG_DBG("status.json: %s", g_resp_status_json.buf);
         *p_params->p_http_resp = http_server_resp_200_json(g_resp_status_json.buf);
     }

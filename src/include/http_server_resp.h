@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-#define HTTP_SERVER_RESP_JSON_AUTH_BUF_SIZE (192U)
+#define HTTP_SERVER_RESP_JSON_AUTH_BUF_SIZE (210U)
 
 #define HTTP_SERVER_EXTRA_HEADER_FIELDS_SIZE (380U)
 
@@ -145,6 +145,7 @@ const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const wifiman_hostinfo_t* const p_hostinfo,
     const http_server_auth_type_e   lan_auth_type,
+    const bool                      flag_access_from_lan,
     const char* const               p_err_message);
 
 const http_server_resp_auth_json_t*

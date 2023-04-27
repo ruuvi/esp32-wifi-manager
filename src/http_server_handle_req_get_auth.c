@@ -14,11 +14,12 @@
 #include "str_buf.h"
 
 static http_server_resp_t
-http_server_handle_req_get_auth_allow(const wifiman_hostinfo_t* const p_hostinfo)
+http_server_handle_req_get_auth_allow(const wifiman_hostinfo_t* const p_hostinfo, const bool flag_access_from_lan)
 {
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_ALLOW,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
 }
@@ -28,9 +29,12 @@ http_server_resp_401_auth_basic(
     const wifiman_hostinfo_t* const   p_hostinfo,
     http_header_extra_fields_t* const p_extra_header_fields)
 {
+    const bool flag_access_from_lan = true;
+
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_BASIC,
+        flag_access_from_lan,
         NULL);
     (void)snprintf(
         p_extra_header_fields->buf,
@@ -77,6 +81,7 @@ http_server_handle_req_check_auth_bearer(
 
 static http_server_resp_t
 http_server_handle_req_get_auth_basic(
+    const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const http_server_auth_info_t* const p_auth_info,
     const wifiman_hostinfo_t* const      p_hostinfo,
@@ -109,12 +114,14 @@ http_server_handle_req_get_auth_basic(
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_BASIC,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
 static http_server_resp_t
 http_server_handle_req_get_auth_digest(
+    const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const http_server_auth_info_t* const p_auth_info,
     const wifiman_hostinfo_t* const      p_hostinfo,
@@ -167,12 +174,14 @@ http_server_handle_req_get_auth_digest(
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_DIGEST,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
 static http_server_resp_t
 http_server_handle_req_get_auth_ruuvi(
+    const bool                        flag_access_from_lan,
     const http_req_header_t           http_header,
     const sta_ip_string_t* const      p_remote_ip,
     const wifiman_hostinfo_t* const   p_hostinfo,
@@ -214,6 +223,7 @@ http_server_handle_req_get_auth_ruuvi(
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
 }
@@ -226,6 +236,7 @@ http_server_handle_req_get_auth_deny(const wifiman_hostinfo_t* const p_hostinfo)
 
 static http_server_resp_t
 http_server_handle_req_get_or_check_auth(
+    const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const bool                           flag_check_rw_access_with_bearer_token,
     const sta_ip_string_t* const         p_remote_ip,
@@ -249,23 +260,35 @@ http_server_handle_req_get_or_check_auth(
             case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
                 *p_flag_access_by_bearer_token = true;
                 return http_server_resp_200_json(
-                    http_server_fill_auth_json(p_hostinfo, HTTP_SERVER_AUTH_TYPE_BEARER, NULL)->buf);
+                    http_server_fill_auth_json(p_hostinfo, HTTP_SERVER_AUTH_TYPE_BEARER, flag_access_from_lan, NULL)
+                        ->buf);
             case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
                 *p_flag_access_by_bearer_token = true;
                 return http_server_resp_401_json(
-                    http_server_fill_auth_json(p_hostinfo, HTTP_SERVER_AUTH_TYPE_BEARER, NULL));
+                    http_server_fill_auth_json(p_hostinfo, HTTP_SERVER_AUTH_TYPE_BEARER, flag_access_from_lan, NULL));
         }
     }
     switch (p_auth_info->auth_type)
     {
         case HTTP_SERVER_AUTH_TYPE_ALLOW:
-            return http_server_handle_req_get_auth_allow(p_hostinfo);
+            return http_server_handle_req_get_auth_allow(p_hostinfo, flag_access_from_lan);
         case HTTP_SERVER_AUTH_TYPE_BASIC:
-            return http_server_handle_req_get_auth_basic(http_header, p_auth_info, p_hostinfo, p_extra_header_fields);
+            return http_server_handle_req_get_auth_basic(
+                flag_access_from_lan,
+                http_header,
+                p_auth_info,
+                p_hostinfo,
+                p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DIGEST:
-            return http_server_handle_req_get_auth_digest(http_header, p_auth_info, p_hostinfo, p_extra_header_fields);
+            return http_server_handle_req_get_auth_digest(
+                flag_access_from_lan,
+                http_header,
+                p_auth_info,
+                p_hostinfo,
+                p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_RUUVI:
             return http_server_handle_req_get_auth_ruuvi(
+                flag_access_from_lan,
                 http_header,
                 p_remote_ip,
                 p_hostinfo,
@@ -276,6 +299,7 @@ http_server_handle_req_get_or_check_auth(
             return http_server_handle_req_get_auth_deny(p_hostinfo);
         case HTTP_SERVER_AUTH_TYPE_DEFAULT:
             return http_server_handle_req_get_auth_ruuvi(
+                flag_access_from_lan,
                 http_header,
                 p_remote_ip,
                 p_hostinfo,
@@ -301,9 +325,10 @@ http_server_handle_req_check_auth(
 {
     if (!flag_access_from_lan)
     {
-        return http_server_handle_req_get_auth_allow(p_hostinfo);
+        return http_server_handle_req_get_auth_allow(p_hostinfo, flag_access_from_lan);
     }
     return http_server_handle_req_get_or_check_auth(
+        flag_access_from_lan,
         http_header,
         flag_check_rw_access_with_bearer_token,
         p_remote_ip,
@@ -326,9 +351,10 @@ http_server_handle_req_get_auth(
 {
     if (!flag_access_from_lan)
     {
-        return http_server_handle_req_get_auth_allow(p_hostinfo);
+        return http_server_handle_req_get_auth_allow(p_hostinfo, flag_access_from_lan);
     }
     return http_server_handle_req_get_or_check_auth(
+        flag_access_from_lan,
         http_header,
         flag_check_rw_access_with_bearer_token,
         p_remote_ip,

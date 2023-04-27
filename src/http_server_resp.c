@@ -346,6 +346,7 @@ const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const wifiman_hostinfo_t* const p_hostinfo,
     const http_server_auth_type_e   lan_auth_type,
+    const bool                      flag_access_from_lan,
     const char* const               p_err_message)
 {
     if (NULL == p_err_message)
@@ -353,23 +354,33 @@ http_server_fill_auth_json(
         (void)snprintf(
             g_auth_json.buf,
             sizeof(g_auth_json.buf),
-            "{\"gateway_name\": \"%s\", \"fw_ver\": \"%s\", \"nrf52_fw_ver\": \"%s\", \"lan_auth_type\": \"%s\"}",
+            "{\"gateway_name\": \"%s\", "
+            "\"fw_ver\": \"%s\", "
+            "\"nrf52_fw_ver\": \"%s\", "
+            "\"lan_auth_type\": \"%s\", "
+            "\"lan\": %s}",
             p_hostinfo->hostname.buf,
             p_hostinfo->fw_ver.buf,
             p_hostinfo->nrf52_fw_ver.buf,
-            http_server_auth_type_to_str(lan_auth_type));
+            http_server_auth_type_to_str(lan_auth_type),
+            flag_access_from_lan ? "true" : "false");
     }
     else
     {
         (void)snprintf(
             g_auth_json.buf,
             sizeof(g_auth_json.buf),
-            "{\"gateway_name\": \"%s\", \"fw_ver\": \"%s\", \"nrf52_fw_ver\": \"%s\", \"lan_auth_type\": \"%s\", "
+            "{\"gateway_name\": \"%s\", "
+            "\"fw_ver\": \"%s\", "
+            "\"nrf52_fw_ver\": \"%s\", "
+            "\"lan_auth_type\": \"%s\", "
+            "\"lan\": %s, "
             "\"message\": \"%s\"}",
             p_hostinfo->hostname.buf,
             p_hostinfo->fw_ver.buf,
             p_hostinfo->nrf52_fw_ver.buf,
             http_server_auth_type_to_str(lan_auth_type),
+            flag_access_from_lan ? "true" : "false",
             p_err_message);
     }
     return &g_auth_json;
@@ -407,9 +418,12 @@ http_server_resp_401_auth_digest(
         p_hostinfo->hostname.buf,
         strlen(p_hostinfo->hostname.buf));
 
+    const bool flag_access_from_lan = true;
+
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_DIGEST,
+        flag_access_from_lan,
         NULL);
     (void)snprintf(
         p_extra_header_fields->buf,
@@ -461,9 +475,12 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
 
     http_server_resp_auth_ruuvi_prep_www_authenticate_header(p_hostinfo, p_login_session, p_extra_header_fields);
 
+    const bool flag_access_from_lan = true;
+
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        flag_access_from_lan,
         p_err_message);
     return http_server_resp_401_json(p_auth_json);
 }
@@ -471,9 +488,12 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
 http_server_resp_t
 http_server_resp_401_auth_ruuvi(const wifiman_hostinfo_t* const p_hostinfo, const bool flag_auth_default)
 {
+    const bool flag_access_from_lan = true;
+
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_401_json(p_auth_json);
 }
@@ -481,9 +501,12 @@ http_server_resp_401_auth_ruuvi(const wifiman_hostinfo_t* const p_hostinfo, cons
 http_server_resp_t
 http_server_resp_403_auth_deny(const wifiman_hostinfo_t* const p_hostinfo)
 {
+    const bool flag_access_from_lan = true;
+
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_DENY,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_403_json(p_auth_json);
 }

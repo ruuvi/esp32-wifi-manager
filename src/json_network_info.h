@@ -201,7 +201,7 @@ json_network_info_do_const_action_with_const_param(
  * @brief Generates the connection status json: ssid and IP addresses.
  */
 void
-json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json, const bool flag_access_from_lan);
+json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json);
 
 /**
  * @brief Generates the connection status json: ssid and IP addresses.
@@ -209,8 +209,7 @@ json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_j
 void
 json_network_info_do_generate_internal(
     const json_network_info_t* const      p_info,
-    http_server_resp_status_json_t* const p_resp_status_json,
-    const bool                            flag_access_from_lan);
+    http_server_resp_status_json_t* const p_resp_status_json);
 
 /**
  * @brief Updates the connection status info: ssid and IP addresses.

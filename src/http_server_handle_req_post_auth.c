@@ -195,6 +195,7 @@ http_server_handle_req_post_auth(
         const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
             p_hostinfo,
             p_auth_info->auth_type,
+            flag_access_from_lan,
             NULL);
         return http_server_resp_200_json(p_auth_json->buf);
     }
@@ -322,6 +323,7 @@ http_server_handle_req_post_auth(
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
         flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
 }

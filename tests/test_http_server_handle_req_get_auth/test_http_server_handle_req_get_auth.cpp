@@ -116,7 +116,46 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow", "lan": true})";
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp.length(), resp.content_len);
+    ASSERT_EQ(string(""), string(extra_header_fields.buf));
+}
+
+TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow_when_access_not_from_lan) // NOLINT
+{
+    const http_server_auth_info_t auth_info = {
+        HTTP_SERVER_AUTH_TYPE_ALLOW,
+        "",
+        "",
+    };
+    const wifiman_hostinfo_t hostinfo = {
+        .hostname     = { "RuuviGatewayEEFF" },
+        .fw_ver       = { "1.13.0" },
+        .nrf52_fw_ver = { "1.0.0" },
+    };
+
+    const http_req_header_t    http_header         = { "" };
+    const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
+    http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
+
+    const http_server_resp_t resp = http_server_handle_req_get_auth(
+        false,
+        false,
+        http_header,
+        &remote_ip,
+        &auth_info,
+        &hostinfo,
+        &extra_header_fields);
+    const string exp_json_resp
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow", "lan": false})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -155,7 +194,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_deny"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_deny", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -207,7 +246,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -258,7 +297,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -312,7 +351,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -366,7 +405,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -420,7 +459,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_basic", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -478,7 +517,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -531,7 +570,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -588,7 +627,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -646,7 +685,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -704,7 +743,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
         &hostinfo,
         &extra_header_fields);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_digest", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -762,7 +801,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -809,7 +848,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -838,7 +877,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -890,7 +929,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -950,7 +989,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -999,7 +1038,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1059,7 +1098,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1108,7 +1147,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1168,7 +1207,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1217,7 +1256,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1277,7 +1316,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1326,7 +1365,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1386,7 +1425,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1435,7 +1474,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1495,7 +1534,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1544,7 +1583,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1604,7 +1643,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1653,7 +1692,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1713,7 +1752,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1761,7 +1800,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1821,7 +1860,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1870,7 +1909,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1930,7 +1969,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -1978,7 +2017,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -2038,7 +2077,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -2075,7 +2114,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
             &hostinfo,
             &extra_header_fields);
         const string exp_json_resp
-            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+            = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
         ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
@@ -2140,7 +2179,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2207,7 +2246,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2274,7 +2313,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2341,7 +2380,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_r
         &extra_header_fields,
         &flag_access_by_bearer_token);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
@@ -2412,7 +2451,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2473,7 +2512,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2533,7 +2572,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2592,7 +2631,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2650,7 +2689,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2709,7 +2748,7 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
-        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi"})";
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
