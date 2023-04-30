@@ -27,6 +27,7 @@ typedef enum http_server_auth_type_e
     HTTP_SERVER_AUTH_TYPE_RUUVI   = 3,
     HTTP_SERVER_AUTH_TYPE_DENY    = 4,
     HTTP_SERVER_AUTH_TYPE_DEFAULT = 5,
+    HTTP_SERVER_AUTH_TYPE_BEARER  = 6,
 } http_server_auth_type_e;
 
 typedef struct http_server_auth_type_str_t

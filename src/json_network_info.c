@@ -53,7 +53,6 @@ typedef struct json_network_info_set_extra_t
 typedef struct json_network_info_do_generate_param_t
 {
     http_server_resp_status_json_t* p_resp_status_json;
-    bool                            flag_access_from_lan;
 } json_network_info_do_generate_param_t;
 
 static json_network_info_t g_json_network_info;
@@ -218,8 +217,7 @@ json_network_info_clear(void)
 void
 json_network_info_do_generate_internal(
     const json_network_info_t* const      p_info,
-    http_server_resp_status_json_t* const p_resp_status_json,
-    const bool                            flag_access_from_lan)
+    http_server_resp_status_json_t* const p_resp_status_json)
 {
     str_buf_t str_buf = STR_BUF_INIT_WITH_ARR(p_resp_status_json->buf);
     str_buf_printf(&str_buf, "{");
@@ -243,13 +241,12 @@ json_network_info_do_generate_internal(
         }
         str_buf_printf(
             &str_buf,
-            ",\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"dhcp\":\"%s\",\"urc\":%d,\"lan\":%d",
+            ",\"ip\":\"%s\",\"netmask\":\"%s\",\"gw\":\"%s\",\"dhcp\":\"%s\",\"urc\":%d",
             p_info->network_info.ip,
             p_info->network_info.netmask,
             p_info->network_info.gw,
             p_info->network_info.dhcp.buf,
-            (printf_int_t)p_info->update_reason_code,
-            (printf_int_t)flag_access_from_lan);
+            (printf_int_t)p_info->update_reason_code);
 
         if ('\0' != p_info->extra_info[0])
         {
@@ -267,15 +264,14 @@ static void
 json_network_info_do_generate(const json_network_info_t* const p_info, const void* const p_param)
 {
     const json_network_info_do_generate_param_t* const p_params = p_param;
-    json_network_info_do_generate_internal(p_info, p_params->p_resp_status_json, p_params->flag_access_from_lan);
+    json_network_info_do_generate_internal(p_info, p_params->p_resp_status_json);
 }
 
 void
-json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json, const bool flag_access_from_lan)
+json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json)
 {
     const json_network_info_do_generate_param_t param = {
-        .p_resp_status_json   = p_resp_status_json,
-        .flag_access_from_lan = flag_access_from_lan,
+        .p_resp_status_json = p_resp_status_json,
     };
     json_network_info_do_const_action_with_const_param(&json_network_info_do_generate, &param);
 }

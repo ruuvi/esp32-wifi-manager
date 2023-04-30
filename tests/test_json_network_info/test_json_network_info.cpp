@@ -154,11 +154,11 @@ os_mutex_unlock(os_mutex_t const h_mutex)
 
 } // extern "C"
 
-string
-json_network_info_get(const bool flag_access_from_lan)
+static string
+json_network_info_get(void)
 {
     http_server_resp_status_json_t resp_status_json = {};
-    json_network_info_generate(&resp_status_json, flag_access_from_lan);
+    json_network_info_generate(&resp_status_json);
     string json_info_copy(resp_status_json.buf);
     return json_info_copy;
 }
@@ -167,14 +167,14 @@ json_network_info_get(const bool flag_access_from_lan)
 
 TEST_F(TestJsonNetworkInfo, test_after_init) // NOLINT
 {
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(string("{}\n"), json_str);
 }
 
 TEST_F(TestJsonNetworkInfo, test_clear) // NOLINT
 {
     json_network_info_clear();
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(string("{}\n"), json_str);
 }
 
@@ -187,10 +187,10 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_null_lan_false) // NOLINT
         { "192.168.0.2" },
     };
     json_network_info_update(nullptr, &network_info, UPDATE_CONNECTION_OK);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":null,\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0,\"lan\":0}\n"),
+               "\"192.168.0.2\",\"urc\":0}\n"),
         json_str);
 }
 
@@ -203,10 +203,10 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_null_lan_true) // NOLINT
         { "192.168.0.2" },
     };
     json_network_info_update(nullptr, &network_info, UPDATE_CONNECTION_OK);
-    string json_str = json_network_info_get(true);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":null,\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0,\"lan\":1}\n"),
+               "\"192.168.0.2\",\"urc\":0}\n"),
         json_str);
 }
 
@@ -220,10 +220,10 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_empty) // NOLINT
     };
     const wifiman_wifi_ssid_t ssid = { "" };
     json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":\"\",\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0,\"lan\":0}\n"),
+               "\"192.168.0.2\",\"urc\":0}\n"),
         json_str);
 }
 
@@ -238,7 +238,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_connection_ok) // NOLINT
 
     const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{"
                "\"ssid\":\"test_ssid\","
@@ -246,8 +246,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_connection_ok) // NOLINT
                "\"netmask\":\"255.255.255.0\","
                "\"gw\":\"192.168.0.1\","
                "\"dhcp\":\"192.168.0.2\","
-               "\"urc\":0,"
-               "\"lan\":0"
+               "\"urc\":0"
                "}\n"),
         json_str);
 }
@@ -262,7 +261,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt) // NOLINT
     };
     const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_FAILED_ATTEMPT);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{"
                "\"ssid\":\"test_ssid\","
@@ -270,8 +269,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":1,"
-               "\"lan\":0"
+               "\"urc\":1"
                "}\n"),
         json_str);
 }
@@ -286,7 +284,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt_2) // NOLINT
     };
     const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_FAILED_ATTEMPT);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{"
                "\"ssid\":\"test_ssid\","
@@ -294,8 +292,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt_2) // NOLINT
                "\"netmask\":\"255.255.255.0\","
                "\"gw\":\"192.168.0.1\","
                "\"dhcp\":\"192.168.0.2\","
-               "\"urc\":1,"
-               "\"lan\":0"
+               "\"urc\":1"
                "}\n"),
         json_str);
 }
@@ -310,7 +307,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_user_disconnect) // NOLINT
     };
     const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_USER_DISCONNECT);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{"
                "\"ssid\":\"test_ssid\","
@@ -318,8 +315,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_user_disconnect) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":2,"
-               "\"lan\":0"
+               "\"urc\":2"
                "}\n"),
         json_str);
 }
@@ -334,7 +330,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_lost_connection) // NOLINT
     };
     const wifiman_wifi_ssid_t ssid = { "test_ssid" };
     json_network_info_update(&ssid, &network_info, UPDATE_LOST_CONNECTION);
-    string json_str = json_network_info_get(false);
+    string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{"
                "\"ssid\":\"test_ssid\","
@@ -342,8 +338,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_lost_connection) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":3,"
-               "\"lan\":0"
+               "\"urc\":3"
                "}\n"),
         json_str);
 }
