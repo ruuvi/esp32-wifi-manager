@@ -163,7 +163,7 @@ http_server_start(void)
 
     os_mutex_unlock(g_http_server_mutex);
 
-    const uint32_t stack_depth = 20U * 1024U;
+    const uint32_t stack_depth = 12U * 1024U;
     if (!os_task_create_finite_without_param(
             &http_server_task,
             "http_server",
