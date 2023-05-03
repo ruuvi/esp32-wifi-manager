@@ -78,8 +78,6 @@ typedef enum http_server_sig_e
 #define HTTP_SERVER_SIG_FIRST (HTTP_SERVER_SIG_STOP)
 #define HTTP_SERVER_SIG_LAST  (HTTP_SERVER_SIG_USER_REQ_2)
 
-#define HTTP_SERVER_ACCEPT_TIMEOUT_MS (1 * 1000)
-
 #define HTTP_SERVER_STATUS_JSON_REQUEST_TIMEOUT_MS (20 * 1000)
 #define HTTP_SERVER_STA_AP_TIMEOUT_MS              (60 * 1000)
 
@@ -411,7 +409,7 @@ http_server_task(void)
             }
         }
 
-        (void)http_server_accept_and_handle_conn(p_conn);
+        http_server_accept_and_handle_conn(p_conn);
 
         taskYIELD(); /* allows the freeRTOS scheduler to take over if needed. */
     }
