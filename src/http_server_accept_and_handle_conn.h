@@ -15,8 +15,8 @@
 extern "C" {
 #endif
 
-#define HTTP_SERVER_ACCEPT_TIMEOUT_MS (5)
-#define HTTP_SERVER_ACCEPT_DELAY_MS   (107)
+#define HTTP_SERVER_ACCEPT_TIMEOUT_MS (1)
+#define HTTP_SERVER_ACCEPT_DELAY_MS   (53)
 
 void
 http_server_accept_and_handle_conn(struct netconn* const p_conn);
