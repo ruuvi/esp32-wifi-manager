@@ -39,6 +39,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include "http_server_auth_type.h"
 #include "attribs.h"
 #include "str_buf.h"
+#include "os_mutex.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +57,9 @@ typedef enum http_server_user_req_code_e
  */
 void
 http_server_init(void);
+
+void
+http_server_use_mutex_for_incoming_connection_handling(os_mutex_t p_mutex);
 
 void
 http_server_sema_send_wait_immediate(void);

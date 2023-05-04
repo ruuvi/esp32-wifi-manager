@@ -15,7 +15,10 @@
 extern "C" {
 #endif
 
-os_delta_ticks_t
+#define HTTP_SERVER_ACCEPT_TIMEOUT_MS (1)
+#define HTTP_SERVER_ACCEPT_DELAY_MS   (53)
+
+void
 http_server_accept_and_handle_conn(struct netconn* const p_conn);
 
 #ifdef __cplusplus

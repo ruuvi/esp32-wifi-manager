@@ -36,6 +36,8 @@ static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
 
+static os_mutex_t g_p_mutex_accept_conn;
+
 static const char*
 get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)
 {
@@ -886,64 +888,110 @@ http_server_netconn_serve(struct netconn* const p_conn)
     os_free(p_req_buf);
 }
 
-os_delta_ticks_t
+void
+http_server_use_mutex_for_incoming_connection_handling(os_mutex_t p_mutex)
+{
+    if (NULL != p_mutex)
+    {
+        if (NULL == g_p_mutex_accept_conn)
+        {
+            LOG_INFO("Activate using mutex for http_server");
+            g_p_mutex_accept_conn = p_mutex;
+        }
+    }
+    else
+    {
+        if (NULL != g_p_mutex_accept_conn)
+        {
+            LOG_INFO("Deactivate using mutex for http_server");
+            g_p_mutex_accept_conn = NULL;
+        }
+    }
+}
+
+void
 http_server_accept_and_handle_conn(struct netconn* const p_conn)
 {
     struct netconn* p_new_conn = NULL;
 
+    os_mutex_t p_mutex = g_p_mutex_accept_conn;
+    if (NULL != p_mutex)
+    {
+        if (!os_mutex_try_lock(p_mutex))
+        {
+            LOG_DBG("Can't lock mutex, sleep for %u ms", HTTP_SERVER_ACCEPT_DELAY_MS);
+            vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
+            return;
+        }
+    }
+
     const err_t err = netconn_accept(p_conn, &p_new_conn);
 
-    os_delta_ticks_t time_for_processing_request = 0;
-    if (ERR_OK == err)
+    if (ERR_OK != err)
     {
-        if (NULL == p_new_conn)
+        if (NULL != p_mutex)
         {
-            LOG_ERR("netconn_accept returned OK, but p_new_conn is NULL");
+            os_mutex_unlock(p_mutex);
         }
-        else if (NULL == p_conn->pcb.tcp)
+        if (ERR_TIMEOUT == err)
         {
-            // It seems that's a bug in netconn_accept, err is ERR_OK, p_new_conn is not NULL,
-            // but p_conn->pcb.tcp is NULL.
-            // Perhaps, err_tcp() was called. So the socked has already been closed.
-            // As a workaround try to free resources and ignore this error.
-            LOG_ERR("netconn_accept returned OK, but p_conn->pcb.tcp is NULL");
-            netconn_delete(p_new_conn);
+            LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
+            vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
+        }
+        else if (ERR_ABRT == err)
+        {
+            LOG_ERR("netconn_accept ERR_ABRT");
         }
         else
         {
-            const int_fast32_t timeout_ms = 2500;
-            netconn_set_recvtimeout(p_new_conn, timeout_ms);
-            netconn_set_sendtimeout(p_new_conn, timeout_ms);
-            const os_delta_ticks_t t0 = xTaskGetTickCount();
-            LOG_DBG("call http_server_netconn_serve");
-            http_server_netconn_serve(p_new_conn);
-            LOG_DBG("call netconn_close");
-            const err_t err_close = netconn_close(p_new_conn);
-            if (ESP_OK != err_close)
-            {
-                LOG_ERR_ESP(err_close, "%s failed (%s)", "netconn_close", conv_lwip_err_to_str(err_close));
-            }
-            LOG_DBG("call netconn_delete");
-            const err_t err_delete = netconn_delete(p_new_conn);
-            if (ESP_OK != err_delete)
-            {
-                LOG_ERR_ESP(err_delete, "%s failed", "netconn_delete");
-            }
-            time_for_processing_request = xTaskGetTickCount() - t0;
-            LOG_DBG("req processed for %u ticks", (printf_uint_t)time_for_processing_request);
+            LOG_ERR("netconn_accept: %d", err);
         }
+        return;
     }
-    else if (ERR_TIMEOUT == err)
+
+    if (NULL == p_new_conn)
     {
-        LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
+        LOG_ERR("netconn_accept returned OK, but p_new_conn is NULL");
     }
-    else if (ERR_ABRT == err)
+    else if (NULL == p_conn->pcb.tcp)
     {
-        LOG_ERR("netconn_accept ERR_ABRT");
+        // It seems that's a bug in netconn_accept, err is ERR_OK, p_new_conn is not NULL,
+        // but p_conn->pcb.tcp is NULL.
+        // Perhaps, err_tcp() was called. So the socked has already been closed.
+        // As a workaround try to free resources and ignore this error.
+        LOG_ERR("netconn_accept returned OK, but p_conn->pcb.tcp is NULL");
+        netconn_delete(p_new_conn);
     }
     else
     {
-        LOG_ERR("netconn_accept: %d", err);
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
+        const os_delta_ticks_t t0 = xTaskGetTickCount();
+#endif
+        const int_fast32_t timeout_ms = 2500;
+        netconn_set_recvtimeout(p_new_conn, timeout_ms);
+        netconn_set_sendtimeout(p_new_conn, timeout_ms);
+        LOG_DBG("call http_server_netconn_serve");
+        http_server_netconn_serve(p_new_conn);
+        LOG_DBG("call netconn_close");
+        const err_t err_close = netconn_close(p_new_conn);
+        if (ESP_OK != err_close)
+        {
+            LOG_ERR_ESP(err_close, "%s failed (%s)", "netconn_close", conv_lwip_err_to_str(err_close));
+        }
+        LOG_DBG("call netconn_delete");
+        const err_t err_delete = netconn_delete(p_new_conn);
+        if (ESP_OK != err_delete)
+        {
+            LOG_ERR_ESP(err_delete, "%s failed", "netconn_delete");
+        }
+#if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
+        const os_delta_ticks_t time_for_processing_request = xTaskGetTickCount() - t0;
+        LOG_DBG("req processed for %u ticks", (printf_uint_t)time_for_processing_request);
+#endif
     }
-    return time_for_processing_request;
+
+    if (NULL != p_mutex)
+    {
+        os_mutex_unlock(p_mutex);
+    }
 }
