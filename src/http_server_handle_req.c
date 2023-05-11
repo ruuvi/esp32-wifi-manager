@@ -170,14 +170,15 @@ http_server_handle_req_get(
 
 static http_server_resp_t
 http_server_handle_req_delete(
-    const char*                          p_file_name,
+    const char* const                    p_file_name,
+    const char* const                    p_uri_params,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
     const http_server_auth_info_t* const p_auth_info,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
-    LOG_INFO("DELETE /%s", p_file_name);
+    LOG_INFO("DELETE /%s, params=%s", p_file_name, (NULL != p_uri_params) ? p_uri_params : "");
     const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
 
     const bool               flag_check_rw_access_with_bearer_token = true;
@@ -216,7 +217,7 @@ http_server_handle_req_delete(
         }
         return http_server_resp_200_json("{}");
     }
-    return wifi_manager_cb_on_http_delete(p_file_name, NULL, flag_access_from_lan, NULL);
+    return wifi_manager_cb_on_http_delete(p_file_name, p_uri_params, flag_access_from_lan, NULL);
 }
 
 static const char*
@@ -451,6 +452,7 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 static http_server_resp_t
 http_server_handle_req_post(
     const char*                          p_file_name,
+    const char*                          p_uri_params,
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
     const sta_ip_string_t* const         p_remote_ip,
@@ -458,7 +460,7 @@ http_server_handle_req_post(
     const http_req_body_t                http_body,
     http_header_extra_fields_t* const    p_extra_header_fields)
 {
-    LOG_INFO("POST /%s", p_file_name);
+    LOG_INFO("POST /%s, params=%s", p_file_name, (NULL != p_uri_params) ? p_uri_params : "");
 
     const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
 
@@ -495,7 +497,7 @@ http_server_handle_req_post(
     {
         return http_server_handle_req_post_connect_json(http_body);
     }
-    return wifi_manager_cb_on_http_post(p_file_name, NULL, http_body, flag_access_from_lan);
+    return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, flag_access_from_lan);
 }
 
 http_server_resp_t
@@ -558,6 +560,7 @@ http_server_handle_req(
     {
         return http_server_handle_req_delete(
             path,
+            p_req_info->http_uri_params.ptr,
             flag_access_from_lan,
             p_req_info->http_header,
             p_remote_ip,
@@ -593,6 +596,7 @@ http_server_handle_req(
 
         const http_server_resp_t resp = http_server_handle_req_post(
             path,
+            p_req_info->http_uri_params.ptr,
             flag_access_from_lan,
             p_req_info->http_header,
             p_remote_ip,
