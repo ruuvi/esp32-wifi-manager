@@ -277,14 +277,21 @@ http_server_handle_req_post_auth(
             flag_auth_default,
             "Incorrect username");
     }
-    wifiman_sha256_digest_hex_str_t password_hash = { 0 };
+    wifiman_sha256_digest_hex_str_t* p_password_hash = os_calloc(1, sizeof(*p_password_hash));
+    if (NULL == p_password_hash)
+    {
+        LOG_ERR("Can't allocate memory");
+        os_free(p_auth_req);
+        return http_server_resp_500();
+    }
     if (!http_server_auth_ruuvi_gen_hashed_password(
             p_auth_ruuvi->login_session.challenge.buf,
             p_auth_info->auth_pass.buf,
-            &password_hash))
+            p_password_hash))
     {
         LOG_WARN("Failed to generate hashed password");
         os_free(p_auth_req);
+        os_free(p_password_hash);
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
             p_hostinfo,
@@ -292,12 +299,13 @@ http_server_handle_req_post_auth(
             flag_auth_default,
             NULL);
     }
-    if (0 != strcmp(password_hash.buf, p_auth_req->password.buf))
+    if (0 != strcmp(p_password_hash->buf, p_auth_req->password.buf))
     {
         LOG_WARN("Password does not match");
         LOG_DBG("Expected password: %s, actual password: %s", password_hash.buf, p_auth_req->password.buf);
         LOG_DBG("Challenge: %s, password: %s", p_auth_ruuvi->login_session.challenge.buf, p_auth_info->auth_pass.buf);
         os_free(p_auth_req);
+        os_free(p_password_hash);
 
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_remote_ip,
@@ -307,6 +315,7 @@ http_server_handle_req_post_auth(
             "Incorrect password");
     }
     os_free(p_auth_req);
+    os_free(p_password_hash);
 
     http_server_auth_ruuvi_add_authorized_session(p_auth_ruuvi, &session_id, p_remote_ip);
     http_server_auth_ruuvi_login_session_clear(&p_auth_ruuvi->login_session);
