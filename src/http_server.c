@@ -84,6 +84,8 @@ typedef enum http_server_sig_e
 #define HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS (1000U)
 #define HTTP_SERVER_TASK_WDOG_MIN_FEED_FREQ        (3U)
 
+#define HTTP_SERVER_TASK_PRIORITY (1)
+
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.
  * @see void http_server_start()
@@ -162,11 +164,7 @@ http_server_start(void)
     os_mutex_unlock(g_http_server_mutex);
 
     const uint32_t stack_depth = 7680U;
-    if (!os_task_create_finite_without_param(
-            &http_server_task,
-            "http_server",
-            stack_depth,
-            WIFI_MANAGER_TASK_PRIORITY - 1))
+    if (!os_task_create_finite_without_param(&http_server_task, "http_server", stack_depth, HTTP_SERVER_TASK_PRIORITY))
     {
         LOG_ERR("xTaskCreate failed: http_server");
     }
