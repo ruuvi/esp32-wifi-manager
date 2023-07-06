@@ -444,6 +444,13 @@ wifi_manager_init_start_wifi(
         return false;
     }
 
+    err = esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_set_ps");
+        return false;
+    }
+
     err = esp_wifi_start();
     if (ESP_OK != err)
     {
