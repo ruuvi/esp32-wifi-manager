@@ -216,11 +216,11 @@ http_server_netconn_write(
             (printf_uint_t)bytes_written);
         offset += bytes_written;
         int32_t send_timeout = p_conn->send_timeout;
-        bool flag_success = false;
+        bool    flag_success = false;
         while (!flag_success && (send_timeout > 0))
         {
             const int32_t tmp_timeout = (send_timeout > 1000) ? 1000 : send_timeout;
-            flag_success = http_server_sema_send_wait_timeout(tmp_timeout);
+            flag_success              = http_server_sema_send_wait_timeout(tmp_timeout);
             LOG_DBG("Feed watchdog");
             const esp_err_t err_wdt = esp_task_wdt_reset();
             if (ESP_OK != err_wdt)
