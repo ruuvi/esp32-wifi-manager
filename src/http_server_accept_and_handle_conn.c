@@ -215,16 +215,24 @@ http_server_netconn_write(
             (printf_uint_t)offset,
             (printf_uint_t)bytes_written);
         offset += bytes_written;
-        if (!http_server_sema_send_wait_timeout(p_conn->send_timeout))
+        int32_t send_timeout = p_conn->send_timeout;
+        bool    flag_success = false;
+        while (!flag_success && (send_timeout > 0))
+        {
+            const int32_t tmp_timeout = (send_timeout > 1000) ? 1000 : send_timeout;
+            flag_success              = http_server_sema_send_wait_timeout(tmp_timeout);
+            LOG_DBG("Feed watchdog");
+            const esp_err_t err_wdt = esp_task_wdt_reset();
+            if (ESP_OK != err_wdt)
+            {
+                LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
+            }
+            send_timeout -= tmp_timeout;
+        }
+        if (!flag_success)
         {
             LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
             return false;
-        }
-        LOG_DBG("Feed watchdog");
-        const esp_err_t err_wdt = esp_task_wdt_reset();
-        if (ESP_OK != err_wdt)
-        {
-            LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
         }
     } while (offset != buf_len);
     return true;
@@ -967,9 +975,10 @@ http_server_accept_and_handle_conn(struct netconn* const p_conn)
 #if LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG
         const os_delta_ticks_t t0 = xTaskGetTickCount();
 #endif
-        const int_fast32_t timeout_ms = 2500;
-        netconn_set_recvtimeout(p_new_conn, timeout_ms);
-        netconn_set_sendtimeout(p_new_conn, timeout_ms);
+        const int_fast32_t recv_timeout_ms = 3000;
+        netconn_set_recvtimeout(p_new_conn, recv_timeout_ms);
+        const int_fast32_t send_timeout_ms = 15000;
+        netconn_set_sendtimeout(p_new_conn, send_timeout_ms);
         LOG_DBG("call http_server_netconn_serve");
         http_server_netconn_serve(p_new_conn);
         LOG_DBG("call netconn_close");
