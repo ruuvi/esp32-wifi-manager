@@ -43,6 +43,12 @@ http_server_resp_t
 http_server_resp_200_json_in_heap(const char* const p_json_content);
 
 http_server_resp_t
+http_server_resp_json_generator(const http_resp_code_e http_resp_code, json_stream_gen_t* const p_json_gen);
+
+http_server_resp_t
+http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen);
+
+http_server_resp_t
 http_server_resp_302(void);
 
 http_server_resp_t

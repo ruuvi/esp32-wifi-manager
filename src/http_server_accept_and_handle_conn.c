@@ -401,6 +401,43 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
     close(p_resp->select_location.fatfs.fd);
 }
 
+static void
+write_content_from_json_generator(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
+{
+    json_stream_gen_t* p_json_gen = p_resp->select_location.json_generator.p_json_gen;
+
+    size_t bytes_cnt = 0;
+    while (true)
+    {
+        const char* p_chunk = json_stream_gen_get_next_chunk(p_json_gen);
+        if (NULL == p_chunk)
+        {
+            LOG_ERR("json_stream_gen_get_next_chunk return error");
+            break;
+        }
+        const size_t num_bytes = strlen(p_chunk);
+        if (0 == num_bytes)
+        {
+            break;
+        }
+        bytes_cnt += num_bytes;
+
+        uint8_t netconn_flags = (uint8_t)NETCONN_COPY;
+        if (bytes_cnt < p_resp->content_len)
+        {
+            netconn_flags |= (uint8_t)NETCONN_MORE;
+        }
+        LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        const bool res = http_server_netconn_write(p_conn, p_chunk, num_bytes, netconn_flags);
+        if (!res)
+        {
+            LOG_ERR("%s failed", "http_server_netconn_write");
+            break;
+        }
+    }
+    json_stream_gen_delete(&p_json_gen);
+}
+
 static http_header_date_str_t
 http_server_gen_header_date_str(const bool flag_gen_date)
 {
@@ -433,6 +470,9 @@ http_server_write_content(struct netconn* const p_conn, http_server_resp_t* cons
         case HTTP_CONTENT_LOCATION_FATFS:
             write_content_from_fatfs(p_conn, p_resp);
             break;
+        case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
+            write_content_from_json_generator(p_conn, p_resp);
+            break;
     }
 }
 
@@ -459,31 +499,61 @@ http_server_netconn_resp_with_content(
     const bool use_extra_content_type_param = (NULL != p_resp->p_content_type_param)
                                               && ('\0' != p_resp->p_content_type_param[0]);
     const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
-    if (!http_server_netconn_printf(
-            p_conn,
-            true,
-            "HTTP/1.0 %u %s\r\n"
-            "Server: Ruuvi Gateway\r\n"
-            "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
-            "Content-Length: %lu\r\n"
-            "%s"
-            "%s"
-            "%s"
-            "\r\n",
-            (printf_uint_t)resp_code,
-            p_status_msg,
-            date_str.buf,
-            http_get_content_type_str(p_resp->content_type),
-            use_extra_content_type_param ? "; " : "",
-            use_extra_content_type_param ? p_resp->p_content_type_param : "",
-            (printf_ulong_t)p_resp->content_len,
-            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-            http_get_content_encoding_str(p_resp),
-            http_get_cache_control_str(p_resp)))
+    if (SIZE_MAX != p_resp->content_len)
     {
-        LOG_ERR("%s failed", "http_server_netconn_printf");
-        return;
+        if (!http_server_netconn_printf(
+                p_conn,
+                true,
+                "HTTP/1.0 %u %s\r\n"
+                "Server: Ruuvi Gateway\r\n"
+                "%s"
+                "Content-type: %s; charset=utf-8%s%s\r\n"
+                "Content-Length: %lu\r\n"
+                "%s"
+                "%s"
+                "%s"
+                "\r\n",
+                (printf_uint_t)resp_code,
+                p_status_msg,
+                date_str.buf,
+                http_get_content_type_str(p_resp->content_type),
+                use_extra_content_type_param ? "; " : "",
+                use_extra_content_type_param ? p_resp->p_content_type_param : "",
+                (printf_ulong_t)p_resp->content_len,
+                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+                http_get_content_encoding_str(p_resp),
+                http_get_cache_control_str(p_resp)))
+        {
+            LOG_ERR("%s failed", "http_server_netconn_printf");
+            return;
+        }
+    }
+    else
+    {
+        if (!http_server_netconn_printf(
+                p_conn,
+                true,
+                "HTTP/1.0 %u %s\r\n"
+                "Server: Ruuvi Gateway\r\n"
+                "%s"
+                "Content-type: %s; charset=utf-8%s%s\r\n"
+                "%s"
+                "%s"
+                "%s"
+                "\r\n",
+                (printf_uint_t)resp_code,
+                p_status_msg,
+                date_str.buf,
+                http_get_content_type_str(p_resp->content_type),
+                use_extra_content_type_param ? "; " : "",
+                use_extra_content_type_param ? p_resp->p_content_type_param : "",
+                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+                http_get_content_encoding_str(p_resp),
+                http_get_cache_control_str(p_resp)))
+        {
+            LOG_ERR("%s failed", "http_server_netconn_printf");
+            return;
+        }
     }
 
     http_server_write_content(p_conn, p_resp);

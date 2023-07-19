@@ -71,10 +71,12 @@ if(IDF_VERSION_MAJOR GREATER_EQUAL 4)
             esp_http_server
             json
             ruuvi.esp_wrappers.c
+            ruuvi.json_stream_gen.c
         INCLUDE_DIRS
             src/include
         PRIV_INCLUDE_DIRS
             ../ruuvi.esp_wrappers.c/include
+            ../ruuvi.json_stream_gen.c/include
         )
 
     target_compile_options(${COMPONENT_LIB} PRIVATE

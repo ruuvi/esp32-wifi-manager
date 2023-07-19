@@ -13,6 +13,8 @@ add_executable(${ProjectId}
         ../../src/include/http_server_auth_type.h
         ../../src/wifiman_sha256.c
         ../../src/wifiman_sha256.h
+        ${RUUVI_JSON_STREAM_GEN_SRC}/json_stream_gen.c
+        ${RUUVI_JSON_STREAM_GEN_INC}/json_stream_gen.h
         $ENV{IDF_PATH}/components/mbedtls/mbedtls/library/sha256.c
         $ENV{IDF_PATH}/components/mbedtls/mbedtls/include/mbedtls/sha256.h
         $ENV{IDF_PATH}/components/mbedtls/mbedtls/library/platform_util.c

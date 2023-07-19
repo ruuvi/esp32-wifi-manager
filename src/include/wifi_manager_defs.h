@@ -40,6 +40,7 @@ Contains the freeRTOS task and all necessary support
 #include "esp_netif_ip_addr.h"
 #include "esp_netif_types.h"
 #include "http_server.h"
+#include "json_stream_gen.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -286,6 +287,7 @@ typedef enum http_content_location_e
     HTTP_CONTENT_LOCATION_STATIC_MEM,
     HTTP_CONTENT_LOCATION_HEAP,
     HTTP_CONTENT_LOCATION_FATFS,
+    HTTP_CONTENT_LOCATION_JSON_GENERATOR,
 } http_content_location_e;
 
 typedef struct http_server_resp_t
@@ -308,6 +310,10 @@ typedef struct http_server_resp_t
         {
             socket_t fd;
         } fatfs;
+        struct
+        {
+            json_stream_gen_t* p_json_gen;
+        } json_generator;
     } select_location;
 } http_server_resp_t;
 

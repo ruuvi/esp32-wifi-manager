@@ -28,6 +28,8 @@ add_executable(${ProjectId}
         ../../src/include/http_server_resp.h
         ../../src/http_req.c
         ../../src/http_req.h
+        ${RUUVI_JSON_STREAM_GEN_SRC}/json_stream_gen.c
+        ${RUUVI_JSON_STREAM_GEN_INC}/json_stream_gen.h
         $ENV{IDF_PATH}/components/json/cJSON/cJSON.c
         $ENV{IDF_PATH}/components/json/cJSON/cJSON.h
         $ENV{IDF_PATH}/components/mbedtls/mbedtls/library/base64.c
