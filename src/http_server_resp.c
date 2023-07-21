@@ -9,6 +9,7 @@
 #include <string.h>
 #include <esp_system.h>
 #include "http_server_auth.h"
+#include "json_stream_gen.h"
 
 static http_server_resp_auth_json_t g_auth_json;
 
@@ -47,6 +48,36 @@ http_server_resp_t
 http_server_resp_200_json_in_heap(const char* const p_json_content)
 {
     return http_server_resp_json_in_heap(HTTP_RESP_CODE_200, p_json_content);
+}
+
+http_server_resp_t
+http_server_resp_json_generator(const http_resp_code_e http_resp_code, json_stream_gen_t* const p_json_gen)
+{
+    const bool flag_no_cache        = true;
+    const bool flag_add_header_date = true;
+    const http_server_resp_t resp = {
+        .http_resp_code       = http_resp_code,
+        .content_location     = HTTP_CONTENT_LOCATION_JSON_GENERATOR,
+        .flag_no_cache        = flag_no_cache,
+        .flag_add_header_date = flag_add_header_date,
+        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .p_content_type_param = NULL,
+        .content_len          = json_stream_gen_calc_size(p_json_gen),
+        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .select_location      = {
+            .json_generator = {
+                .p_json_gen = p_json_gen,
+            },
+        },
+    };
+    json_stream_gen_reset(p_json_gen);
+    return resp;
+}
+
+http_server_resp_t
+http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen)
+{
+    return http_server_resp_json_generator(HTTP_RESP_CODE_200, p_json_gen);
 }
 
 http_server_resp_t
