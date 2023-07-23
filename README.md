@@ -1,7 +1,6 @@
 
 This is modification of *esp32-wifi-manager*, which you can find here: https://github.com/tonyp7/esp32-wifi-manager
 
-
 The original component has been rewritten quite extensively in order to best integrate it with "Ruuvi Gateway" https://github.com/ruuvi/ruuvi.gateway_esp.c.git
 
 ---
