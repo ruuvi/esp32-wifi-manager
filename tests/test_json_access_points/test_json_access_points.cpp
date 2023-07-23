@@ -23,13 +23,11 @@ protected:
     void
     SetUp() override
     {
-        json_access_points_init();
     }
 
     void
     TearDown() override
     {
-        json_access_points_deinit();
     }
 
 public:

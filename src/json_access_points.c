@@ -37,16 +37,6 @@ Contains the freeRTOS task and all necessary support
 #include "json.h"
 
 void
-json_access_points_init(void)
-{
-}
-
-void
-json_access_points_deinit(void)
-{
-}
-
-void
 json_access_points_generate_str_buf(
     str_buf_t* const              p_str_buf,
     const wifi_ap_record_t* const p_access_points,
@@ -56,18 +46,18 @@ json_access_points_generate_str_buf(
     const uint32_t num_ap_checked = (num_access_points <= MAX_AP_NUM) ? num_access_points : MAX_AP_NUM;
     for (uint32_t i = 0; i < num_ap_checked; ++i)
     {
-        const wifi_ap_record_t ap = p_access_points[i];
+        const wifi_ap_record_t* const p_ap = &p_access_points[i];
 
         str_buf_printf(p_str_buf, "{\"ssid\":");
-        json_print_escaped_string(p_str_buf, (const char*)ap.ssid);
+        json_print_escaped_string(p_str_buf, (const char*)p_ap->ssid);
 
         /* print the rest of the json for this access point: no more string to escape */
         str_buf_printf(
             p_str_buf,
             ",\"chan\":%d,\"rssi\":%d,\"auth\":%d}%s\n",
-            ap.primary,
-            ap.rssi,
-            ap.authmode,
+            p_ap->primary,
+            p_ap->rssi,
+            p_ap->authmode,
             (i < (num_ap_checked - 1)) ? "," : "");
     }
     str_buf_printf(p_str_buf, "]\n");

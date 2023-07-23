@@ -500,6 +500,101 @@ http_server_handle_req_post(
     return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, flag_access_from_lan);
 }
 
+static http_server_resp_t
+http_server_handle_req_get_with_ecdh_key(
+    const char* const                    p_path,
+    const http_req_info_t* const         p_req_info,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    http_header_extra_fields_t* const    p_extra_header_fields,
+    const bool                           flag_access_from_lan)
+{
+    http_server_resp_t resp = http_server_handle_req_get(
+        p_path,
+        p_req_info->http_uri_params.ptr,
+        flag_access_from_lan,
+        p_req_info->http_header,
+        p_remote_ip,
+        p_auth_info,
+        p_extra_header_fields);
+
+    uint32_t          len_ruuvi_ecdh_pub_key = 0;
+    const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
+        p_req_info->http_header,
+        "ruuvi_ecdh_pub_key:",
+        &len_ruuvi_ecdh_pub_key);
+
+    if (NULL != p_ruuvi_ecdh_pub_key)
+    {
+        http_server_ecdh_pub_key_b64_t pub_key_b64_srv = { 0 };
+        if (!http_server_handle_ruuvi_ecdh_pub_key(p_ruuvi_ecdh_pub_key, len_ruuvi_ecdh_pub_key, &pub_key_b64_srv))
+        {
+            LOG_ERR("http_server_handle_ruuvi_ecdh_pub_key failed");
+            if ((HTTP_CONTENT_LOCATION_HEAP == resp.content_location) && (NULL != resp.select_location.memory.p_buf))
+            {
+                os_free(resp.select_location.memory.p_buf);
+            }
+            return http_server_resp_500();
+        }
+        const size_t offset = strlen(p_extra_header_fields->buf);
+        (void)snprintf(
+            &p_extra_header_fields->buf[offset],
+            sizeof(p_extra_header_fields->buf) - offset,
+            "ruuvi_ecdh_pub_key: %s\r\n",
+            pub_key_b64_srv.buf);
+    }
+    return resp;
+}
+
+static http_server_resp_t
+http_server_handle_req_post_with_ecdh_key(
+    const char* const                    p_path,
+    const http_req_info_t* const         p_req_info,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_server_auth_info_t* const p_auth_info,
+    http_header_extra_fields_t* const    p_extra_header_fields,
+    const bool                           flag_access_from_lan)
+{
+    bool              flag_encrypted           = false;
+    uint32_t          len_ruuvi_ecdh_encrypted = 0;
+    const char* const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
+        p_req_info->http_header,
+        "ruuvi_ecdh_encrypted:",
+        &len_ruuvi_ecdh_encrypted);
+    if ((NULL != p_ruuvi_ecdh_encrypted) && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
+    {
+        flag_encrypted = true;
+    }
+
+    str_buf_t       decrypted_str_buf   = STR_BUF_INIT_NULL();
+    http_req_body_t http_body_decrypted = {
+        .ptr = NULL,
+    };
+    if (flag_encrypted)
+    {
+        if (!http_server_decrypt(p_req_info->http_body.ptr, &decrypted_str_buf))
+        {
+            return http_server_resp_400();
+        }
+        http_body_decrypted.ptr = decrypted_str_buf.buf;
+    }
+
+    const http_server_resp_t resp = http_server_handle_req_post(
+        p_path,
+        p_req_info->http_uri_params.ptr,
+        flag_access_from_lan,
+        p_req_info->http_header,
+        p_remote_ip,
+        p_auth_info,
+        flag_encrypted ? http_body_decrypted : p_req_info->http_body,
+        p_extra_header_fields);
+    if (flag_encrypted)
+    {
+        str_buf_free_buf(&decrypted_str_buf);
+    }
+    return resp;
+}
+
 http_server_resp_t
 http_server_handle_req(
     const http_req_info_t* const         p_req_info,
@@ -511,55 +606,26 @@ http_server_handle_req(
     assert(NULL != p_extra_header_fields);
     p_extra_header_fields->buf[0] = '\0';
 
-    const char* path = p_req_info->http_uri.ptr;
-    if ('/' == path[0])
+    const char* p_path = p_req_info->http_uri.ptr;
+    if ('/' == p_path[0])
     {
-        path += 1;
+        p_path += 1;
     }
 
     if (0 == strcmp("GET", p_req_info->http_cmd.ptr))
     {
-        http_server_resp_t resp = http_server_handle_req_get(
-            path,
-            p_req_info->http_uri_params.ptr,
-            flag_access_from_lan,
-            p_req_info->http_header,
+        return http_server_handle_req_get_with_ecdh_key(
+            p_path,
+            p_req_info,
             p_remote_ip,
             p_auth_info,
-            p_extra_header_fields);
-
-        uint32_t          len_ruuvi_ecdh_pub_key = 0;
-        const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
-            p_req_info->http_header,
-            "ruuvi_ecdh_pub_key:",
-            &len_ruuvi_ecdh_pub_key);
-
-        if (NULL != p_ruuvi_ecdh_pub_key)
-        {
-            http_server_ecdh_pub_key_b64_t pub_key_b64_srv = { 0 };
-            if (!http_server_handle_ruuvi_ecdh_pub_key(p_ruuvi_ecdh_pub_key, len_ruuvi_ecdh_pub_key, &pub_key_b64_srv))
-            {
-                LOG_ERR("http_server_handle_ruuvi_ecdh_pub_key failed");
-                if ((HTTP_CONTENT_LOCATION_HEAP == resp.content_location)
-                    && (NULL != resp.select_location.memory.p_buf))
-                {
-                    os_free(resp.select_location.memory.p_buf);
-                }
-                return http_server_resp_500();
-            }
-            const size_t offset = strlen(p_extra_header_fields->buf);
-            (void)snprintf(
-                &p_extra_header_fields->buf[offset],
-                sizeof(p_extra_header_fields->buf) - offset,
-                "ruuvi_ecdh_pub_key: %s\r\n",
-                pub_key_b64_srv.buf);
-        }
-        return resp;
+            p_extra_header_fields,
+            flag_access_from_lan);
     }
     if (0 == strcmp("DELETE", p_req_info->http_cmd.ptr))
     {
         return http_server_handle_req_delete(
-            path,
+            p_path,
             p_req_info->http_uri_params.ptr,
             flag_access_from_lan,
             p_req_info->http_header,
@@ -569,45 +635,13 @@ http_server_handle_req(
     }
     if (0 == strcmp("POST", p_req_info->http_cmd.ptr))
     {
-        bool              flag_encrypted           = false;
-        uint32_t          len_ruuvi_ecdh_encrypted = 0;
-        const char* const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
-            p_req_info->http_header,
-            "ruuvi_ecdh_encrypted:",
-            &len_ruuvi_ecdh_encrypted);
-        if ((NULL != p_ruuvi_ecdh_encrypted)
-            && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
-        {
-            flag_encrypted = true;
-        }
-
-        str_buf_t       decrypted_str_buf   = STR_BUF_INIT_NULL();
-        http_req_body_t http_body_decrypted = {
-            .ptr = NULL,
-        };
-        if (flag_encrypted)
-        {
-            if (!http_server_decrypt(p_req_info->http_body.ptr, &decrypted_str_buf))
-            {
-                return http_server_resp_400();
-            }
-            http_body_decrypted.ptr = decrypted_str_buf.buf;
-        }
-
-        const http_server_resp_t resp = http_server_handle_req_post(
-            path,
-            p_req_info->http_uri_params.ptr,
-            flag_access_from_lan,
-            p_req_info->http_header,
+        return http_server_handle_req_post_with_ecdh_key(
+            p_path,
+            p_req_info,
             p_remote_ip,
             p_auth_info,
-            flag_encrypted ? http_body_decrypted : p_req_info->http_body,
-            p_extra_header_fields);
-        if (flag_encrypted)
-        {
-            str_buf_free_buf(&decrypted_str_buf);
-        }
-        return resp;
+            p_extra_header_fields,
+            flag_access_from_lan);
     }
     return http_server_resp_400();
 }

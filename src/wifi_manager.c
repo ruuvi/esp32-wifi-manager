@@ -314,7 +314,6 @@ wifi_manager_task(void)
     esp_wifi_deinit();
 
     /* heap buffers */
-    json_access_points_deinit();
     json_network_info_deinit();
     sta_ip_safe_deinit();
 

@@ -41,12 +41,6 @@ Contains the freeRTOS task and all necessary support
 extern "C" {
 #endif
 
-void
-json_access_points_init(void);
-
-void
-json_access_points_deinit(void);
-
 /**
  * @brief Generates the list of access points after a wifi scan.
  * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.

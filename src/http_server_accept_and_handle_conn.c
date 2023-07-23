@@ -477,6 +477,80 @@ http_server_write_content(struct netconn* const p_conn, http_server_resp_t* cons
 }
 
 static void
+http_server_netconn_resp_content_with_len(
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
+    const http_resp_code_e                  resp_code,
+    const char* const                       p_status_msg,
+    const bool                              use_extra_content_type_param,
+    const http_header_date_str_t* const     p_date_str)
+{
+    if (!http_server_netconn_printf(
+            p_conn,
+            true,
+            "HTTP/1.0 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "%s"
+            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "Content-Length: %lu\r\n"
+            "%s"
+            "%s"
+            "%s"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg,
+            p_date_str->buf,
+            http_get_content_type_str(p_resp->content_type),
+            use_extra_content_type_param ? "; " : "",
+            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            (printf_ulong_t)p_resp->content_len,
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            http_get_content_encoding_str(p_resp),
+            http_get_cache_control_str(p_resp)))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
+http_server_netconn_resp_content_without_len(
+    struct netconn* const                   p_conn,
+    http_server_resp_t* const               p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
+    const http_resp_code_e                  resp_code,
+    const char* const                       p_status_msg,
+    const bool                              use_extra_content_type_param,
+    const http_header_date_str_t* const     p_date_str)
+{
+    if (!http_server_netconn_printf(
+            p_conn,
+            true,
+            "HTTP/1.0 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "%s"
+            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "%s"
+            "%s"
+            "%s"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg,
+            p_date_str->buf,
+            http_get_content_type_str(p_resp->content_type),
+            use_extra_content_type_param ? "; " : "",
+            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            http_get_content_encoding_str(p_resp),
+            http_get_cache_control_str(p_resp)))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
 http_server_netconn_resp_with_content(
     struct netconn* const                   p_conn,
     http_server_resp_t* const               p_resp,
@@ -501,59 +575,25 @@ http_server_netconn_resp_with_content(
     const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
     if (SIZE_MAX != p_resp->content_len)
     {
-        if (!http_server_netconn_printf(
-                p_conn,
-                true,
-                "HTTP/1.0 %u %s\r\n"
-                "Server: Ruuvi Gateway\r\n"
-                "%s"
-                "Content-type: %s; charset=utf-8%s%s\r\n"
-                "Content-Length: %lu\r\n"
-                "%s"
-                "%s"
-                "%s"
-                "\r\n",
-                (printf_uint_t)resp_code,
-                p_status_msg,
-                date_str.buf,
-                http_get_content_type_str(p_resp->content_type),
-                use_extra_content_type_param ? "; " : "",
-                use_extra_content_type_param ? p_resp->p_content_type_param : "",
-                (printf_ulong_t)p_resp->content_len,
-                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-                http_get_content_encoding_str(p_resp),
-                http_get_cache_control_str(p_resp)))
-        {
-            LOG_ERR("%s failed", "http_server_netconn_printf");
-            return;
-        }
+        http_server_netconn_resp_content_with_len(
+            p_conn,
+            p_resp,
+            p_extra_header_fields,
+            resp_code,
+            p_status_msg,
+            use_extra_content_type_param,
+            &date_str);
     }
     else
     {
-        if (!http_server_netconn_printf(
-                p_conn,
-                true,
-                "HTTP/1.0 %u %s\r\n"
-                "Server: Ruuvi Gateway\r\n"
-                "%s"
-                "Content-type: %s; charset=utf-8%s%s\r\n"
-                "%s"
-                "%s"
-                "%s"
-                "\r\n",
-                (printf_uint_t)resp_code,
-                p_status_msg,
-                date_str.buf,
-                http_get_content_type_str(p_resp->content_type),
-                use_extra_content_type_param ? "; " : "",
-                use_extra_content_type_param ? p_resp->p_content_type_param : "",
-                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-                http_get_content_encoding_str(p_resp),
-                http_get_cache_control_str(p_resp)))
-        {
-            LOG_ERR("%s failed", "http_server_netconn_printf");
-            return;
-        }
+        http_server_netconn_resp_content_without_len(
+            p_conn,
+            p_resp,
+            p_extra_header_fields,
+            resp_code,
+            p_status_msg,
+            use_extra_content_type_param,
+            &date_str);
     }
 
     http_server_write_content(p_conn, p_resp);
