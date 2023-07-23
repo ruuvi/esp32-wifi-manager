@@ -131,11 +131,12 @@ http_server_auth_ruuvi_get_prev_url_from_cookies(const http_req_header_t http_he
     const char* const p_cookies  = http_req_header_get_field(http_header, "Cookie:", &len_cookie);
     if (NULL == p_cookies)
     {
+        prev_url.buf[0] = '\0';
         return prev_url;
     }
     if (!http_server_auth_ruuvi_get_ruuvi_prev_url_from_cookies(p_cookies, len_cookie, &prev_url))
     {
-        return prev_url;
+        prev_url.buf[0] = '\0';
     }
     return prev_url;
 }
