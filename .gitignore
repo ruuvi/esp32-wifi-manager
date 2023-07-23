@@ -60,7 +60,6 @@ RemoteSystemsTempFiles/.project
 *.d
 wifi_manager/.cproject
 wifi_manager/.project
-sdkconfig
 sdkconfig.old
 **/build/
 **/cmake-build-debug/
