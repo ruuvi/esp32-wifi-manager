@@ -226,7 +226,7 @@ http_server_handle_req_post_auth_check_auth(
         LOG_ERR("Can't allocate memory");
         return http_server_resp_500();
     }
-    http_server_auth_ruuvi_t* const p_auth_ruuvi = http_server_auth_ruuvi_get_info();
+    const http_server_auth_ruuvi_t* const p_auth_ruuvi = http_server_auth_ruuvi_get_info();
     if (!http_server_auth_ruuvi_gen_hashed_password(
             p_auth_ruuvi->login_session.challenge.buf,
             p_auth_info->auth_pass.buf,

@@ -26,20 +26,20 @@ http_server_auth_ruuvi_get_cookie(
     {
         return false;
     }
-    const size_t len_till_eol    = len_cookies - (ptrdiff_t)(p_cookie_begin - p_cookies);
+    const size_t len_till_eol    = len_cookies - (p_cookie_begin - p_cookies);
     const char*  p_end_of_cookie = http_server_strnstr(p_cookie_begin, ";", len_till_eol);
     if (NULL == p_end_of_cookie)
     {
         p_end_of_cookie = p_cookie_begin + len_till_eol;
     }
-    const size_t      len_of_cookie_pair = (size_t)(ptrdiff_t)(p_end_of_cookie - p_cookie_begin);
+    const size_t      len_of_cookie_pair = (size_t)(p_end_of_cookie - p_cookie_begin);
     const char* const p_delimiter        = http_server_strnstr(p_cookie_begin, "=", len_of_cookie_pair);
     if ((NULL == p_delimiter) || (p_delimiter > p_end_of_cookie))
     {
         return false;
     }
     const char* const p_cookie_value = p_delimiter + 1;
-    const size_t      cookie_len     = (size_t)(ptrdiff_t)(p_end_of_cookie - p_cookie_value);
+    const size_t      cookie_len     = (size_t)(p_end_of_cookie - p_cookie_value);
     if (0 == cookie_len)
     {
         return false;

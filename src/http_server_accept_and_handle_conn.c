@@ -52,7 +52,7 @@ get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_bod
     p_body += strlen(g_newlines);
     if (NULL != p_body_len)
     {
-        *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - p_msg);
+        *p_body_len = len - (uint32_t)(p_body - p_msg);
     }
     return p_body;
 }
@@ -479,7 +479,7 @@ http_server_write_content(struct netconn* const p_conn, http_server_resp_t* cons
 static void
 http_server_netconn_resp_content_with_len(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields,
     const http_resp_code_e                  resp_code,
     const char* const                       p_status_msg,
@@ -517,7 +517,7 @@ http_server_netconn_resp_content_with_len(
 static void
 http_server_netconn_resp_content_without_len(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields,
     const http_resp_code_e                  resp_code,
     const char* const                       p_status_msg,
