@@ -68,9 +68,8 @@ static const wifiman_config_t g_wifiman_config_default_const = {
     },
     .sta = {
         .wifi_config_sta = {
-            .ssid = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
-            .password = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
+            .ssid = { 0 },
+            .password = { 0 },
             .scan_method = WIFI_FAST_SCAN,
             .bssid_set = false,
             .bssid = {0, 0, 0, 0, 0, 0},
@@ -90,10 +89,15 @@ static const wifiman_config_t g_wifiman_config_default_const = {
             .sta_power_save       = WIFI_PS_NONE,
             .sta_static_ip        = false,
             .sta_static_ip_config = {
-                .ip               = { 0 },
-                .netmask          = { 0 },
-                .gw               = { 0 },
+                .ip               = { .addr = 0, },
+                .netmask          = { .addr = 0, },
+                .gw               = { .addr = 0, },
             },
+        },
+        .hostinfo = {
+            .hostname = { .buf = { 0 }, },
+            .fw_ver = { .buf = { 0 }, },
+            .nrf52_fw_ver = { .buf = { 0 }, },
         },
     },
 };

@@ -70,33 +70,31 @@ http_server_gen_resp_status_json(const json_network_info_t* const p_info, void* 
 
 static http_server_resp_t
 http_server_handle_req_get(
-    const char* const                    p_file_name_unchecked,
-    const char* const                    p_uri_params,
-    const bool                           flag_access_from_lan,
-    const http_req_header_t              http_header,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    http_header_extra_fields_t* const    p_extra_header_fields)
+    const char* const                           p_file_name_unchecked,
+    const http_server_handle_req_param_t* const p_param,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
+    const char* const       p_uri_params = p_param->p_req_info->http_uri_params.ptr;
+    const http_req_header_t http_header  = p_param->p_req_info->http_header;
+
     LOG_DBG("http_server_handle_req_get /%s", p_file_name_unchecked);
 
     const char* const p_file_name = (0 == strcmp(p_file_name_unchecked, "")) ? "index.html" : p_file_name_unchecked;
 
-    const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
+    const wifiman_hostinfo_t host_info = wifiman_config_sta_get_hostinfo();
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        const bool flag_check_rw_access_with_bearer_token = false;
+        const http_server_handle_req_auth_param_t param = {
+            .flag_access_from_lan                   = p_param->flag_access_from_lan,
+            .flag_check_rw_access_with_bearer_token = false,
+            .http_header                            = http_header,
+            .p_remote_ip                            = p_param->p_remote_ip,
+            .p_auth_info                            = p_param->p_auth_info,
+            .p_hostinfo                             = &host_info,
+        };
 
-        const http_server_resp_t resp_auth = http_server_handle_req_get_auth(
-            flag_access_from_lan,
-            flag_check_rw_access_with_bearer_token,
-            http_header,
-            p_remote_ip,
-            p_auth_info,
-            &hostinfo,
-            p_extra_header_fields);
-        return resp_auth;
+        return http_server_handle_req_get_auth(&param, p_extra_header_fields);
     }
 
     bool flag_check_rw_access_with_bearer_token = false;
@@ -110,20 +108,24 @@ http_server_handle_req_get(
     {
         bool flag_access_by_bearer_token = false;
 
+        const http_server_handle_req_auth_param_t param = {
+            .flag_access_from_lan                   = p_param->flag_access_from_lan,
+            .flag_check_rw_access_with_bearer_token = flag_check_rw_access_with_bearer_token,
+            .http_header                            = http_header,
+            .p_remote_ip                            = p_param->p_remote_ip,
+            .p_auth_info                            = p_param->p_auth_info,
+            .p_hostinfo                             = &host_info,
+        };
+
         const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
-            flag_access_from_lan,
-            flag_check_rw_access_with_bearer_token,
-            http_header,
-            p_remote_ip,
-            p_auth_info,
-            &hostinfo,
+            &param,
             p_extra_header_fields,
             &flag_access_by_bearer_token);
         if ((!flag_access_by_bearer_token) && (HTTP_RESP_CODE_401 == resp_auth_check.http_resp_code)
-            && ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_auth_info->auth_type)
-                || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type)))
+            && ((HTTP_SERVER_AUTH_TYPE_RUUVI == p_param->p_auth_info->auth_type)
+                || (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_param->p_auth_info->auth_type)))
         {
-            if ((0 != strcmp(p_file_name, "ap.json") && (0 != strcmp(p_file_name, "status.json"))))
+            if ((0 != strcmp(p_file_name, "ap.json")) && (0 != strcmp(p_file_name, "status.json")))
             {
                 (void)snprintf(
                     p_extra_header_fields->buf,
@@ -157,7 +159,7 @@ http_server_handle_req_get(
         http_server_resp_t                       http_resp = { 0 };
         http_server_gen_resp_status_json_param_t params    = {
                .p_http_resp          = &http_resp,
-               .flag_access_from_lan = flag_access_from_lan,
+               .flag_access_from_lan = p_param->flag_access_from_lan,
         };
         const os_delta_ticks_t ticks_to_wait = 10U;
         json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
@@ -165,31 +167,34 @@ http_server_handle_req_get(
         return http_resp;
     }
 
-    return wifi_manager_cb_on_http_get(p_file_name, p_uri_params, flag_access_from_lan, NULL);
+    return wifi_manager_cb_on_http_get(p_file_name, p_uri_params, p_param->flag_access_from_lan, NULL);
 }
 
 static http_server_resp_t
 http_server_handle_req_delete(
-    const char* const                    p_file_name,
-    const char* const                    p_uri_params,
-    const bool                           flag_access_from_lan,
-    const http_req_header_t              http_header,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    http_header_extra_fields_t* const    p_extra_header_fields)
+    const char* const                           p_file_name,
+    const http_server_handle_req_param_t* const p_param,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
-    LOG_INFO("DELETE /%s, params=%s", p_file_name, (NULL != p_uri_params) ? p_uri_params : "");
-    const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
+    const char* const       p_uri_params = p_param->p_req_info->http_uri_params.ptr;
+    const http_req_header_t http_header  = p_param->p_req_info->http_header;
 
-    const bool               flag_check_rw_access_with_bearer_token = true;
-    bool                     flag_access_by_bearer_token            = false;
-    const http_server_resp_t resp_auth_check                        = http_server_handle_req_check_auth(
-        flag_access_from_lan,
-        flag_check_rw_access_with_bearer_token,
-        http_header,
-        p_remote_ip,
-        p_auth_info,
-        &hostinfo,
+    LOG_INFO("DELETE /%s, params=%s", p_file_name, (NULL != p_uri_params) ? p_uri_params : "");
+    const wifiman_hostinfo_t host_info = wifiman_config_sta_get_hostinfo();
+
+    bool flag_access_by_bearer_token = false;
+
+    const http_server_handle_req_auth_param_t param = {
+        .flag_access_from_lan                   = p_param->flag_access_from_lan,
+        .flag_check_rw_access_with_bearer_token = true,
+        .http_header                            = http_header,
+        .p_remote_ip                            = p_param->p_remote_ip,
+        .p_auth_info                            = p_param->p_auth_info,
+        .p_hostinfo                             = &host_info,
+    };
+
+    const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
+        &param,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 
@@ -200,7 +205,7 @@ http_server_handle_req_delete(
 
     if (0 == strcmp(p_file_name, "auth"))
     {
-        return http_server_handle_req_delete_auth(http_header, p_remote_ip, p_auth_info, &hostinfo);
+        return http_server_handle_req_delete_auth(http_header, p_param->p_remote_ip, p_param->p_auth_info, &host_info);
     }
     if (0 == strcmp(p_file_name, "connect.json"))
     {
@@ -217,7 +222,7 @@ http_server_handle_req_delete(
         }
         return http_server_resp_200_json("{}");
     }
-    return wifi_manager_cb_on_http_delete(p_file_name, p_uri_params, flag_access_from_lan, NULL);
+    return wifi_manager_cb_on_http_delete(p_file_name, p_uri_params, p_param->flag_access_from_lan, NULL);
 }
 
 static const char*
@@ -451,15 +456,14 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 
 static http_server_resp_t
 http_server_handle_req_post(
-    const char*                          p_file_name,
-    const char*                          p_uri_params,
-    const bool                           flag_access_from_lan,
-    const http_req_header_t              http_header,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    const http_req_body_t                http_body,
-    http_header_extra_fields_t* const    p_extra_header_fields)
+    const char*                                 p_file_name,
+    const http_server_handle_req_param_t* const p_param,
+    const http_req_body_t                       http_body,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
+    const char*             p_uri_params = p_param->p_req_info->http_uri_params.ptr;
+    const http_req_header_t http_header  = p_param->p_req_info->http_header;
+
     LOG_INFO("POST /%s, params=%s", p_file_name, (NULL != p_uri_params) ? p_uri_params : "");
 
     const wifiman_hostinfo_t hostinfo = wifiman_config_sta_get_hostinfo();
@@ -467,24 +471,28 @@ http_server_handle_req_post(
     if (0 == strcmp(p_file_name, "auth"))
     {
         return http_server_handle_req_post_auth(
-            flag_access_from_lan,
+            p_param->flag_access_from_lan,
             http_header,
-            p_remote_ip,
+            p_param->p_remote_ip,
             http_body,
-            p_auth_info,
+            p_param->p_auth_info,
             &hostinfo,
             p_extra_header_fields);
     }
 
-    const bool               flag_check_rw_access_with_bearer_token = true;
-    bool                     flag_access_by_bearer_token            = false;
-    const http_server_resp_t resp_auth_check                        = http_server_handle_req_check_auth(
-        flag_access_from_lan,
-        flag_check_rw_access_with_bearer_token,
-        http_header,
-        p_remote_ip,
-        p_auth_info,
-        &hostinfo,
+    bool flag_access_by_bearer_token = false;
+
+    const http_server_handle_req_auth_param_t param = {
+        .flag_access_from_lan                   = p_param->flag_access_from_lan,
+        .flag_check_rw_access_with_bearer_token = true,
+        .http_header                            = http_header,
+        .p_remote_ip                            = p_param->p_remote_ip,
+        .p_auth_info                            = p_param->p_auth_info,
+        .p_hostinfo                             = &hostinfo,
+    };
+
+    const http_server_resp_t resp_auth_check = http_server_handle_req_check_auth(
+        &param,
         p_extra_header_fields,
         &flag_access_by_bearer_token);
 
@@ -497,30 +505,20 @@ http_server_handle_req_post(
     {
         return http_server_handle_req_post_connect_json(http_body);
     }
-    return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, flag_access_from_lan);
+    return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, p_param->flag_access_from_lan);
 }
 
 static http_server_resp_t
 http_server_handle_req_get_with_ecdh_key(
-    const char* const                    p_path,
-    const http_req_info_t* const         p_req_info,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    http_header_extra_fields_t* const    p_extra_header_fields,
-    const bool                           flag_access_from_lan)
+    const char* const                           p_path,
+    const http_server_handle_req_param_t* const p_param,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
-    http_server_resp_t resp = http_server_handle_req_get(
-        p_path,
-        p_req_info->http_uri_params.ptr,
-        flag_access_from_lan,
-        p_req_info->http_header,
-        p_remote_ip,
-        p_auth_info,
-        p_extra_header_fields);
+    http_server_resp_t resp = http_server_handle_req_get(p_path, p_param, p_extra_header_fields);
 
     uint32_t          len_ruuvi_ecdh_pub_key = 0;
     const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
-        p_req_info->http_header,
+        p_param->p_req_info->http_header,
         "ruuvi_ecdh_pub_key:",
         &len_ruuvi_ecdh_pub_key);
 
@@ -548,17 +546,14 @@ http_server_handle_req_get_with_ecdh_key(
 
 static http_server_resp_t
 http_server_handle_req_post_with_ecdh_key(
-    const char* const                    p_path,
-    const http_req_info_t* const         p_req_info,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    http_header_extra_fields_t* const    p_extra_header_fields,
-    const bool                           flag_access_from_lan)
+    const char* const                           p_path,
+    const http_server_handle_req_param_t* const p_param,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
     bool              flag_encrypted           = false;
     uint32_t          len_ruuvi_ecdh_encrypted = 0;
     const char* const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
-        p_req_info->http_header,
+        p_param->p_req_info->http_header,
         "ruuvi_ecdh_encrypted:",
         &len_ruuvi_ecdh_encrypted);
     if ((NULL != p_ruuvi_ecdh_encrypted) && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
@@ -572,7 +567,7 @@ http_server_handle_req_post_with_ecdh_key(
     };
     if (flag_encrypted)
     {
-        if (!http_server_decrypt(p_req_info->http_body.ptr, &decrypted_str_buf))
+        if (!http_server_decrypt(p_param->p_req_info->http_body.ptr, &decrypted_str_buf))
         {
             return http_server_resp_400();
         }
@@ -581,12 +576,8 @@ http_server_handle_req_post_with_ecdh_key(
 
     const http_server_resp_t resp = http_server_handle_req_post(
         p_path,
-        p_req_info->http_uri_params.ptr,
-        flag_access_from_lan,
-        p_req_info->http_header,
-        p_remote_ip,
-        p_auth_info,
-        flag_encrypted ? http_body_decrypted : p_req_info->http_body,
+        p_param,
+        flag_encrypted ? http_body_decrypted : p_param->p_req_info->http_body,
         p_extra_header_fields);
     if (flag_encrypted)
     {
@@ -597,51 +588,29 @@ http_server_handle_req_post_with_ecdh_key(
 
 http_server_resp_t
 http_server_handle_req(
-    const http_req_info_t* const         p_req_info,
-    const sta_ip_string_t* const         p_remote_ip,
-    const http_server_auth_info_t* const p_auth_info,
-    http_header_extra_fields_t* const    p_extra_header_fields,
-    const bool                           flag_access_from_lan)
+    const http_server_handle_req_param_t* const p_param,
+    http_header_extra_fields_t* const           p_extra_header_fields)
 {
     assert(NULL != p_extra_header_fields);
     p_extra_header_fields->buf[0] = '\0';
 
-    const char* p_path = p_req_info->http_uri.ptr;
+    const char* p_path = p_param->p_req_info->http_uri.ptr;
     if ('/' == p_path[0])
     {
         p_path += 1;
     }
 
-    if (0 == strcmp("GET", p_req_info->http_cmd.ptr))
+    if (0 == strcmp("GET", p_param->p_req_info->http_cmd.ptr))
     {
-        return http_server_handle_req_get_with_ecdh_key(
-            p_path,
-            p_req_info,
-            p_remote_ip,
-            p_auth_info,
-            p_extra_header_fields,
-            flag_access_from_lan);
+        return http_server_handle_req_get_with_ecdh_key(p_path, p_param, p_extra_header_fields);
     }
-    if (0 == strcmp("DELETE", p_req_info->http_cmd.ptr))
+    if (0 == strcmp("DELETE", p_param->p_req_info->http_cmd.ptr))
     {
-        return http_server_handle_req_delete(
-            p_path,
-            p_req_info->http_uri_params.ptr,
-            flag_access_from_lan,
-            p_req_info->http_header,
-            p_remote_ip,
-            p_auth_info,
-            p_extra_header_fields);
+        return http_server_handle_req_delete(p_path, p_param, p_extra_header_fields);
     }
-    if (0 == strcmp("POST", p_req_info->http_cmd.ptr))
+    if (0 == strcmp("POST", p_param->p_req_info->http_cmd.ptr))
     {
-        return http_server_handle_req_post_with_ecdh_key(
-            p_path,
-            p_req_info,
-            p_remote_ip,
-            p_auth_info,
-            p_extra_header_fields,
-            flag_access_from_lan);
+        return http_server_handle_req_post_with_ecdh_key(p_path, p_param, p_extra_header_fields);
     }
     return http_server_resp_400();
 }

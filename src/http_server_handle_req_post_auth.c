@@ -181,6 +181,85 @@ http_server_handle_req_post_auth_check_login_session(
 }
 
 http_server_resp_t
+http_server_handle_req_post_auth_check_auth(
+    http_server_auth_ruuvi_req_t* const  p_auth_req,
+    const bool                           flag_auth_default,
+    const sta_ip_string_t* const         p_remote_ip,
+    const http_req_body_t                http_body,
+    const http_server_auth_info_t* const p_auth_info,
+    const wifiman_hostinfo_t* const      p_hostinfo,
+    http_header_extra_fields_t* const    p_extra_header_fields)
+{
+    if (!json_ruuvi_auth_parse_http_body(http_body.ptr, p_auth_req))
+    {
+        LOG_WARN("Failed to parse auth request body");
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_hostinfo,
+            p_extra_header_fields,
+            flag_auth_default,
+            NULL);
+    }
+    if ('\0' == p_auth_req->username.buf[0])
+    {
+        LOG_WARN("Username is empty");
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_hostinfo,
+            p_extra_header_fields,
+            flag_auth_default,
+            "The username is empty");
+    }
+    if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_req->username.buf))
+    {
+        LOG_WARN("Username in auth_info does not match the username from auth_req");
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_hostinfo,
+            p_extra_header_fields,
+            flag_auth_default,
+            "Incorrect username");
+    }
+    wifiman_sha256_digest_hex_str_t* p_password_hash = os_calloc(1, sizeof(*p_password_hash));
+    if (NULL == p_password_hash)
+    {
+        LOG_ERR("Can't allocate memory");
+        return http_server_resp_500();
+    }
+    http_server_auth_ruuvi_t* const p_auth_ruuvi = http_server_auth_ruuvi_get_info();
+    if (!http_server_auth_ruuvi_gen_hashed_password(
+            p_auth_ruuvi->login_session.challenge.buf,
+            p_auth_info->auth_pass.buf,
+            p_password_hash))
+    {
+        LOG_WARN("Failed to generate hashed password");
+        os_free(p_password_hash);
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_hostinfo,
+            p_extra_header_fields,
+            flag_auth_default,
+            NULL);
+    }
+    if (0 != strcmp(p_password_hash->buf, p_auth_req->password.buf))
+    {
+        LOG_WARN("Password does not match");
+        LOG_DBG("Expected password: %s, actual password: %s", password_hash.buf, p_auth_req->password.buf);
+        LOG_DBG("Challenge: %s, password: %s", p_auth_ruuvi->login_session.challenge.buf, p_auth_info->auth_pass.buf);
+        os_free(p_password_hash);
+
+        return http_server_resp_401_auth_ruuvi_with_new_session_id(
+            p_remote_ip,
+            p_hostinfo,
+            p_extra_header_fields,
+            flag_auth_default,
+            "Incorrect password");
+    }
+    os_free(p_password_hash);
+    return http_server_resp_200_json("{}");
+}
+
+http_server_resp_t
 http_server_handle_req_post_auth(
     const bool                           flag_access_from_lan,
     const http_req_header_t              http_header,
@@ -236,86 +315,25 @@ http_server_handle_req_post_auth(
         return resp;
     }
 
-    http_server_auth_ruuvi_req_t* p_auth_req;
-    p_auth_req = os_calloc(1, sizeof(*p_auth_req));
+    http_server_auth_ruuvi_req_t* p_auth_req = os_calloc(1, sizeof(*p_auth_req));
     if (NULL == p_auth_req)
     {
         LOG_ERR("Can't allocate memory for auth_req");
         return http_server_resp_500();
     }
-
-    if (!json_ruuvi_auth_parse_http_body(http_body.ptr, p_auth_req))
+    resp = http_server_handle_req_post_auth_check_auth(
+        p_auth_req,
+        flag_auth_default,
+        p_remote_ip,
+        http_body,
+        p_auth_info,
+        p_hostinfo,
+        p_extra_header_fields);
+    if (HTTP_RESP_CODE_200 != resp.http_resp_code)
     {
-        LOG_WARN("Failed to parse auth request body");
-        os_free(p_auth_req);
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_hostinfo,
-            p_extra_header_fields,
-            flag_auth_default,
-            NULL);
-    }
-    if ('\0' == p_auth_req->username.buf[0])
-    {
-        LOG_WARN("Username is empty");
-        os_free(p_auth_req);
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_hostinfo,
-            p_extra_header_fields,
-            flag_auth_default,
-            "The username is empty");
-    }
-    if (0 != strcmp(p_auth_info->auth_user.buf, p_auth_req->username.buf))
-    {
-        LOG_WARN("Username in auth_info does not match the username from auth_req");
-        os_free(p_auth_req);
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_hostinfo,
-            p_extra_header_fields,
-            flag_auth_default,
-            "Incorrect username");
-    }
-    wifiman_sha256_digest_hex_str_t* p_password_hash = os_calloc(1, sizeof(*p_password_hash));
-    if (NULL == p_password_hash)
-    {
-        LOG_ERR("Can't allocate memory");
-        os_free(p_auth_req);
-        return http_server_resp_500();
-    }
-    if (!http_server_auth_ruuvi_gen_hashed_password(
-            p_auth_ruuvi->login_session.challenge.buf,
-            p_auth_info->auth_pass.buf,
-            p_password_hash))
-    {
-        LOG_WARN("Failed to generate hashed password");
-        os_free(p_auth_req);
-        os_free(p_password_hash);
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_hostinfo,
-            p_extra_header_fields,
-            flag_auth_default,
-            NULL);
-    }
-    if (0 != strcmp(p_password_hash->buf, p_auth_req->password.buf))
-    {
-        LOG_WARN("Password does not match");
-        LOG_DBG("Expected password: %s, actual password: %s", password_hash.buf, p_auth_req->password.buf);
-        LOG_DBG("Challenge: %s, password: %s", p_auth_ruuvi->login_session.challenge.buf, p_auth_info->auth_pass.buf);
-        os_free(p_auth_req);
-        os_free(p_password_hash);
-
-        return http_server_resp_401_auth_ruuvi_with_new_session_id(
-            p_remote_ip,
-            p_hostinfo,
-            p_extra_header_fields,
-            flag_auth_default,
-            "Incorrect password");
+        return resp;
     }
     os_free(p_auth_req);
-    os_free(p_password_hash);
 
     http_server_auth_ruuvi_add_authorized_session(p_auth_ruuvi, &session_id, p_remote_ip);
     http_server_auth_ruuvi_login_session_clear(&p_auth_ruuvi->login_session);

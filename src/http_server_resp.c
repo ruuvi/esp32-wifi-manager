@@ -33,15 +33,22 @@ http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char*
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
-    return http_server_resp_data_in_heap(
-        http_resp_code,
-        HTTP_CONENT_TYPE_APPLICATION_JSON,
-        NULL,
-        strlen(p_json_content),
-        HTTP_CONENT_ENCODING_NONE,
-        (const uint8_t*)p_json_content,
-        flag_no_cache,
-        flag_add_header_date);
+    const http_server_resp_t resp = {
+        .http_resp_code       = http_resp_code,
+        .content_location     = HTTP_CONTENT_LOCATION_HEAP,
+        .flag_no_cache        = flag_no_cache,
+        .flag_add_header_date = flag_add_header_date,
+        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .p_content_type_param = NULL,
+        .content_len          = strlen(p_json_content),
+        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .select_location      = {
+            .memory = {
+                .p_buf = (const uint8_t*)p_json_content,
+            },
+        },
+    };
+    return resp;
 }
 
 http_server_resp_t
@@ -267,8 +274,7 @@ http_server_resp_data_in_static_mem(
 }
 
 http_server_resp_t
-http_server_resp_data_in_heap(
-    const http_resp_code_e        resp_code,
+http_server_resp_200_data_in_heap(
     const http_content_type_e     content_type,
     const char*                   p_content_type_param,
     const size_t                  content_len,
@@ -278,7 +284,7 @@ http_server_resp_data_in_heap(
     const bool                    flag_add_header_date)
 {
     const http_server_resp_t resp = {
-        .http_resp_code       = resp_code,
+        .http_resp_code       = HTTP_RESP_CODE_200,
         .content_location     = HTTP_CONTENT_LOCATION_HEAP,
         .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = flag_add_header_date,
@@ -293,27 +299,6 @@ http_server_resp_data_in_heap(
         },
     };
     return resp;
-}
-
-http_server_resp_t
-http_server_resp_200_data_in_heap(
-    const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
-    const size_t                  content_len,
-    const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
-    const bool                    flag_no_cache,
-    const bool                    flag_add_header_date)
-{
-    return http_server_resp_data_in_heap(
-        HTTP_RESP_CODE_200,
-        content_type,
-        p_content_type_param,
-        content_len,
-        content_encoding,
-        p_buf,
-        flag_no_cache,
-        flag_add_header_date);
 }
 
 http_server_resp_t
