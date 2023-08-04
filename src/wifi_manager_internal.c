@@ -382,8 +382,6 @@ wifi_manager_init_start_wifi(
         return false;
     }
 
-    json_access_points_init();
-
     for (int32_t msg_code = WIFI_MAN_MSG_CODE_NONE; msg_code < MESSAGE_CODE_COUNT; ++msg_code)
     {
         wifi_manager_set_callback((message_code_e)msg_code, NULL);

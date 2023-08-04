@@ -52,7 +52,7 @@ get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_bod
     p_body += strlen(g_newlines);
     if (NULL != p_body_len)
     {
-        *p_body_len = len - (uint32_t)(ptrdiff_t)(p_body - p_msg);
+        *p_body_len = len - (uint32_t)(p_body - p_msg);
     }
     return p_body;
 }
@@ -217,7 +217,7 @@ http_server_netconn_write(
         offset += bytes_written;
         int32_t send_timeout = p_conn->send_timeout;
         bool    flag_success = false;
-        while (!flag_success && (send_timeout > 0))
+        while ((!flag_success) && (send_timeout > 0))
         {
             const int32_t tmp_timeout = (send_timeout > 1000) ? 1000 : send_timeout;
             flag_success              = http_server_sema_send_wait_timeout(tmp_timeout);
@@ -477,6 +477,80 @@ http_server_write_content(struct netconn* const p_conn, http_server_resp_t* cons
 }
 
 static void
+http_server_netconn_resp_content_with_len(
+    struct netconn* const                   p_conn,
+    const http_server_resp_t* const         p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
+    const http_resp_code_e                  resp_code,
+    const char* const                       p_status_msg,
+    const bool                              use_extra_content_type_param,
+    const http_header_date_str_t* const     p_date_str)
+{
+    if (!http_server_netconn_printf(
+            p_conn,
+            true,
+            "HTTP/1.0 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "%s"
+            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "Content-Length: %lu\r\n"
+            "%s"
+            "%s"
+            "%s"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg,
+            p_date_str->buf,
+            http_get_content_type_str(p_resp->content_type),
+            use_extra_content_type_param ? "; " : "",
+            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            (printf_ulong_t)p_resp->content_len,
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            http_get_content_encoding_str(p_resp),
+            http_get_cache_control_str(p_resp)))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
+http_server_netconn_resp_content_without_len(
+    struct netconn* const                   p_conn,
+    const http_server_resp_t* const         p_resp,
+    const http_header_extra_fields_t* const p_extra_header_fields,
+    const http_resp_code_e                  resp_code,
+    const char* const                       p_status_msg,
+    const bool                              use_extra_content_type_param,
+    const http_header_date_str_t* const     p_date_str)
+{
+    if (!http_server_netconn_printf(
+            p_conn,
+            true,
+            "HTTP/1.0 %u %s\r\n"
+            "Server: Ruuvi Gateway\r\n"
+            "%s"
+            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "%s"
+            "%s"
+            "%s"
+            "\r\n",
+            (printf_uint_t)resp_code,
+            p_status_msg,
+            p_date_str->buf,
+            http_get_content_type_str(p_resp->content_type),
+            use_extra_content_type_param ? "; " : "",
+            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            http_get_content_encoding_str(p_resp),
+            http_get_cache_control_str(p_resp)))
+    {
+        LOG_ERR("%s failed", "http_server_netconn_printf");
+        return;
+    }
+}
+
+static void
 http_server_netconn_resp_with_content(
     struct netconn* const                   p_conn,
     http_server_resp_t* const               p_resp,
@@ -501,59 +575,25 @@ http_server_netconn_resp_with_content(
     const http_header_date_str_t date_str = http_server_gen_header_date_str(true);
     if (SIZE_MAX != p_resp->content_len)
     {
-        if (!http_server_netconn_printf(
-                p_conn,
-                true,
-                "HTTP/1.0 %u %s\r\n"
-                "Server: Ruuvi Gateway\r\n"
-                "%s"
-                "Content-type: %s; charset=utf-8%s%s\r\n"
-                "Content-Length: %lu\r\n"
-                "%s"
-                "%s"
-                "%s"
-                "\r\n",
-                (printf_uint_t)resp_code,
-                p_status_msg,
-                date_str.buf,
-                http_get_content_type_str(p_resp->content_type),
-                use_extra_content_type_param ? "; " : "",
-                use_extra_content_type_param ? p_resp->p_content_type_param : "",
-                (printf_ulong_t)p_resp->content_len,
-                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-                http_get_content_encoding_str(p_resp),
-                http_get_cache_control_str(p_resp)))
-        {
-            LOG_ERR("%s failed", "http_server_netconn_printf");
-            return;
-        }
+        http_server_netconn_resp_content_with_len(
+            p_conn,
+            p_resp,
+            p_extra_header_fields,
+            resp_code,
+            p_status_msg,
+            use_extra_content_type_param,
+            &date_str);
     }
     else
     {
-        if (!http_server_netconn_printf(
-                p_conn,
-                true,
-                "HTTP/1.0 %u %s\r\n"
-                "Server: Ruuvi Gateway\r\n"
-                "%s"
-                "Content-type: %s; charset=utf-8%s%s\r\n"
-                "%s"
-                "%s"
-                "%s"
-                "\r\n",
-                (printf_uint_t)resp_code,
-                p_status_msg,
-                date_str.buf,
-                http_get_content_type_str(p_resp->content_type),
-                use_extra_content_type_param ? "; " : "",
-                use_extra_content_type_param ? p_resp->p_content_type_param : "",
-                (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
-                http_get_content_encoding_str(p_resp),
-                http_get_cache_control_str(p_resp)))
-        {
-            LOG_ERR("%s failed", "http_server_netconn_printf");
-            return;
-        }
+        http_server_netconn_resp_content_without_len(
+            p_conn,
+            p_resp,
+            p_extra_header_fields,
+            resp_code,
+            p_status_msg,
+            use_extra_content_type_param,
+            &date_str);
     }
 
     http_server_write_content(p_conn, p_resp);
@@ -661,16 +701,26 @@ http_server_netconn_resp_302_auth_html(
 }
 
 static void
-http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_with_code(
+    struct netconn* const     p_conn,
+    http_server_resp_t* const p_resp,
+    const http_resp_code_e    resp_code,
+    const char* const         p_status_msg)
 {
     if ((NULL == p_resp) || (0 == p_resp->content_len))
     {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_400, "Bad Request");
+        http_server_netconn_resp_without_content(p_conn, resp_code, p_status_msg);
     }
     else
     {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_400, "Bad Request");
+        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, resp_code, p_status_msg);
     }
+}
+
+static void
+http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+{
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_400, "Bad Request");
 }
 
 static void
@@ -694,79 +744,37 @@ http_server_netconn_resp_403(
 static void
 http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_404, "Not Found");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_404, "Not Found");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_404, "Not Found");
 }
 
 static void
 http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_429, "Too Many Requests");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_429, "Too Many Requests");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_429, "Too Many Requests");
 }
 
 static void
 http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_500, "Internal Server Error");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_500, "Internal Server Error");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_500, "Internal Server Error");
 }
 
 static void
 http_server_netconn_resp_502(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_502, "Bad Gateway");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_502, "Bad Gateway");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_502, "Bad Gateway");
 }
 
 static void
 http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_503, "Service Unavailable");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_503, "Service Unavailable");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_503, "Service Unavailable");
 }
 
 static void
 http_server_netconn_resp_504(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    if ((NULL == p_resp) || (0 == p_resp->content_len))
-    {
-        http_server_netconn_resp_without_content(p_conn, HTTP_RESP_CODE_504, "Gateway timeout");
-    }
-    else
-    {
-        http_server_netconn_resp_with_content(p_conn, p_resp, NULL, HTTP_RESP_CODE_504, "Gateway timeout");
-    }
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_504, "Gateway timeout");
 }
 
 static void
@@ -879,12 +887,14 @@ http_server_netconn_serve_handle_req(
 
     g_http_server_extra_header_fields.buf[0] = '\0';
 
-    http_server_resp_t resp = http_server_handle_req(
-        &req_info,
-        p_remote_ip_str,
-        http_server_get_auth(),
-        &g_http_server_extra_header_fields,
-        flag_access_from_lan);
+    const http_server_handle_req_param_t param = {
+        .p_req_info           = &req_info,
+        .p_remote_ip          = p_remote_ip_str,
+        .p_auth_info          = http_server_get_auth(),
+        .flag_access_from_lan = flag_access_from_lan,
+    };
+
+    http_server_resp_t resp = http_server_handle_req(&param, &g_http_server_extra_header_fields);
     if ('\0' != g_http_server_extra_header_fields.buf[0])
     {
         LOG_INFO("Extra HTTP-header resp: %s", g_http_server_extra_header_fields.buf);
@@ -993,14 +1003,11 @@ http_server_accept_and_handle_conn(struct netconn* const p_conn)
     struct netconn* p_new_conn = NULL;
 
     os_mutex_t p_mutex = g_p_mutex_accept_conn;
-    if (NULL != p_mutex)
+    if ((NULL != p_mutex) && (!os_mutex_try_lock(p_mutex)))
     {
-        if (!os_mutex_try_lock(p_mutex))
-        {
-            LOG_DBG("Can't lock mutex, sleep for %u ms", HTTP_SERVER_ACCEPT_DELAY_MS);
-            vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
-            return;
-        }
+        LOG_DBG("Can't lock mutex, sleep for %u ms", HTTP_SERVER_ACCEPT_DELAY_MS);
+        vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
+        return;
     }
 
     const err_t err = netconn_accept(p_conn, &p_new_conn);
