@@ -243,6 +243,15 @@ wifi_manager_start_ap(const bool flag_block_req_from_lan)
     wifiman_msg_send_cmd_start_ap(flag_block_req_from_lan);
 }
 
+void
+wifi_manager_stop(void)
+{
+    if (!wifiman_msg_send_cmd_stop_and_destroy())
+    {
+        LOG_ERR("%s failed", "wifiman_msg_send_cmd_stop_and_destroy");
+    }
+}
+
 static void
 wifi_manager_timer_cb_task_watchdog_feed(const os_timer_periodic_cptr_without_arg_t* const p_timer)
 {

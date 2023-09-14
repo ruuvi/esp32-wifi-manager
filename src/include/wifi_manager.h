@@ -100,6 +100,12 @@ void
 wifi_manager_start_ap(const bool flag_block_req_from_lan);
 
 /**
+ * @brief Stop Wi-Fi Manger
+ */
+void
+wifi_manager_stop(void);
+
+/**
  * @brief requests a connection to an access point that will be process in the main task thread.
  */
 void
