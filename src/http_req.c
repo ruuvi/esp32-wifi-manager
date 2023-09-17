@@ -118,7 +118,7 @@ http_req_header_get_field(const http_req_header_t req_header, const char* const 
 {
     *p_len = 0;
 
-    const char* p_start = strstr(req_header.ptr, p_field_name);
+    const char* p_start = strcasestr(req_header.ptr, p_field_name);
     if (NULL == p_start)
     {
         return NULL;
