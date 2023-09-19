@@ -242,7 +242,7 @@ http_server_handle_ruuvi_ecdh_pub_key(
     const uint32_t                        len_ruuvi_ecdh_pub_key,
     http_server_ecdh_pub_key_b64_t* const p_pub_key_b64_srv)
 {
-    LOG_INFO("Found ruuvi_ecdh_pub_key: %.*s", (printf_int_t)len_ruuvi_ecdh_pub_key, p_ruuvi_ecdh_pub_key);
+    LOG_INFO("Found Ruuvi-Ecdh-Pub-Key: %.*s", (printf_int_t)len_ruuvi_ecdh_pub_key, p_ruuvi_ecdh_pub_key);
 
     http_server_ecdh_pub_key_b64_t pub_key_b64_cli = { 0 };
     if (len_ruuvi_ecdh_pub_key >= sizeof(pub_key_b64_cli.buf))
@@ -519,7 +519,7 @@ http_server_handle_req_get_with_ecdh_key(
     uint32_t          len_ruuvi_ecdh_pub_key = 0;
     const char* const p_ruuvi_ecdh_pub_key   = http_req_header_get_field(
         p_param->p_req_info->http_header,
-        "ruuvi_ecdh_pub_key:",
+        "Ruuvi-Ecdh-Pub-Key:",
         &len_ruuvi_ecdh_pub_key);
 
     if (NULL != p_ruuvi_ecdh_pub_key)
@@ -538,7 +538,7 @@ http_server_handle_req_get_with_ecdh_key(
         (void)snprintf(
             &p_extra_header_fields->buf[offset],
             sizeof(p_extra_header_fields->buf) - offset,
-            "ruuvi_ecdh_pub_key: %s\r\n",
+            "Ruuvi-Ecdh-Pub-Key: %s\r\n",
             pub_key_b64_srv.buf);
     }
     return resp;
@@ -554,7 +554,7 @@ http_server_handle_req_post_with_ecdh_key(
     uint32_t          len_ruuvi_ecdh_encrypted = 0;
     const char* const p_ruuvi_ecdh_encrypted   = http_req_header_get_field(
         p_param->p_req_info->http_header,
-        "ruuvi_ecdh_encrypted:",
+        "Ruuvi-Ecdh-Encrypted:",
         &len_ruuvi_ecdh_encrypted);
     if ((NULL != p_ruuvi_ecdh_encrypted) && (0 == strncmp(p_ruuvi_ecdh_encrypted, "true", len_ruuvi_ecdh_encrypted)))
     {
