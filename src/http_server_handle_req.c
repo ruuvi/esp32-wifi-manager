@@ -583,6 +583,7 @@ http_server_handle_req_post_with_ecdh_key(
     {
         str_buf_free_buf(&decrypted_str_buf);
     }
+    vTaskDelay(pdMS_TO_TICKS(1000));
     return resp;
 }
 
