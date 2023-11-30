@@ -5,12 +5,14 @@
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
  */
 
+#include <esp_wps.h>
 #include "wifi_manager_internal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "esp_wifi.h"
 #include "esp_task_wdt.h"
 #include "lwip/sockets.h"
+#include "os_malloc.h"
 #include "os_mutex_recursive.h"
 #include "os_sema.h"
 #include "wifi_manager.h"
@@ -24,8 +26,9 @@
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
-
 static const char TAG[] = "wifi_manager";
+
+esp_wps_config_t g_wps_config = WPS_CONFIG_INIT_DEFAULT(WPS_TYPE_PBC);
 
 static wifi_manager_callbacks_t g_wifi_callbacks;
 
@@ -134,6 +137,7 @@ wifi_manager_cb_on_http_delete(
 void
 wifi_manager_esp_wifi_configure_ap(void)
 {
+    LOG_INFO("%s: ### Configure WiFi mode: AP and Station", __func__);
     esp_err_t err = esp_wifi_set_mode(WIFI_MODE_APSTA);
     if (ESP_OK != err)
     {
@@ -143,6 +147,28 @@ wifi_manager_esp_wifi_configure_ap(void)
     wifi_config_t ap_config = {
         .ap = wifiman_config_ap_get_config(),
     };
+    if (0 == ap_config.ap.ssid_len)
+    {
+        LOG_INFO("Configure Wi-Fi AP: SSID: %s", ap_config.ap.ssid);
+    }
+    else
+    {
+        LOG_INFO("Configure Wi-Fi AP: SSID: %.*s", ap_config.ap.ssid_len, ap_config.ap.ssid);
+    }
+    LOG_INFO("Configure Wi-Fi AP: Auth mode: %d", ap_config.ap.authmode);
+    if (WIFI_AUTH_OPEN == ap_config.ap.authmode)
+    {
+        LOG_INFO("Configure Wi-Fi AP: Password: not used");
+    }
+    else
+    {
+        LOG_INFO("Configure Wi-Fi AP: Password: %s", "********");
+        LOG_DBG("Configure Wi-Fi AP: Password: %s", ap_config.ap.password);
+    }
+    LOG_INFO("Configure Wi-Fi AP: Channel: %d", ap_config.ap.channel);
+    LOG_INFO("Configure Wi-Fi AP: Is SSID hidden: %d", ap_config.ap.ssid_hidden);
+    LOG_INFO("Configure Wi-Fi AP: Max conn: %d", ap_config.ap.max_connection);
+    LOG_INFO("Configure Wi-Fi AP: Beacon interval: %d", ap_config.ap.beacon_interval);
     err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
     if (ESP_OK != err)
     {
@@ -152,6 +178,7 @@ wifi_manager_esp_wifi_configure_ap(void)
 
     const wifi_settings_ap_t wifi_ap_settings = wifiman_config_ap_get_settings();
 
+    LOG_INFO("Configure Wi-Fi AP: Bandwidth: %s", (WIFI_BW_HT20 == wifi_ap_settings.ap_bandwidth) ? "HT20" : "HT40");
     err = esp_wifi_set_bandwidth(WIFI_IF_AP, wifi_ap_settings.ap_bandwidth);
     if (ESP_OK != err)
     {
@@ -271,6 +298,113 @@ wifi_manager_timer_cb_reconnect(const os_timer_one_shot_cptr_without_arg_t* cons
     wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_AUTO_RECONNECT);
 }
 
+static void
+wifi_manager_event_handler_on_wps_er_success(wifi_event_sta_wps_er_success_t* const p_evt)
+{
+    typedef struct tmp_wifi_config_t
+    {
+        wifi_config_t           conf;
+        wifiman_wifi_ssid_t     ssid;
+        wifiman_wifi_password_t password;
+    } tmp_wifi_config_t;
+
+    LOG_INFO("WIFI_EVENT_STA_WPS_ER_SUCCESS");
+
+    LOG_INFO("Disable WPS");
+    esp_err_t err      = esp_wifi_wps_disable();
+    g_wifi_wps_enabled = false;
+    if (ESP_OK != err)
+    {
+        LOG_ERR("%s failed", "esp_wifi_wps_disable");
+    }
+    wifi_callback_on_wps_stopped();
+
+    tmp_wifi_config_t* p_tmp_wifi_config = (tmp_wifi_config_t*)os_calloc(1, sizeof(*p_tmp_wifi_config));
+    if (NULL == p_tmp_wifi_config)
+    {
+        LOG_ERR("Can't allocate memory");
+        return;
+    }
+    p_tmp_wifi_config->ssid.ssid_buf[0]         = '\0';
+    p_tmp_wifi_config->password.password_buf[0] = '\0';
+
+    if (NULL != p_evt)
+    {
+        LOG_INFO("WIFI_EVENT_STA_WPS_ER_SUCCESS: ap_cred_cnt=%d", p_evt->ap_cred_cnt);
+        if (0 == p_evt->ap_cred_cnt)
+        {
+            LOG_ERR("WIFI_EVENT_STA_WPS_ER_SUCCESS: ap_cred_cnt is zero");
+            os_free(p_tmp_wifi_config);
+            return;
+        }
+        (void)snprintf(
+            p_tmp_wifi_config->ssid.ssid_buf,
+            sizeof(p_tmp_wifi_config->ssid.ssid_buf),
+            "%s",
+            p_evt->ap_cred[0].ssid);
+        (void)snprintf(
+            p_tmp_wifi_config->password.password_buf,
+            sizeof(p_tmp_wifi_config->password.password_buf),
+            "%s",
+            p_evt->ap_cred[0].passphrase);
+    }
+    else
+    {
+        /*
+         * If only one AP credential is received from WPS, there will be no event data and
+         * esp_wifi_set_config() is already called by WPS modules for backward compatibility
+         * with legacy apps. So directly attempt connection here.
+         */
+        err = esp_wifi_get_config(WIFI_IF_STA, &p_tmp_wifi_config->conf);
+        if (ESP_OK != err)
+        {
+            LOG_ERR("%s failed", "esp_wifi_get_config");
+            os_free(p_tmp_wifi_config);
+            return;
+        }
+        (void)snprintf(
+            p_tmp_wifi_config->ssid.ssid_buf,
+            sizeof(p_tmp_wifi_config->ssid.ssid_buf),
+            "%s",
+            p_tmp_wifi_config->conf.sta.ssid);
+        (void)snprintf(
+            p_tmp_wifi_config->password.password_buf,
+            sizeof(p_tmp_wifi_config->password.password_buf),
+            "%s",
+            p_tmp_wifi_config->conf.sta.password);
+    }
+
+    LOG_INFO("WIFI_EVENT_STA_WPS_ER_SUCCESS: SSID: %s", p_tmp_wifi_config->conf.sta.ssid);
+    LOG_DBG("WIFI_EVENT_STA_WPS_ER_SUCCESS: password: %s", p_tmp_wifi_config->conf.sta.password);
+    if ('\0' != p_tmp_wifi_config->conf.sta.ssid[0])
+    {
+        wifiman_config_sta_set_ssid_and_password(&p_tmp_wifi_config->ssid, &p_tmp_wifi_config->password);
+        os_free(p_tmp_wifi_config);
+
+        wifi_manager_connect_async_by_wps();
+    }
+}
+
+static void
+wifi_manager_restart_wps(void)
+{
+    esp_err_t err = esp_wifi_wps_disable();
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_disable");
+    }
+    err = esp_wifi_wps_enable(&g_wps_config);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_enable");
+    }
+    err = esp_wifi_wps_start(0);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_start");
+    }
+}
+
 void
 wifi_manager_event_handler(
     ATTR_UNUSED void*      p_ctx,
@@ -325,6 +459,17 @@ wifi_manager_event_handler(
                     wifiman_disconnection_reason_to_str(((const wifi_event_sta_disconnected_t*)p_event_data)->reason));
 
                 wifiman_msg_send_ev_disconnected(((const wifi_event_sta_disconnected_t*)p_event_data)->reason);
+                break;
+            case WIFI_EVENT_STA_WPS_ER_SUCCESS:
+                wifi_manager_event_handler_on_wps_er_success(p_event_data);
+                break;
+            case WIFI_EVENT_STA_WPS_ER_FAILED:
+                LOG_ERR("WIFI_EVENT_STA_WPS_ER_FAILED");
+                wifi_manager_restart_wps();
+                break;
+            case WIFI_EVENT_STA_WPS_ER_TIMEOUT:
+                LOG_ERR("WIFI_EVENT_STA_WPS_ER_TIMEOUT");
+                wifi_manager_restart_wps();
                 break;
             default:
                 break;
@@ -434,6 +579,7 @@ wifi_manager_init_start_wifi(
     /* STA - Wifi Station configuration setup */
     wifi_manager_netif_configure_sta();
 
+    LOG_INFO("%s: ### Configure WiFi mode: Station", __func__);
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
     err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (ESP_OK != err)
@@ -622,6 +768,24 @@ wifi_callback_on_connect_eth_cmd(void)
     if (NULL != g_wifi_callbacks.cb_on_connect_eth_cmd)
     {
         g_wifi_callbacks.cb_on_connect_eth_cmd();
+    }
+}
+
+void
+wifi_callback_on_wps_started(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_wps_started)
+    {
+        g_wifi_callbacks.cb_on_wps_started();
+    }
+}
+
+void
+wifi_callback_on_wps_stopped(void)
+{
+    if (NULL != g_wifi_callbacks.cb_on_wps_stopped)
+    {
+        g_wifi_callbacks.cb_on_wps_stopped();
     }
 }
 

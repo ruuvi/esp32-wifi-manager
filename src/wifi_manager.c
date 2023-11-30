@@ -131,6 +131,7 @@ wifi_manager_set_config_sta(const wifiman_config_sta_t* const p_wifi_cfg_sta)
     /* STA - Wifi Station configuration setup */
     wifi_manager_netif_configure_sta();
 
+    LOG_INFO("%s: ### Configure WiFi mode: Station", __func__);
     /* by default the mode is STA because wifi_manager will not start the access point unless it has to! */
     const esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
     if (ESP_OK != err)
@@ -218,15 +219,27 @@ wifi_manager_update_network_connection_info(
 void
 wifi_manager_connect_async(void)
 {
-    /* in order to avoid a false positive on the front end app we need to quickly flush the ip json
-     * There'se a risk the front end sees an IP or a password error when in fact
-     * it's a remnant from a previous connection
-     */
     wifi_manager_lock();
     json_network_info_clear();
     wifi_manager_unlock();
     LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_USER", __func__);
-    wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+    if (!wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER))
+    {
+        LOG_ERR("%s failed", "wifiman_msg_send_cmd_connect_sta");
+    }
+}
+
+void
+wifi_manager_connect_async_by_wps(void)
+{
+    wifi_manager_lock();
+    json_network_info_clear();
+    wifi_manager_unlock();
+    LOG_INFO("%s: wifiman_msg_send_cmd_connect_sta: CONNECTION_REQUEST_WPS", __func__);
+    if (!wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_WPS))
+    {
+        LOG_ERR("%s failed", "wifiman_msg_send_cmd_connect_sta");
+    }
 }
 
 void
@@ -241,6 +254,20 @@ wifi_manager_start_ap(const bool flag_block_req_from_lan)
 {
     LOG_INFO("%s", __func__);
     wifiman_msg_send_cmd_start_ap(flag_block_req_from_lan);
+}
+
+void
+wifi_manager_enable_wps(void)
+{
+    LOG_INFO("%s", __func__);
+    wifiman_msg_send_cmd_enable_wps();
+}
+
+void
+wifi_manager_disable_wps(void)
+{
+    LOG_INFO("%s", __func__);
+    wifiman_msg_send_cmd_disable_wps();
 }
 
 void

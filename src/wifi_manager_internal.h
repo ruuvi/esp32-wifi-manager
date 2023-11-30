@@ -15,6 +15,7 @@
 #include "os_sema.h"
 #include "os_timer.h"
 #include "http_req.h"
+#include "esp_wps.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,6 +72,9 @@ typedef struct wifi_manager_scan_info_t
 } wifi_manager_scan_info_t;
 
 extern EventGroupHandle_t g_p_wifi_manager_event_group;
+
+extern esp_wps_config_t g_wps_config;
+extern bool             g_wifi_wps_enabled;
 
 void
 wifi_manager_init_mutex(void);
@@ -163,6 +167,12 @@ wifi_manager_scan_timer_stop(void);
 
 void
 wifi_callback_on_connect_eth_cmd(void);
+
+void
+wifi_callback_on_wps_started(void);
+
+void
+wifi_callback_on_wps_stopped(void);
 
 void
 wifi_callback_on_ap_started(void);

@@ -179,8 +179,10 @@ typedef enum message_code_e
     EVENT_AP_STA_CONNECTED    = 14,
     EVENT_AP_STA_DISCONNECTED = 15,
     EVENT_AP_STA_IP_ASSIGNED  = 16,
-    ORDER_TASK_WATCHDOG_FEED  = 17,
-    MESSAGE_CODE_COUNT        = 18 /* important for the callback array */
+    ORDER_ENABLE_WPS          = 17,
+    ORDER_DISABLE_WPS         = 18,
+    ORDER_TASK_WATCHDOG_FEED  = 19,
+    MESSAGE_CODE_COUNT        = 20 /* important for the callback array */
 } message_code_e;
 
 typedef void (*wifi_manager_cb_ptr)(void*);
@@ -207,6 +209,7 @@ typedef enum connection_request_made_by_code_e
     CONNECTION_REQUEST_USER               = 1,
     CONNECTION_REQUEST_AUTO_RECONNECT     = 2,
     CONNECTION_REQUEST_RESTORE_CONNECTION = 3,
+    CONNECTION_REQUEST_WPS                = 4,
     CONNECTION_REQUEST_MAX                = 0x7fffffff /*force the creation of this enum as a 32 bit int */
 } connection_request_made_by_code_e;
 
@@ -338,6 +341,8 @@ typedef struct wifiman_config_t     wifiman_config_t;
 typedef void (*wifi_manager_callback_on_cmd_connect_eth_t)(void);
 typedef void (*wifi_manager_callback_on_cmd_disconnect_eth_t)(void);
 typedef void (*wifi_manager_callback_on_cmd_disconnect_sta_t)(void);
+typedef void (*wifi_manager_callback_on_wps_started_t)(void);
+typedef void (*wifi_manager_callback_on_wps_stopped_t)(void);
 typedef void (*wifi_manager_callback_on_ap_started_t)(void);
 typedef void (*wifi_manager_callback_on_ap_stopped_t)(void);
 typedef void (*wifi_manager_callback_on_ap_sta_connected_t)(void);
@@ -355,6 +360,8 @@ typedef struct wifi_manager_callbacks_t
     wifi_manager_callback_on_cmd_connect_eth_t     cb_on_connect_eth_cmd;
     wifi_manager_callback_on_cmd_disconnect_eth_t  cb_on_disconnect_eth_cmd;
     wifi_manager_callback_on_cmd_disconnect_sta_t  cb_on_disconnect_sta_cmd;
+    wifi_manager_callback_on_wps_started_t         cb_on_wps_started;
+    wifi_manager_callback_on_wps_stopped_t         cb_on_wps_stopped;
     wifi_manager_callback_on_ap_started_t          cb_on_ap_started;
     wifi_manager_callback_on_ap_stopped_t          cb_on_ap_stopped;
     wifi_manager_callback_on_ap_sta_connected_t    cb_on_ap_sta_connected;
