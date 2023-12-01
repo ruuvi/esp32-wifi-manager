@@ -28,7 +28,13 @@
 #include "log.h"
 static const char TAG[] = "wifi_manager";
 
-esp_wps_config_t g_wps_config = WPS_CONFIG_INIT_DEFAULT(WPS_TYPE_PBC);
+esp_wps_config_t g_wps_config = {
+    .wps_type     = WPS_TYPE_PBC,
+    .factory_info = { ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(manufacturer, "Ruuvi")
+                          ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(model_number, "Ruuvi Gateway")
+                              ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(model_name, "Ruuvi Gateway")
+                                  ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(device_name, "Ruuvi Gateway") }
+};
 
 static wifi_manager_callbacks_t g_wifi_callbacks;
 
