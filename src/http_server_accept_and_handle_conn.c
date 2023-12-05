@@ -184,7 +184,9 @@ http_server_netconn_write(
      * then netconn_write_partly will ignore p_conn->send_timeout and will wait much longer,
      * which will trigger task watchdog for http_server.
      */
-    size_t offset = 0;
+    const TickType_t tick_start      = xTaskGetTickCount();
+    const int32_t send_timeout_ticks = (0 != p_conn->send_timeout) ? (int32_t)pdMS_TO_TICKS(p_conn->send_timeout) : 0;
+    size_t        offset             = 0;
     do
     {
         size_t bytes_written = 0;
@@ -208,31 +210,25 @@ http_server_netconn_write(
                     (printf_uint_t)(buf_len - offset));
                 return false;
             }
-            vTaskDelay(pdMS_TO_TICKS(20));
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
         LOG_DBG(
             "netconn_write_partly: offset=%u, bytes_written=%u",
             (printf_uint_t)offset,
             (printf_uint_t)bytes_written);
         offset += bytes_written;
-        int32_t send_timeout = p_conn->send_timeout;
-        bool    flag_success = false;
-        while ((!flag_success) && (send_timeout > 0))
+        if (0 != send_timeout_ticks)
         {
-            const int32_t tmp_timeout = (send_timeout > 1000) ? 1000 : send_timeout;
-            flag_success              = http_server_sema_send_wait_timeout(tmp_timeout);
-            LOG_DBG("Feed watchdog");
-            const esp_err_t err_wdt = esp_task_wdt_reset();
-            if (ESP_OK != err_wdt)
+            if ((xTaskGetTickCount() - tick_start) > send_timeout_ticks)
             {
-                LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
+                LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
+                return false;
             }
-            send_timeout -= tmp_timeout;
         }
-        if (!flag_success)
+        const esp_err_t err_wdt = esp_task_wdt_reset();
+        if (ESP_OK != err_wdt)
         {
-            LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
-            return false;
+            LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
         }
     } while (offset != buf_len);
     return true;
