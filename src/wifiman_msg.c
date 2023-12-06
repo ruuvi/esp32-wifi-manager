@@ -225,6 +225,24 @@ wifiman_msg_send_cmd_start_ap(const bool flag_block_req_from_lan)
 }
 
 bool
+wifiman_msg_send_cmd_enable_wps(void)
+{
+    const wifiman_msg_param_t msg_param = {
+        .ptr = NULL,
+    };
+    return wifiman_msg_send(ORDER_ENABLE_WPS, msg_param);
+}
+
+bool
+wifiman_msg_send_cmd_disable_wps(void)
+{
+    const wifiman_msg_param_t msg_param = {
+        .ptr = NULL,
+    };
+    return wifiman_msg_send(ORDER_DISABLE_WPS, msg_param);
+}
+
+bool
 wifiman_msg_send_cmd_stop_ap(void)
 {
     const wifiman_msg_param_t msg_param = {

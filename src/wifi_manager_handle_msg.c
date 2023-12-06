@@ -5,6 +5,7 @@
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
  */
 
+#include <esp_wps.h>
 #include "wifi_manager_internal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -32,6 +33,8 @@ static wifi_manager_cb_ptr      g_wifi_cb_ptr_arr[MESSAGE_CODE_COUNT];
 static wifi_manager_scan_info_t g_wifi_scan_info;
 static uint16_t                 g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t         g_wifi_ap_records[2 * MAX_AP_NUM];
+
+bool g_wifi_wps_enabled;
 
 static bool
 wifi_scan_next(wifi_manager_scan_info_t* const p_scan_info)
@@ -125,6 +128,14 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
                 (printf_uint_t)event_bits);
             LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
+            break;
+        case CONNECTION_REQUEST_WPS:
+            LOG_INFO(
+                "MESSAGE: ORDER_CONNECT_STA: CONNECTION_REQUEST_WPS, event_bits=0x%04x",
+                (printf_uint_t)event_bits);
+            LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_STA_CONNECT_BIT");
+            xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_RESTORE_STA_BIT);
+            xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_STA_CONNECT_BIT);
             break;
         default:
             LOG_WARN(
@@ -274,8 +285,11 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     {
         LOG_INFO("lost connection");
         update_reason_code = UPDATE_LOST_CONNECTION;
-        LOG_INFO("%s: activate reconnection after timeout", __func__);
-        wifi_manager_start_timer_reconnect_sta_after_timeout();
+        if (!g_wifi_wps_enabled)
+        {
+            LOG_INFO("%s: activate reconnection after timeout", __func__);
+            wifi_manager_start_timer_reconnect_sta_after_timeout();
+        }
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
@@ -304,6 +318,7 @@ wifi_handle_cmd_start_ap(const bool flag_block_req_from_lan)
     xEventGroupSetBits(
         g_p_wifi_manager_event_group,
         WIFI_MANAGER_AP_ACTIVE | (flag_block_req_from_lan ? WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE : 0));
+
     wifi_callback_on_ap_started();
 }
 
@@ -322,6 +337,43 @@ wifi_handle_cmd_stop_ap(void)
         g_p_wifi_manager_event_group,
         WIFI_MANAGER_AP_ACTIVE | WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE);
     wifi_callback_on_ap_stopped();
+}
+
+static void
+wifi_handle_cmd_enable_wps(void)
+{
+    LOG_INFO("MESSAGE: ORDER_ENABLE_WPS");
+    esp_err_t err = esp_wifi_wps_enable(&g_wps_config);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_enable");
+    }
+    err = esp_wifi_wps_start(0);
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_start");
+    }
+    else
+    {
+        g_wifi_wps_enabled = true;
+        wifi_callback_on_wps_started();
+    }
+}
+
+static void
+wifi_handle_cmd_disable_wps(void)
+{
+    LOG_INFO("MESSAGE: ORDER_DISABLE_WPS");
+    const esp_err_t err = esp_wifi_wps_disable();
+    g_wifi_wps_enabled  = false;
+    if (ESP_OK != err)
+    {
+        LOG_ERR_ESP(err, "%s failed", "esp_wifi_wps_disable");
+    }
+    else
+    {
+        wifi_callback_on_wps_stopped();
+    }
 }
 
 static void
@@ -615,6 +667,12 @@ wifi_manager_recv_and_handle_msg(void)
             break;
         case EVENT_AP_STA_IP_ASSIGNED:
             wifi_handle_ev_ap_sta_ip_assigned();
+            break;
+        case ORDER_ENABLE_WPS:
+            wifi_handle_cmd_enable_wps();
+            break;
+        case ORDER_DISABLE_WPS:
+            wifi_handle_cmd_disable_wps();
             break;
         case ORDER_TASK_WATCHDOG_FEED:
             wifiman_msg_clear_flag_wdog_feed_active();

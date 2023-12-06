@@ -56,6 +56,12 @@ bool
 wifiman_msg_send_cmd_start_ap(const bool flag_block_req_from_lan);
 
 bool
+wifiman_msg_send_cmd_enable_wps(void);
+
+bool
+wifiman_msg_send_cmd_disable_wps(void);
+
+bool
 wifiman_msg_send_cmd_stop_ap(void);
 
 bool

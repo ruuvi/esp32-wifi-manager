@@ -100,6 +100,18 @@ void
 wifi_manager_start_ap(const bool flag_block_req_from_lan);
 
 /**
+ * @brief Enable WPS
+ */
+void
+wifi_manager_enable_wps(void);
+
+/**
+ * @brief Disable WPS
+ */
+void
+wifi_manager_disable_wps(void);
+
+/**
  * @brief Stop Wi-Fi Manger
  */
 void
@@ -110,6 +122,12 @@ wifi_manager_stop(void);
  */
 void
 wifi_manager_connect_async(void);
+
+/**
+ * @brief requests a connection to an access point using SSID and password got by WPS.
+ */
+void
+wifi_manager_connect_async_by_wps(void);
 
 /**
  * @brief scan WiFi APs and return json

@@ -211,6 +211,7 @@ http_server_handle_req_delete(
     {
         LOG_INFO("http_server_netconn_serve: DELETE /connect.json");
         dns_server_stop();
+        wifi_manager_disable_wps();
         if (wifi_manager_is_connected_to_ethernet())
         {
             wifi_manager_disconnect_eth();
@@ -455,6 +456,15 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
 }
 
 static http_server_resp_t
+http_server_handle_req_post_connect_wps(void)
+{
+    LOG_INFO("http_server_netconn_serve: POST /connect_wps");
+
+    wifi_manager_enable_wps();
+    return http_server_resp_200_json("{}");
+}
+
+static http_server_resp_t
 http_server_handle_req_post(
     const char*                                 p_file_name,
     const http_server_handle_req_param_t* const p_param,
@@ -504,6 +514,10 @@ http_server_handle_req_post(
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         return http_server_handle_req_post_connect_json(http_body);
+    }
+    if (0 == strcmp(p_file_name, "connect_wps"))
+    {
+        return http_server_handle_req_post_connect_wps();
     }
     return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, p_param->flag_access_from_lan);
 }
