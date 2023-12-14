@@ -185,6 +185,7 @@ wifi_manager_update_network_connection_info(
         {
             LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_WIFI_CONNECTED_BIT");
             xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_WIFI_CONNECTED_BIT);
+            wifi_manager_stop_timer_reconnect_sta_after_timeout();
         }
         if (NULL != p_ip_info)
         {
