@@ -160,6 +160,9 @@ bool
 wifi_manager_is_ap_active(void);
 
 bool
+wifi_manager_is_sta_active(void);
+
+bool
 wifi_manager_is_req_from_lan_blocked_while_ap_is_active(void);
 
 bool
