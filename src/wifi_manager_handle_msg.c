@@ -145,7 +145,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
             break;
     }
 
-    if (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT))
+    if (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT))
     {
         LOG_WARN("%s: Already connected to WiFi, first need to disconnect, then reconnect", __func__);
         LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_RESTORE_STA_BIT");
@@ -156,6 +156,7 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
     {
         LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_REQUEST_DISCONNECT_BIT");
         xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
+        xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_STA_ACTIVE_BIT);
 
         /* update config to latest and attempt connection */
         wifi_config_t wifi_config = {
@@ -240,8 +241,11 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
 static bool
 wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
 {
-    const wifiman_disconnection_reason_t reason = wifiman_conv_param_to_reason(p_param);
-    const EventBits_t event_bits = xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_SCAN_BIT);
+    const wifiman_disconnection_reason_t reason     = wifiman_conv_param_to_reason(p_param);
+    const EventBits_t                    event_bits = xEventGroupClearBits(
+        g_p_wifi_manager_event_group,
+        WIFI_MANAGER_SCAN_BIT | WIFI_MANAGER_INITIAL_CONNECTION_BIT | WIFI_MANAGER_STA_ACTIVE_BIT
+            | WIFI_MANAGER_WIFI_CONNECTED_BIT);
 
     LOG_INFO(
         "MESSAGE: EVENT_STA_DISCONNECTED with Reason code: %d (%s), event_bits=0x%04x",
@@ -285,7 +289,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     {
         LOG_INFO("lost connection");
         update_reason_code = UPDATE_LOST_CONNECTION;
-        if (!g_wifi_wps_enabled)
+        if ((!g_wifi_wps_enabled) && (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT)))
         {
             LOG_INFO("%s: activate reconnection after timeout", __func__);
             wifi_manager_start_timer_reconnect_sta_after_timeout();
@@ -297,7 +301,7 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     {
         wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
     }
-    if (!is_connected_to_wifi)
+    if ((!is_connected_to_wifi) && (0 == (event_bits & WIFI_MANAGER_INITIAL_CONNECTION_BIT)))
     {
         return false;
     }
@@ -425,8 +429,10 @@ static void
 wifi_handle_ev_ap_sta_connected(void)
 {
     LOG_INFO("MESSAGE: EVENT_AP_STA_CONNECTED");
-    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT");
-    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT);
+    LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT | WIFI_MANAGER_INITIAL_CONNECTION_BIT");
+    xEventGroupClearBits(
+        g_p_wifi_manager_event_group,
+        WIFI_MANAGER_AP_STA_IP_ASSIGNED_BIT | WIFI_MANAGER_INITIAL_CONNECTION_BIT);
     LOG_INFO("WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_AP_STA_CONNECTED_BIT");
     xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_AP_STA_CONNECTED_BIT);
     wifi_callback_on_ap_sta_connected();
@@ -479,8 +485,7 @@ wifi_handle_cmd_disconnect_sta(void)
         "WIFI_MANAGER:EV_STATE: Set WIFI_MANAGER_REQUEST_DISCONNECT_BIT, event_bits=0x%04x",
         (printf_uint_t)event_bits);
 
-    const bool is_connected_to_wifi = (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT)) ? true : false;
-
+    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_STA_ACTIVE_BIT);
     const esp_err_t err = esp_wifi_disconnect();
     if (ESP_OK != err)
     {
@@ -488,15 +493,10 @@ wifi_handle_cmd_disconnect_sta(void)
     }
     wifi_callback_on_disconnect_sta_cmd();
 
-    if (!is_connected_to_wifi)
+    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
+    if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
     {
-        LOG_INFO("Got a command to disconnect from WiFi AP, but we are not currently connected");
-        LOG_INFO("WIFI_MANAGER:EV_STATE: Clear WIFI_MANAGER_REQUEST_DISCONNECT_BIT");
-        xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_REQUEST_DISCONNECT_BIT);
-        if (0 != (event_bits & WIFI_MANAGER_REQUEST_STA_CONNECT_BIT))
-        {
-            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
-        }
+        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
     }
 }
 

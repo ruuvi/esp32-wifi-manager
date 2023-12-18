@@ -54,6 +54,12 @@ extern "C" {
 /* @brief Block requests from LAN while WiFi access point is active. */
 #define WIFI_MANAGER_BLOCK_REQ_FROM_LAN_WHILE_AP_ACTIVE ((uint32_t)(BIT11))
 
+/* @brief indicates that the ESP32 is working as Wi-Fi station and trying to connect or connected to a hotspot. */
+#define WIFI_MANAGER_STA_ACTIVE_BIT ((uint32_t)(BIT12))
+
+/* @brief indicates that the ESP32 is trying to connect to a hotspot for the first time. */
+#define WIFI_MANAGER_INITIAL_CONNECTION_BIT ((uint32_t)(BIT13))
+
 #define WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS (200U)
 
 #define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL (1U)

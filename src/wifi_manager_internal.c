@@ -702,6 +702,7 @@ wifi_manager_init(
 
     if (flag_connect_sta)
     {
+        xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_INITIAL_CONNECTION_BIT);
         wifi_manager_reconnect_sta();
     }
     return true;
