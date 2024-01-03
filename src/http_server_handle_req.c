@@ -212,6 +212,9 @@ http_server_handle_req_delete(
         LOG_INFO("http_server_netconn_serve: DELETE /connect.json");
         dns_server_stop();
         wifi_manager_disable_wps();
+        wifi_manager_lock();
+        json_network_info_set_reason_user_disconnect();
+        wifi_manager_unlock();
         if (wifi_manager_is_connected_to_ethernet())
         {
             wifi_manager_disconnect_eth();
@@ -436,6 +439,9 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
                     login_info.ssid.ssid_buf);
                 wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
             }
+            wifi_manager_lock();
+            json_network_info_clear();
+            wifi_manager_unlock();
             LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
             wifi_manager_start_timer_reconnect_sta_after_timeout();
             return http_server_resp_200_json("{}");

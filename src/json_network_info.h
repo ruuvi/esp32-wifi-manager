@@ -233,6 +233,13 @@ json_network_set_extra_info(const char* const p_extra);
 void
 json_network_info_clear(void);
 
+/**
+ * @brief Updates the connection status json - sets reason to "user disconnect".
+ * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
+ */
+void
+json_network_info_set_reason_user_disconnect(void);
+
 #ifdef __cplusplus
 }
 #endif
