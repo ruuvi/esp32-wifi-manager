@@ -60,6 +60,9 @@ extern "C" {
 /* @brief indicates that the ESP32 is trying to connect to a hotspot for the first time. */
 #define WIFI_MANAGER_INITIAL_CONNECTION_BIT ((uint32_t)(BIT13))
 
+/* @brief indicates that command to connect to STA was sent, but has not handled yet. */
+#define WIFI_MANAGER_CMD_STA_CONNECT_BIT ((uint32_t)(BIT14))
+
 #define WIFI_MANAGER_DELAY_BETWEEN_SCANNING_WIFI_CHANNELS_MS (200U)
 
 #define WIFI_MANAGER_WIFI_COUNTRY_DEFAULT_FIRST_CHANNEL (1U)

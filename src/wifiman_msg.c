@@ -267,6 +267,7 @@ wifiman_msg_send_cmd_connect_sta(const connection_request_made_by_code_e conn_re
         .val = conn_req_code,
     };
     LOG_INFO("Send msg: ORDER_CONNECT_STA, conn_req_code=%d", (printf_int_t)conn_req_code);
+    xEventGroupSetBits(g_p_wifi_manager_event_group, WIFI_MANAGER_CMD_STA_CONNECT_BIT);
     return wifiman_msg_send(ORDER_CONNECT_STA, msg_param);
 }
 

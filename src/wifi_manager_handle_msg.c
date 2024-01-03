@@ -100,6 +100,8 @@ wifi_handle_cmd_connect_eth(void)
 static void
 wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
 {
+    xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_CMD_STA_CONNECT_BIT);
+
     const EventBits_t                       event_bits = xEventGroupGetBits(g_p_wifi_manager_event_group);
     const connection_request_made_by_code_e conn_req   = wifiman_conv_param_to_conn_req(p_param);
     switch (conn_req)
@@ -299,7 +301,14 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
     if (flag_need_to_reconnect)
     {
-        wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+        if (0 != (event_bits & WIFI_MANAGER_CMD_STA_CONNECT_BIT))
+        {
+            LOG_INFO("%s: Command to connect to STA was already sent from ORDER_DISCONNECT_STA handler", __func__);
+        }
+        else
+        {
+            wifiman_msg_send_cmd_connect_sta(CONNECTION_REQUEST_USER);
+        }
     }
     if ((!is_connected_to_wifi) && (0 == (event_bits & WIFI_MANAGER_INITIAL_CONNECTION_BIT)))
     {
