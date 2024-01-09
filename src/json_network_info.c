@@ -214,6 +214,18 @@ json_network_info_clear(void)
     json_network_info_do_action_without_param(&json_network_info_do_clear);
 }
 
+static void
+json_network_info_do_set_reason_user_disconnect(json_network_info_t* const p_info)
+{
+    p_info->update_reason_code = UPDATE_USER_DISCONNECT;
+}
+
+void
+json_network_info_set_reason_user_disconnect(void)
+{
+    json_network_info_do_action_without_param(&json_network_info_do_set_reason_user_disconnect);
+}
+
 void
 json_network_info_do_generate_internal(
     const json_network_info_t* const      p_info,
