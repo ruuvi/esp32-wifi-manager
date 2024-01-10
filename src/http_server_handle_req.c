@@ -423,42 +423,41 @@ http_server_handle_req_post_connect_json(const http_req_body_t http_body)
         wifiman_msg_send_cmd_connect_eth();
         return http_server_resp_200_json("{}");
     }
-    if (!login_info.is_ssid_null)
+    if (login_info.is_ssid_null)
     {
-        if (login_info.is_password_null)
+        /* bad request the authentication header is not complete/not the correct format */
+        return http_server_resp_400();
+    }
+    if (login_info.is_password_null)
+    {
+        const wifiman_wifi_ssid_t saved_ssid = wifiman_config_sta_get_ssid();
+        if (0 == strcmp(saved_ssid.ssid_buf, login_info.ssid.ssid_buf))
         {
-            const wifiman_wifi_ssid_t saved_ssid = wifiman_config_sta_get_ssid();
-            if (0 == strcmp(saved_ssid.ssid_buf, login_info.ssid.ssid_buf))
-            {
-                LOG_INFO("POST /connect.json: SSID:%s, PWD: NULL - reconnect to saved WiFi", login_info.ssid.ssid_buf);
-            }
-            else
-            {
-                LOG_WARN(
-                    "POST /connect.json: SSID:%s, PWD: NULL - try to connect to WiFi without authentication",
-                    login_info.ssid.ssid_buf);
-                wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
-            }
-            wifi_manager_lock();
-            json_network_info_clear();
-            wifi_manager_unlock();
-            LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
-            wifi_manager_start_timer_reconnect_sta_after_timeout();
-            return http_server_resp_200_json("{}");
+            LOG_INFO("POST /connect.json: SSID:%s, PWD: NULL - reconnect to saved WiFi", login_info.ssid.ssid_buf);
         }
+        else
+        {
+            LOG_WARN(
+                "POST /connect.json: SSID:%s, PWD: NULL - try to connect to WiFi without authentication",
+                login_info.ssid.ssid_buf);
+            wifiman_config_sta_set_ssid_and_password(&login_info.ssid, NULL);
+        }
+    }
+    else
+    {
         LOG_DBG(
             "POST /connect.json: SSID:%s, PWD: %s - connect to WiFi",
             login_info.ssid.ssid_buf,
             login_info.password.password_buf);
         LOG_INFO("POST /connect.json: SSID:%s, PWD: ******** - connect to WiFi", login_info.ssid.ssid_buf);
         wifiman_config_sta_set_ssid_and_password(&login_info.ssid, &login_info.password);
-
-        LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
-        wifi_manager_connect_async();
-        return http_server_resp_200_json("{}");
     }
-    /* bad request the authentication header is not complete/not the correct format */
-    return http_server_resp_400();
+    wifi_manager_lock();
+    json_network_info_clear();
+    wifi_manager_unlock();
+    LOG_DBG("http_server_netconn_serve: wifi_manager_connect_async() call");
+    wifi_manager_connect_async();
+    return http_server_resp_200_json("{}");
 }
 
 static http_server_resp_t
