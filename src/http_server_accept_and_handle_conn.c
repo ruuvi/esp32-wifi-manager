@@ -272,28 +272,28 @@ http_get_content_type_str(const http_content_type_e content_type)
     const char* p_content_type_str = "application/octet-stream";
     switch (content_type)
     {
-        case HTTP_CONENT_TYPE_TEXT_HTML:
+        case HTTP_CONTENT_TYPE_TEXT_HTML:
             p_content_type_str = "text/html";
             break;
-        case HTTP_CONENT_TYPE_TEXT_PLAIN:
+        case HTTP_CONTENT_TYPE_TEXT_PLAIN:
             p_content_type_str = "text/plain";
             break;
-        case HTTP_CONENT_TYPE_TEXT_CSS:
+        case HTTP_CONTENT_TYPE_TEXT_CSS:
             p_content_type_str = "text/css";
             break;
-        case HTTP_CONENT_TYPE_TEXT_JAVASCRIPT:
+        case HTTP_CONTENT_TYPE_TEXT_JAVASCRIPT:
             p_content_type_str = "text/javascript";
             break;
-        case HTTP_CONENT_TYPE_IMAGE_PNG:
+        case HTTP_CONTENT_TYPE_IMAGE_PNG:
             p_content_type_str = "image/png";
             break;
-        case HTTP_CONENT_TYPE_IMAGE_SVG_XML:
+        case HTTP_CONTENT_TYPE_IMAGE_SVG_XML:
             p_content_type_str = "image/svg+xml";
             break;
-        case HTTP_CONENT_TYPE_APPLICATION_JSON:
+        case HTTP_CONTENT_TYPE_APPLICATION_JSON:
             p_content_type_str = "application/json";
             break;
-        case HTTP_CONENT_TYPE_APPLICATION_OCTET_STREAM:
+        case HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM:
             p_content_type_str = "application/octet-stream";
             break;
     }
@@ -306,10 +306,10 @@ http_get_content_encoding_str(const http_server_resp_t* const p_resp)
     const char* p_content_encoding_str = "";
     switch (p_resp->content_encoding)
     {
-        case HTTP_CONENT_ENCODING_NONE:
+        case HTTP_CONTENT_ENCODING_NONE:
             p_content_encoding_str = "";
             break;
-        case HTTP_CONENT_ENCODING_GZIP:
+        case HTTP_CONTENT_ENCODING_GZIP:
             p_content_encoding_str = "Content-Encoding: gzip\r\n";
             break;
     }
@@ -614,7 +614,7 @@ http_server_netconn_resp_without_content(
             "%s",
             (printf_uint_t)resp_code,
             p_status_msg,
-            http_get_content_type_str(HTTP_CONENT_TYPE_APPLICATION_JSON),
+            http_get_content_type_str(HTTP_CONTENT_TYPE_APPLICATION_JSON),
             (printf_ulong_t)strlen(p_empty_json),
             p_empty_json))
     {
@@ -895,7 +895,7 @@ http_server_netconn_serve_handle_req(
     {
         LOG_INFO("Extra HTTP-header resp: %s", g_http_server_extra_header_fields.buf);
     }
-    if ((HTTP_CONENT_TYPE_APPLICATION_JSON == resp.content_type)
+    if ((HTTP_CONTENT_TYPE_APPLICATION_JSON == resp.content_type)
         && ((HTTP_CONTENT_LOCATION_STATIC_MEM == resp.content_location)
             || (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)))
     {
