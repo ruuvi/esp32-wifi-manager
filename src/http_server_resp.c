@@ -19,10 +19,10 @@ http_server_resp_200_json(const char* p_json_content)
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
     return http_server_resp_data_in_static_mem(
-        HTTP_CONENT_TYPE_APPLICATION_JSON,
+        HTTP_CONTENT_TYPE_APPLICATION_JSON,
         NULL,
         strlen(p_json_content),
-        HTTP_CONENT_ENCODING_NONE,
+        HTTP_CONTENT_ENCODING_NONE,
         (const uint8_t*)p_json_content,
         flag_no_cache,
         flag_add_header_date);
@@ -38,10 +38,10 @@ http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char*
         .content_location     = HTTP_CONTENT_LOCATION_HEAP,
         .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = flag_add_header_date,
-        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .content_type         = HTTP_CONTENT_TYPE_APPLICATION_JSON,
         .p_content_type_param = NULL,
         .content_len          = strlen(p_json_content),
-        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
             .memory = {
                 .p_buf = (const uint8_t*)p_json_content,
@@ -67,10 +67,10 @@ http_server_resp_json_generator(const http_resp_code_e http_resp_code, json_stre
         .content_location     = HTTP_CONTENT_LOCATION_JSON_GENERATOR,
         .flag_no_cache        = flag_no_cache,
         .flag_add_header_date = flag_add_header_date,
-        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .content_type         = HTTP_CONTENT_TYPE_APPLICATION_JSON,
         .p_content_type_param = NULL,
         .content_len          = json_stream_gen_calc_size(p_json_gen),
-        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
             .json_generator = {
                 .p_json_gen = p_json_gen,
@@ -95,10 +95,10 @@ http_server_resp_err(const http_resp_code_e http_resp_code)
         .content_location     = HTTP_CONTENT_LOCATION_NO_CONTENT,
         .flag_no_cache        = true,
         .flag_add_header_date = true,
-        .content_type         = HTTP_CONENT_TYPE_TEXT_HTML,
+        .content_type         = HTTP_CONTENT_TYPE_TEXT_HTML,
         .p_content_type_param = NULL,
         .content_len          = 0,
-        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location = {
             .memory = {
                 .p_buf = NULL,
@@ -120,10 +120,10 @@ http_server_resp_err_json_in_static_mem(const http_resp_code_e http_resp_code, c
         .content_location     = HTTP_CONTENT_LOCATION_STATIC_MEM,
         .flag_no_cache        = true,
         .flag_add_header_date = true,
-        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .content_type         = HTTP_CONTENT_TYPE_APPLICATION_JSON,
         .p_content_type_param = NULL,
         .content_len          = strlen(p_json_content),
-        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
             .memory = {
                 .p_buf = (const uint8_t*)p_json_content,
@@ -145,10 +145,10 @@ http_server_resp_err_json_in_heap(const http_resp_code_e http_resp_code, const c
         .content_location     = HTTP_CONTENT_LOCATION_HEAP,
         .flag_no_cache        = true,
         .flag_add_header_date = true,
-        .content_type         = HTTP_CONENT_TYPE_APPLICATION_JSON,
+        .content_type         = HTTP_CONTENT_TYPE_APPLICATION_JSON,
         .p_content_type_param = NULL,
         .content_len          = strlen(p_json_content),
-        .content_encoding     = HTTP_CONENT_ENCODING_NONE,
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
             .memory = {
                 .p_buf = (const uint8_t*)p_json_content,

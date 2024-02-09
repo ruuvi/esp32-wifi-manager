@@ -123,9 +123,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -164,9 +164,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow_when_access_not_from_lan)
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -204,9 +204,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_deny) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -257,9 +257,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_success) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -309,9 +309,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_no_header_authorizat
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -364,9 +364,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_wrong_header_authori
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -419,9 +419,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_short_password) // N
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -474,9 +474,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_basic_fail_incorrect_password) 
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -533,9 +533,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_success) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -587,9 +587,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_no_header_authoriza
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -645,9 +645,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_header_author
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -704,9 +704,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_password) // 
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -763,9 +763,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_digest_fail_wrong_user) // NOLI
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(
@@ -822,9 +822,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -869,9 +869,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -899,9 +899,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -923,9 +923,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     }
@@ -952,9 +952,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_success) // NOLINT
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1013,9 +1013,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1062,9 +1062,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_password) // N
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1123,9 +1123,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1172,9 +1172,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_user) // NOLIN
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1233,9 +1233,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1282,9 +1282,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_user) // NOLIN
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1343,9 +1343,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1392,9 +1392,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_realm) // NOLI
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1453,9 +1453,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1502,9 +1502,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_remote_ip) // 
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1563,9 +1563,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1612,9 +1612,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_wrong_session_id) //
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1673,9 +1673,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1722,9 +1722,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_empty_session_id) //
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1783,9 +1783,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1831,9 +1831,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_no_session_id) // NO
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1892,9 +1892,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -1941,9 +1941,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_missing_quo
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -2002,9 +2002,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -2050,9 +2050,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_username
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -2111,9 +2111,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -2148,9 +2148,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_ruuvi_fail_bad_body_no_password
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
-        ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+        ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
         ASSERT_EQ(nullptr, resp.p_content_type_param);
-        ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+        ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
         ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
         ASSERT_EQ(exp_json_resp.length(), resp.content_len);
         ASSERT_EQ(
@@ -2216,9 +2216,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_success) // NO
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2286,9 +2286,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2356,9 +2356,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_rw_access_to_r
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2426,9 +2426,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_ro_access_to_r
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
     ASSERT_EQ(exp_json_resp.length(), resp.content_len);
     ASSERT_EQ(string(""), string(extra_header_fields.buf));
@@ -2491,9 +2491,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_differe
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
@@ -2555,9 +2555,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_non_empty_failed_wrong_a
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
@@ -2618,9 +2618,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_1) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
@@ -2680,9 +2680,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_empty_2) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_bearer", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
@@ -2741,9 +2741,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_no_auth_not_used) // NOL
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
@@ -2803,9 +2803,9 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_bearer_wrong_auth_not_used) // 
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
-    ASSERT_EQ(HTTP_CONENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
-    ASSERT_EQ(HTTP_CONENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     const string exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_ruuvi", "lan": true})";
     ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
