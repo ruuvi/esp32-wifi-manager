@@ -423,13 +423,21 @@ write_content_from_json_generator(struct netconn* const p_conn, const http_serve
         {
             netconn_flags |= (uint8_t)NETCONN_MORE;
         }
-        LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        if (p_resp->content_len < 4 * 1024)
+        {
+            LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        }
+        else
+        {
+            LOG_DBG("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        }
         const bool res = http_server_netconn_write(p_conn, p_chunk, num_bytes, netconn_flags);
         if (!res)
         {
             LOG_ERR("%s failed", "http_server_netconn_write");
             break;
         }
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
     json_stream_gen_delete(&p_json_gen);
 }
