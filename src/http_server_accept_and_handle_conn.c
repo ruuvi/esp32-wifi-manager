@@ -23,7 +23,10 @@
 
 #define FULLBUF_SIZE (4U * 1024U)
 
-#define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG (256U)
+#define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP       (256U)
+#define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FROM_JSON_GENERATOR (4U * 1024U)
+
+#define HTTP_SERVER_DELAY_BETWEEN_NETCONN_WRITE_MS (5)
 
 #define HTTP_HEADER_DATE_EXAMPLE "Date: Thu, 01 Jan 2021 00:00:00 GMT\r\n"
 
@@ -423,13 +426,21 @@ write_content_from_json_generator(struct netconn* const p_conn, const http_serve
         {
             netconn_flags |= (uint8_t)NETCONN_MORE;
         }
-        LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        if (p_resp->content_len < HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FROM_JSON_GENERATOR)
+        {
+            LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        }
+        else
+        {
+            LOG_DBG("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+        }
         const bool res = http_server_netconn_write(p_conn, p_chunk, num_bytes, netconn_flags);
         if (!res)
         {
             LOG_ERR("%s failed", "http_server_netconn_write");
             break;
         }
+        vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_DELAY_BETWEEN_NETCONN_WRITE_MS)); // A delay to avoid triggering watchdog
     }
     json_stream_gen_delete(&p_json_gen);
 }
@@ -900,7 +911,7 @@ http_server_netconn_serve_handle_req(
             || (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)))
     {
         const size_t content_len = strlen((const char*)resp.select_location.memory.p_buf);
-        if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG)
+        if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP)
         {
             LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
         }
