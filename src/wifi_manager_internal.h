@@ -85,6 +85,9 @@ extern EventGroupHandle_t g_p_wifi_manager_event_group;
 extern esp_wps_config_t g_wps_config;
 extern bool             g_wifi_wps_enabled;
 
+bool
+wifi_manager_is_initialized(void);
+
 void
 wifi_manager_init_mutex(void);
 

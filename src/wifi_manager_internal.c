@@ -50,6 +50,16 @@ static os_sema_static_t g_scan_sync_sema_mem;
 static os_mutex_recursive_t        g_p_wifi_mutex;
 static os_mutex_recursive_static_t g_wifi_manager_mutex_mem;
 
+bool
+wifi_manager_is_initialized(void)
+{
+    if (NULL == g_p_wifi_mutex)
+    {
+        return false;
+    }
+    return true;
+}
+
 void
 wifi_manager_init_mutex(void)
 {
