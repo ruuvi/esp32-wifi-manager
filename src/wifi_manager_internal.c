@@ -474,7 +474,7 @@ wifi_manager_event_handler(
                 wifi_manager_restart_wps();
                 break;
             case WIFI_EVENT_STA_WPS_ER_TIMEOUT:
-                LOG_ERR("WIFI_EVENT_STA_WPS_ER_TIMEOUT");
+                LOG_INFO("WIFI_EVENT_STA_WPS_ER_TIMEOUT - restart WPS");
                 wifi_manager_restart_wps();
                 break;
             default:
