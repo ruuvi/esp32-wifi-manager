@@ -274,12 +274,13 @@ wifi_manager_disable_wps(void)
 void
 wifi_manager_stop(void)
 {
-    if (wifi_manager_is_initialized())
+    if (!wifi_manager_is_initialized())
     {
-        if (!wifiman_msg_send_cmd_stop_and_destroy())
-        {
-            LOG_ERR("%s failed", "wifiman_msg_send_cmd_stop_and_destroy");
-        }
+        return;
+    }
+    if (!wifiman_msg_send_cmd_stop_and_destroy())
+    {
+        LOG_ERR("%s failed", "wifiman_msg_send_cmd_stop_and_destroy");
     }
 }
 
