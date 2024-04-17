@@ -47,6 +47,12 @@ http_server_strnstr(const char* const p_haystack, const char* const p_needle, co
 http_server_auth_info_t*
 http_server_get_auth(void);
 
+void
+http_server_auth_ruuvi_add_authorized_session(
+    http_server_auth_ruuvi_t* const                  p_auth_ruuvi,
+    const http_server_auth_ruuvi_session_id_t* const p_session_id,
+    const sta_ip_string_t* const                     p_remote_ip);
+
 #ifdef __cplusplus
 }
 #endif

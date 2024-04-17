@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "http_server_resp.h"
+#include "http_server_auth.h"
 #include <string>
 
 using namespace std;
@@ -21,6 +22,7 @@ protected:
     SetUp() override
     {
         this->m_idx_random_value = 0;
+        std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
     }
 
     void
@@ -31,9 +33,10 @@ protected:
     }
 
 public:
-    const uint32_t* m_p_random_values;
-    size_t          m_num_random_values;
-    size_t          m_idx_random_value;
+    const uint32_t*          m_p_random_values;
+    size_t                   m_num_random_values;
+    size_t                   m_idx_random_value;
+    std::array<uint32_t, 50> arr_of_random_values;
 
     TestHttpServerResp();
 
@@ -345,4 +348,44 @@ TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
     ASSERT_EQ(5, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
+}
+
+TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session_id) // NOLINT
+{
+    const bool                 flag_no_cache       = true;
+    const sta_ip_string_t      remote_ip           = { "192.168.1.110" };
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    const http_server_resp_t resp = http_server_resp_200_auth_allow_with_new_session_id(
+        &remote_ip,
+        &hostinfo,
+        &extra_header_fields);
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_EQ(flag_no_cache, resp.flag_no_cache);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(123, resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
+        "\"lan_auth_allow\", \"lan\": true}",
+        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(
+        "WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\" "
+        "challenge=\"66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925\" "
+        "session_cookie=\"RUUVISESSION\" session_id=\"AAAAAAAAAAAAAAAA\"\r\n"
+        "Set-Cookie: RUUVISESSION=AAAAAAAAAAAAAAAA\r\n",
+        string(extra_header_fields.buf));
+
+    const http_server_auth_ruuvi_t* const                    p_auth    = http_server_auth_ruuvi_get_info();
+    const http_server_auth_ruuvi_authorized_session_t* const p_session = &p_auth->authorized_sessions[0];
+    ASSERT_EQ("AAAAAAAAAAAAAAAA", string(p_session->session_id.buf));
+    ASSERT_EQ(string(remote_ip.buf), string(p_session->remote_ip.buf));
 }

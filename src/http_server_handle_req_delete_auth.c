@@ -25,7 +25,8 @@ http_server_handle_req_delete_auth(
     {
         return http_server_resp_401_auth_ruuvi(
             p_hostinfo,
-            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
+            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? HTTP_SERVER_AUTH_TYPE_DEFAULT
+                                                                      : HTTP_SERVER_AUTH_TYPE_RUUVI);
     }
     http_server_auth_ruuvi_authorized_session_t* const p_authorized_session
         = http_server_auth_ruuvi_find_authorized_session(&session_id, p_remote_ip);
@@ -34,7 +35,8 @@ http_server_handle_req_delete_auth(
     {
         return http_server_resp_401_auth_ruuvi(
             p_hostinfo,
-            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? true : false);
+            (HTTP_SERVER_AUTH_TYPE_DEFAULT == p_auth_info->auth_type) ? HTTP_SERVER_AUTH_TYPE_DEFAULT
+                                                                      : HTTP_SERVER_AUTH_TYPE_RUUVI);
     }
 
     p_authorized_session->session_id.buf[0] = '\0';

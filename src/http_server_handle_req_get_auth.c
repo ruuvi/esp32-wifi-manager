@@ -183,21 +183,35 @@ static http_server_resp_t
 http_server_handle_req_get_auth_ruuvi(
     const http_server_handle_req_auth_param_t* const p_param,
     const bool                                       flag_check,
-    const bool                                       flag_auth_default,
+    const http_server_auth_type_e                    auth_type,
     http_header_extra_fields_t* const                p_extra_header_fields)
 {
     http_server_auth_ruuvi_session_id_t session_id = { 0 };
     if (!http_server_auth_ruuvi_get_session_id_from_cookies(p_param->http_header, &session_id))
     {
+        if (HTTP_SERVER_AUTH_TYPE_ALLOW == auth_type)
+        {
+            if (flag_check)
+            {
+                return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
+            }
+            else
+            {
+                return http_server_resp_200_auth_allow_with_new_session_id(
+                    p_param->p_remote_ip,
+                    p_param->p_hostinfo,
+                    p_extra_header_fields);
+            }
+        }
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_param->p_hostinfo, flag_auth_default);
+            return http_server_resp_401_auth_ruuvi(p_param->p_hostinfo, auth_type);
         }
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_param->p_remote_ip,
             p_param->p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default,
+            auth_type,
             NULL);
     }
     const http_server_auth_ruuvi_authorized_session_t* const p_authorized_session
@@ -207,19 +221,26 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (flag_check)
         {
-            return http_server_resp_401_auth_ruuvi(p_param->p_hostinfo, flag_auth_default);
+            return http_server_resp_401_auth_ruuvi(p_param->p_hostinfo, auth_type);
+        }
+        if (HTTP_SERVER_AUTH_TYPE_ALLOW == auth_type)
+        {
+            return http_server_resp_200_auth_allow_with_new_session_id(
+                p_param->p_remote_ip,
+                p_param->p_hostinfo,
+                p_extra_header_fields);
         }
         return http_server_resp_401_auth_ruuvi_with_new_session_id(
             p_param->p_remote_ip,
             p_param->p_hostinfo,
             p_extra_header_fields,
-            flag_auth_default,
+            auth_type,
             NULL);
     }
 
     const http_server_resp_auth_json_t* p_auth_json = http_server_fill_auth_json(
         p_param->p_hostinfo,
-        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        auth_type,
         p_param->flag_access_from_lan,
         NULL);
     return http_server_resp_200_json(p_auth_json->buf);
@@ -269,17 +290,29 @@ http_server_handle_req_get_or_check_auth(
     switch (p_param->p_auth_info->auth_type)
     {
         case HTTP_SERVER_AUTH_TYPE_ALLOW:
-            return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
+            return http_server_handle_req_get_auth_ruuvi(
+                p_param,
+                flag_check,
+                p_param->p_auth_info->auth_type,
+                p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_BASIC:
             return http_server_handle_req_get_auth_basic(p_param, p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DIGEST:
             return http_server_handle_req_get_auth_digest(p_param, p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_RUUVI:
-            return http_server_handle_req_get_auth_ruuvi(p_param, flag_check, false, p_extra_header_fields);
+            return http_server_handle_req_get_auth_ruuvi(
+                p_param,
+                flag_check,
+                p_param->p_auth_info->auth_type,
+                p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_DENY:
             return http_server_handle_req_get_auth_deny(p_param->p_hostinfo);
         case HTTP_SERVER_AUTH_TYPE_DEFAULT:
-            return http_server_handle_req_get_auth_ruuvi(p_param, flag_check, true, p_extra_header_fields);
+            return http_server_handle_req_get_auth_ruuvi(
+                p_param,
+                flag_check,
+                p_param->p_auth_info->auth_type,
+                p_extra_header_fields);
         case HTTP_SERVER_AUTH_TYPE_BEARER:
             return http_server_resp_500();
     }
@@ -312,5 +345,6 @@ http_server_handle_req_get_auth(
     {
         return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
     }
-    return http_server_handle_req_get_or_check_auth(p_param, false, p_extra_header_fields, NULL);
+    const bool flag_check = false;
+    return http_server_handle_req_get_or_check_auth(p_param, flag_check, p_extra_header_fields, NULL);
 }

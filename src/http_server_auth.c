@@ -105,3 +105,17 @@ http_server_get_auth(void)
 {
     return &g_auth_info;
 }
+
+void
+http_server_auth_ruuvi_add_authorized_session(
+    http_server_auth_ruuvi_t* const                  p_auth_ruuvi,
+    const http_server_auth_ruuvi_session_id_t* const p_session_id,
+    const sta_ip_string_t* const                     p_remote_ip)
+{
+    for (int32_t i = HTTP_SERVER_AUTH_RUUVI_MAX_NUM_SESSIONS - 1; i > 0; --i)
+    {
+        p_auth_ruuvi->authorized_sessions[i] = p_auth_ruuvi->authorized_sessions[i - 1];
+    }
+    p_auth_ruuvi->authorized_sessions[0].session_id = *p_session_id;
+    p_auth_ruuvi->authorized_sessions[0].remote_ip  = *p_remote_ip;
+}
