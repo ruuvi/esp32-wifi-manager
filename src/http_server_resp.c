@@ -476,7 +476,7 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
     const sta_ip_string_t* const      p_remote_ip,
     const wifiman_hostinfo_t* const   p_hostinfo,
     http_header_extra_fields_t* const p_extra_header_fields,
-    const bool                        flag_auth_default,
+    const http_server_auth_type_e     lan_auth_type,
     const char* const                 p_err_message)
 {
     http_server_auth_ruuvi_t* const               p_auth_info     = http_server_auth_ruuvi_get_info();
@@ -495,23 +495,56 @@ http_server_resp_401_auth_ruuvi_with_new_session_id(
 
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
-        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        lan_auth_type,
         flag_access_from_lan,
         p_err_message);
     return http_server_resp_401_json(p_auth_json);
 }
 
 http_server_resp_t
-http_server_resp_401_auth_ruuvi(const wifiman_hostinfo_t* const p_hostinfo, const bool flag_auth_default)
+http_server_resp_401_auth_ruuvi(const wifiman_hostinfo_t* const p_hostinfo, const http_server_auth_type_e lan_auth_type)
 {
     const bool flag_access_from_lan = true;
 
     const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
         p_hostinfo,
-        flag_auth_default ? HTTP_SERVER_AUTH_TYPE_DEFAULT : HTTP_SERVER_AUTH_TYPE_RUUVI,
+        lan_auth_type,
         flag_access_from_lan,
         NULL);
     return http_server_resp_401_json(p_auth_json);
+}
+
+http_server_resp_t
+http_server_resp_200_auth_allow_with_new_session_id(
+    const sta_ip_string_t* const      p_remote_ip,
+    const wifiman_hostinfo_t* const   p_hostinfo,
+    http_header_extra_fields_t* const p_extra_header_fields)
+{
+    http_server_auth_ruuvi_t* const               p_auth_info     = http_server_auth_ruuvi_get_info();
+    http_server_auth_ruuvi_login_session_t* const p_login_session = &p_auth_info->login_session;
+
+    http_server_login_session_init(p_login_session, p_remote_ip);
+
+    if (wifiman_sha256_is_empty_digest_hex_str(&p_login_session->challenge))
+    {
+        return http_server_resp_503();
+    }
+
+    http_server_resp_auth_ruuvi_prep_www_authenticate_header(p_hostinfo, p_login_session, p_extra_header_fields);
+
+    http_server_auth_ruuvi_add_authorized_session(
+        http_server_auth_ruuvi_get_info(),
+        &p_login_session->session_id,
+        p_remote_ip);
+
+    const bool flag_access_from_lan = true;
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        p_hostinfo,
+        HTTP_SERVER_AUTH_TYPE_ALLOW,
+        flag_access_from_lan,
+        NULL);
+    return http_server_resp_200_json(p_auth_json->buf);
 }
 
 http_server_resp_t
