@@ -191,7 +191,17 @@ http_server_handle_req_get_auth_ruuvi(
     {
         if (HTTP_SERVER_AUTH_TYPE_ALLOW == auth_type)
         {
-            return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
+            if (flag_check)
+            {
+                return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
+            }
+            else
+            {
+                return http_server_resp_200_auth_allow_with_new_session_id(
+                    p_param->p_remote_ip,
+                    p_param->p_hostinfo,
+                    p_extra_header_fields);
+            }
         }
         if (flag_check)
         {

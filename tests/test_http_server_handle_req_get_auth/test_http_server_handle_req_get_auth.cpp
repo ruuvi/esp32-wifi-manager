@@ -28,6 +28,8 @@ protected:
     SetUp() override
     {
         this->m_idx_random_value = 0;
+        std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+        set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
         http_server_auth_clear_authorized_sessions();
     }
 
@@ -39,9 +41,10 @@ protected:
     }
 
 public:
-    const uint32_t* m_p_random_values;
-    size_t          m_num_random_values;
-    size_t          m_idx_random_value;
+    const uint32_t*          m_p_random_values;
+    size_t                   m_num_random_values;
+    size_t                   m_idx_random_value;
+    std::array<uint32_t, 50> arr_of_random_values;
 
     TestHttpServerHandleReqGetAuth();
 
@@ -90,7 +93,7 @@ esp_random(void)
 
 /*** Unit-Tests *******************************************************************************************************/
 
-TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
+TEST_F(TestHttpServerHandleReqGetAuth, test_req_get_auth_allow) // NOLINT
 {
     const http_server_auth_info_t auth_info = {
         HTTP_SERVER_AUTH_TYPE_ALLOW,
@@ -119,6 +122,57 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_auth_allow) // NOLINT
     const http_server_resp_t resp = http_server_handle_req_get_auth(&param, &extra_header_fields);
     const string             exp_json_resp
         = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow", "lan": true})";
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(exp_json_resp, string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(exp_json_resp.length(), resp.content_len);
+    ASSERT_EQ(
+        string("WWW-Authenticate: x-ruuvi-interactive realm=\"RuuviGatewayEEFF\" "
+               "challenge=\"66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925\" "
+               "session_cookie=\"RUUVISESSION\" session_id=\"AAAAAAAAAAAAAAAA\"\r\n"
+               "Set-Cookie: RUUVISESSION=AAAAAAAAAAAAAAAA\r\n"),
+        string(extra_header_fields.buf));
+}
+
+TEST_F(TestHttpServerHandleReqGetAuth, test_req_check_auth_allow) // NOLINT
+{
+    const http_server_auth_info_t auth_info = {
+        HTTP_SERVER_AUTH_TYPE_ALLOW,
+        "",
+        "",
+    };
+    const wifiman_hostinfo_t hostinfo = {
+        .hostname     = { "RuuviGatewayEEFF" },
+        .fw_ver       = { "1.13.0" },
+        .nrf52_fw_ver = { "1.0.0" },
+    };
+
+    const http_req_header_t    http_header         = { "" };
+    const sta_ip_string_t      remote_ip           = { "192.168.1.10" };
+    http_header_extra_fields_t extra_header_fields = { .buf = { '\0' } };
+
+    const http_server_handle_req_auth_param_t param = {
+        .flag_access_from_lan                   = true,
+        .flag_check_rw_access_with_bearer_token = false,
+        .http_header                            = http_header,
+        .p_remote_ip                            = &remote_ip,
+        .p_auth_info                            = &auth_info,
+        .p_hostinfo                             = &hostinfo,
+    };
+
+    bool                     flag_access_by_bearer_token = false;
+    const http_server_resp_t resp                        = http_server_handle_req_check_auth(
+        &param,
+        &extra_header_fields,
+        &flag_access_by_bearer_token);
+    const string exp_json_resp
+        = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow", "lan": true})";
+    ASSERT_FALSE(flag_access_by_bearer_token);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);

@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "http_server_resp.h"
+#include "http_server_auth.h"
 #include <string>
 
 using namespace std;
@@ -376,4 +377,15 @@ TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session
         "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
         "\"lan_auth_allow\", \"lan\": true}",
         string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+    ASSERT_EQ(
+        "WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\" "
+        "challenge=\"66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925\" "
+        "session_cookie=\"RUUVISESSION\" session_id=\"AAAAAAAAAAAAAAAA\"\r\n"
+        "Set-Cookie: RUUVISESSION=AAAAAAAAAAAAAAAA\r\n",
+        string(extra_header_fields.buf));
+
+    const http_server_auth_ruuvi_t* const                    p_auth    = http_server_auth_ruuvi_get_info();
+    const http_server_auth_ruuvi_authorized_session_t* const p_session = &p_auth->authorized_sessions[0];
+    ASSERT_EQ("AAAAAAAAAAAAAAAA", string(p_session->session_id.buf));
+    ASSERT_EQ(string(remote_ip.buf), string(p_session->remote_ip.buf));
 }
