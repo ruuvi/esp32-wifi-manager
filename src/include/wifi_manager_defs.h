@@ -252,6 +252,7 @@ typedef struct network_info_str_t
 typedef enum http_resp_code_e
 {
     HTTP_RESP_CODE_200 = 200, // OK
+    HTTP_RESP_CODE_299 = 299, // OK (max value)
     HTTP_RESP_CODE_301 = 301, // Moved Permanently
     HTTP_RESP_CODE_302 = 302, // Found
     HTTP_RESP_CODE_400 = 400, // Bad Request
