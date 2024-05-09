@@ -790,6 +790,8 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
     switch (p_resp->http_resp_code)
     {
         case HTTP_RESP_CODE_200:
+            ATTR_FALLTHROUGH;
+        case HTTP_RESP_CODE_299:
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_301:
