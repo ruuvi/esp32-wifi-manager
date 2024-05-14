@@ -21,6 +21,13 @@
 extern "C" {
 #endif
 
+#define WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC            (1U)
+#define WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE1_TIMEOUT_SEC (1U * TIME_UNITS_SECONDS_PER_MINUTE)
+#define WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE2_TIMEOUT_SEC (5U * TIME_UNITS_SECONDS_PER_MINUTE)
+#define WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE3_TIMEOUT_SEC (10U * TIME_UNITS_SECONDS_PER_MINUTE)
+#define WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE4_TIMEOUT_SEC (20U * TIME_UNITS_SECONDS_PER_MINUTE)
+#define WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE5_TIMEOUT_SEC (30U * TIME_UNITS_SECONDS_PER_MINUTE)
+
 /* @brief indicates that wifi_manager is working. */
 #define WIFI_MANAGER_IS_WORKING ((uint32_t)(BIT0))
 
@@ -217,7 +224,7 @@ void
 wifi_manger_notify_scan_done(void);
 
 void
-wifi_manager_start_timer_reconnect_sta_after_timeout(void);
+wifi_manager_start_timer_reconnect_sta_after_timeout(const os_delta_ticks_t delay_ticks);
 
 void
 wifi_manager_stop_timer_reconnect_sta_after_timeout(void);
