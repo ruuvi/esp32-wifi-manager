@@ -23,6 +23,7 @@
 #include "dns_server.h"
 #include "json_access_points.h"
 #include "wifiman_config.h"
+#include "time_units.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -672,7 +673,7 @@ wifi_manager_init(
     g_p_wifi_manager_timer_reconnect_sta = os_timer_one_shot_cptr_without_arg_create_static(
         &g_wifi_manager_timer_reconnect_sta_mem,
         "wifi:reconnect",
-        pdMS_TO_TICKS(1000U),
+        pdMS_TO_TICKS(WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC * TIME_UNITS_MS_PER_SECOND),
         &wifi_manager_timer_cb_reconnect);
 
     wifi_manager_set_callbacks(p_callbacks);
@@ -902,9 +903,9 @@ wifi_manger_notify_scan_done(void)
 }
 
 void
-wifi_manager_start_timer_reconnect_sta_after_timeout(void)
+wifi_manager_start_timer_reconnect_sta_after_timeout(const os_delta_ticks_t delay_ticks)
 {
-    os_timer_one_shot_cptr_without_arg_start(g_p_wifi_manager_timer_reconnect_sta);
+    os_timer_one_shot_cptr_without_arg_restart(g_p_wifi_manager_timer_reconnect_sta, delay_ticks);
 }
 
 void

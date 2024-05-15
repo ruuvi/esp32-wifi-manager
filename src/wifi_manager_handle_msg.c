@@ -23,6 +23,7 @@
 #include "access_points_list.h"
 #include "dns_server.h"
 #include "json_access_points.h"
+#include "time_units.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -33,6 +34,7 @@ static wifi_manager_cb_ptr      g_wifi_cb_ptr_arr[MESSAGE_CODE_COUNT];
 static wifi_manager_scan_info_t g_wifi_scan_info;
 static uint16_t                 g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t         g_wifi_ap_records[2 * MAX_AP_NUM];
+static uint32_t                 g_wifi_mic_failure_count;
 
 bool g_wifi_wps_enabled;
 
@@ -255,6 +257,15 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
         wifiman_disconnection_reason_to_str(reason),
         (printf_uint_t)event_bits);
 
+    if (WIFI_REASON_MIC_FAILURE == reason)
+    {
+        g_wifi_mic_failure_count += 1;
+    }
+    else
+    {
+        g_wifi_mic_failure_count = 0;
+    }
+
     /* if a DISCONNECT message is posted while a scan is in progress this scan will NEVER end, causing scan
      * to never work again. For this reason SCAN_BIT is cleared too */
     const bool is_connected_to_wifi = (0 != (event_bits & WIFI_MANAGER_WIFI_CONNECTED_BIT)) ? true : false;
@@ -293,8 +304,30 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
         update_reason_code = UPDATE_LOST_CONNECTION;
         if ((!g_wifi_wps_enabled) && (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT)))
         {
-            LOG_INFO("%s: activate reconnection after timeout", __func__);
-            wifi_manager_start_timer_reconnect_sta_after_timeout();
+            TimeUnitsSeconds_t delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
+            switch (g_wifi_mic_failure_count)
+            {
+                case 0:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
+                    break;
+                case 1:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE1_TIMEOUT_SEC;
+                    break;
+                case 2:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE2_TIMEOUT_SEC;
+                    break;
+                case 3:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE3_TIMEOUT_SEC;
+                    break;
+                case 4:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE4_TIMEOUT_SEC;
+                    break;
+                default:
+                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE5_TIMEOUT_SEC;
+                    break;
+            }
+            LOG_INFO("%s: activate reconnection after timeout: %u seconds", __func__, (printf_uint_t)delay_sec);
+            wifi_manager_start_timer_reconnect_sta_after_timeout(pdMS_TO_TICKS(delay_sec * TIME_UNITS_MS_PER_SECOND));
         }
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
