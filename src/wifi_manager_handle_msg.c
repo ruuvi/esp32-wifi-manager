@@ -325,7 +325,17 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     }
     else
     {
-        LOG_INFO("lost connection");
+        time_t    cur_time = time(NULL);
+        struct tm tm_time  = { 0 };
+        gmtime_r(&cur_time, &tm_time);
+        LOG_INFO(
+            "[%04u-%02u-%02u %02u:%02u:%02u] lost connection",
+            tm_time.tm_year + 1900,
+            tm_time.tm_mon + 1,
+            tm_time.tm_mday,
+            tm_time.tm_hour,
+            tm_time.tm_min,
+            tm_time.tm_sec);
         update_reason_code = UPDATE_LOST_CONNECTION;
         wifi_handle_ev_sta_handle_lost_connection(event_bits);
     }
