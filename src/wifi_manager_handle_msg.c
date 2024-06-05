@@ -182,6 +182,31 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
     }
 }
 
+static void
+wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits)
+{
+    if ((!g_wifi_wps_enabled) && (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT)))
+    {
+        TimeUnitsSeconds_t delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
+        if (0 == g_wifi_mic_failure_count)
+        {
+            delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
+        }
+        else
+        {
+            delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE_TIMEOUT_SEC;
+            LOG_INFO("esp_wifi_disconnect after MIC_FAILURE");
+            const esp_err_t err = esp_wifi_disconnect();
+            if (ESP_OK != err)
+            {
+                LOG_ERR_ESP(err, "%s failed", "esp_wifi_disconnect");
+            }
+        }
+        LOG_INFO("%s: activate reconnection after timeout: %u seconds", __func__, (printf_uint_t)delay_sec);
+        wifi_manager_start_timer_reconnect_sta_after_timeout(pdMS_TO_TICKS(delay_sec * TIME_UNITS_MS_PER_SECOND));
+    }
+}
+
 /**
  * @brief Handle event EVENT_STA_DISCONNECTED
  * @note this even can be posted in numerous different conditions
@@ -300,35 +325,19 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
     }
     else
     {
-        LOG_INFO("lost connection");
+        time_t    cur_time = time(NULL);
+        struct tm tm_time  = { 0 };
+        gmtime_r(&cur_time, &tm_time);
+        LOG_INFO(
+            "[%04u-%02u-%02u %02u:%02u:%02u] lost connection",
+            tm_time.tm_year + 1900,
+            tm_time.tm_mon + 1,
+            tm_time.tm_mday,
+            tm_time.tm_hour,
+            tm_time.tm_min,
+            tm_time.tm_sec);
         update_reason_code = UPDATE_LOST_CONNECTION;
-        if ((!g_wifi_wps_enabled) && (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT)))
-        {
-            TimeUnitsSeconds_t delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
-            switch (g_wifi_mic_failure_count)
-            {
-                case 0:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
-                    break;
-                case 1:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE1_TIMEOUT_SEC;
-                    break;
-                case 2:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE2_TIMEOUT_SEC;
-                    break;
-                case 3:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE3_TIMEOUT_SEC;
-                    break;
-                case 4:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE4_TIMEOUT_SEC;
-                    break;
-                default:
-                    delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE5_TIMEOUT_SEC;
-                    break;
-            }
-            LOG_INFO("%s: activate reconnection after timeout: %u seconds", __func__, (printf_uint_t)delay_sec);
-            wifi_manager_start_timer_reconnect_sta_after_timeout(pdMS_TO_TICKS(delay_sec * TIME_UNITS_MS_PER_SECOND));
-        }
+        wifi_handle_ev_sta_handle_lost_connection(event_bits);
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
@@ -528,6 +537,7 @@ wifi_handle_cmd_disconnect_sta(void)
         (printf_uint_t)event_bits);
 
     xEventGroupClearBits(g_p_wifi_manager_event_group, WIFI_MANAGER_STA_ACTIVE_BIT);
+    LOG_INFO("esp_wifi_disconnect");
     const esp_err_t err = esp_wifi_disconnect();
     if (ESP_OK != err)
     {
