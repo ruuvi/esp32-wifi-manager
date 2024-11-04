@@ -211,6 +211,11 @@ http_server_handle_req_delete(
     if (0 == strcmp(p_file_name, "connect.json"))
     {
         LOG_INFO("http_server_netconn_serve: DELETE /connect.json");
+        if (p_param->flag_access_from_lan)
+        {
+            LOG_ERR("http_server_netconn_serve: DELETE /connect.json - access from LAN is not allowed");
+            return http_server_resp_403_forbidden();
+        }
         dns_server_stop();
         wifi_manager_disable_wps();
         wifi_manager_lock();
@@ -519,10 +524,20 @@ http_server_handle_req_post(
 
     if (0 == strcmp(p_file_name, "connect.json"))
     {
+        if (p_param->flag_access_from_lan)
+        {
+            LOG_ERR("POST /connect.json - access from LAN is not allowed");
+            return http_server_resp_403_forbidden();
+        }
         return http_server_handle_req_post_connect_json(http_body);
     }
     if (0 == strcmp(p_file_name, "connect_wps"))
     {
+        if (p_param->flag_access_from_lan)
+        {
+            LOG_ERR("POST /connect_wps - access from LAN is not allowed");
+            return http_server_resp_403_forbidden();
+        }
         return http_server_handle_req_post_connect_wps();
     }
     return wifi_manager_cb_on_http_post(p_file_name, p_uri_params, http_body, p_param->flag_access_from_lan);
