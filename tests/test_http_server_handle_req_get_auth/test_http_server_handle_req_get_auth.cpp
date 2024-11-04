@@ -164,14 +164,15 @@ TEST_F(TestHttpServerHandleReqGetAuth, test_req_get_auth_allow) // NOLINT
             .p_hostinfo                             = &hostinfo,
         };
 
-        bool                     flag_access_by_bearer_token = false;
-        const http_server_resp_t resp                        = http_server_handle_req_check_auth(
+        bool flag_access_by_bearer_token = false;
+
+        const http_server_resp_t resp = http_server_handle_req_check_auth(
             &param,
             &extra_header_fields,
             &flag_access_by_bearer_token);
         const string exp_json_resp
             = R"({"gateway_name": "RuuviGatewayEEFF", "fw_ver": "1.13.0", "nrf52_fw_ver": "1.0.0", "lan_auth_type": "lan_auth_allow", "lan": true})";
-        ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+        ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
         ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
         ASSERT_TRUE(resp.flag_no_cache);
         ASSERT_TRUE(resp.flag_add_header_date);
