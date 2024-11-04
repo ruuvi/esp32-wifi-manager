@@ -263,7 +263,7 @@ http_server_ecdh_handshake_internal(
         LOG_ERR("Can't decode pub_key_b64_cli: %s", p_pub_key_b64_cli->buf);
         return false;
     }
-    LOG_DUMP_DBG(pub_key_cli_with_len.buf, sizeof(pub_key_cli_with_len.buf), "PubKey_cli (with len)");
+    LOG_DUMP_DBG((const uint8_t*)p_pub_key_b64_cli->buf, sizeof(p_pub_key_b64_cli->buf), "PubKey_cli (with len)");
 
     mbedtls_ecdh_free(&g_http_server_ecdh_ctx);
     mbedtls_ecdh_init(&g_http_server_ecdh_ctx);
@@ -335,7 +335,7 @@ http_server_ecdh_handshake_internal(
         LOG_ERR("%s failed", "mbedtls_ecdh_calc_secret");
         return false;
     }
-    LOG_DUMP_DBG(shared_secret.buf, sizeof(shared_secret.buf), "Shared secret");
+    LOG_DUMP_DBG(p_tmp_buf->shared_secret.buf, sizeof(p_tmp_buf->shared_secret.buf), "Shared secret");
 
     http_server_ecdh_calc_sha256(
         p_tmp_buf->shared_secret.buf,
@@ -375,6 +375,9 @@ http_server_ecdh_aes_decrypt(
     mbedtls_aes_context aes_ctx = { 0 };
     mbedtls_aes_init(&aes_ctx);
 
+    LOG_DUMP_DBG(p_encrypted_buf->p_buf, p_encrypted_buf->buf_size, "Encrypted:");
+    LOG_DUMP_DBG(p_aes_iv->buf, sizeof(p_aes_iv->buf), "IV:");
+    LOG_DUMP_DBG(g_http_server_ecdh_aes_key.buf, sizeof(g_http_server_ecdh_aes_key.buf), "AES key:");
     mbedtls_aes_setkey_dec(&aes_ctx, g_http_server_ecdh_aes_key.buf, HTTP_SERVER_ECDH_AES_NUM_BITS);
     mbedtls_aes_crypt_cbc(
         &aes_ctx,
@@ -385,12 +388,15 @@ http_server_ecdh_aes_decrypt(
         p_decrypted_buf->p_buf);
     const uint8_t pad_len = p_decrypted_buf->p_buf[p_decrypted_buf->buf_size - 1];
     LOG_DBG("pad_len=%d", pad_len);
+    LOG_DUMP_DBG(p_decrypted_buf->p_buf, p_decrypted_buf->buf_size, "Decrypted:");
     if (pad_len > HTTP_SERVER_ECDH_AES_BLOCK_SIZE)
     {
+        LOG_DBG("pad_len > %d", HTTP_SERVER_ECDH_AES_BLOCK_SIZE);
         return false;
     }
     if (pad_len > p_decrypted_buf->buf_size)
     {
+        LOG_DBG("pad_len > %d", p_decrypted_buf->buf_size);
         return false;
     }
     p_decrypted_buf->buf_size -= pad_len;
