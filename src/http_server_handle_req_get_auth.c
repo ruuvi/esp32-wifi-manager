@@ -186,22 +186,19 @@ http_server_handle_req_get_auth_ruuvi(
     const http_server_auth_type_e                    auth_type,
     http_header_extra_fields_t* const                p_extra_header_fields)
 {
+    if (flag_check && (HTTP_SERVER_AUTH_TYPE_ALLOW == auth_type))
+    {
+        return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
+    }
     http_server_auth_ruuvi_session_id_t session_id = { 0 };
     if (!http_server_auth_ruuvi_get_session_id_from_cookies(p_param->http_header, &session_id))
     {
         if (HTTP_SERVER_AUTH_TYPE_ALLOW == auth_type)
         {
-            if (flag_check)
-            {
-                return http_server_handle_req_get_auth_allow(p_param->p_hostinfo, p_param->flag_access_from_lan);
-            }
-            else
-            {
-                return http_server_resp_200_auth_allow_with_new_session_id(
-                    p_param->p_remote_ip,
-                    p_param->p_hostinfo,
-                    p_extra_header_fields);
-            }
+            return http_server_resp_200_auth_allow_with_new_session_id(
+                p_param->p_remote_ip,
+                p_param->p_hostinfo,
+                p_extra_header_fields);
         }
         if (flag_check)
         {
