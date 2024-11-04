@@ -138,6 +138,7 @@ http_server_handle_req_get(
         }
         if (HTTP_RESP_CODE_200 != resp_auth_check.http_resp_code)
         {
+            LOG_DBG("GET /%s: failed to check auth, return HTTP error %d", p_file_name, resp_auth_check.http_resp_code);
             return resp_auth_check;
         }
     }
