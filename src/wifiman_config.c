@@ -7,6 +7,7 @@
 
 #include "wifiman_config.h"
 #include <string.h>
+#include <esp_attr.h>
 #include "esp_wifi_types.h"
 #include "wifi_manager_defs.h"
 #include "wifi_manager_internal.h"

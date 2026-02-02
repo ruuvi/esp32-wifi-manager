@@ -32,6 +32,7 @@ Contains the freeRTOS task and all necessary support
 
 #include "json_network_info.h"
 #include <stddef.h>
+#include <esp_attr.h>
 #include <stdio.h>
 #include "json.h"
 #include "wifi_manager_defs.h"

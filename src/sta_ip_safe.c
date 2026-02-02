@@ -6,6 +6,7 @@
  */
 
 #include "sta_ip_safe.h"
+#include <esp_attr.h>
 #include "os_mutex.h"
 #include "sta_ip_unsafe.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_DEBUG
