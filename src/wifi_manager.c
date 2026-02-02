@@ -60,7 +60,7 @@ Contains the freeRTOS task and all necessary support
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "wifi_manager";
 
-IRAM_ATTR EventGroupHandle_t g_p_wifi_manager_event_group;
+EventGroupHandle_t IRAM_ATTR g_p_wifi_manager_event_group;
 static StaticEventGroup_t    g_wifi_manager_event_group_mem;
 
 static os_timer_periodic_cptr_without_arg_t* IRAM_ATTR g_p_wifi_manager_timer_task_watchdog;

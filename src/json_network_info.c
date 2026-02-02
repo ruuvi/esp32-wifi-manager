@@ -57,7 +57,7 @@ typedef struct json_network_info_do_generate_param_t
 } json_network_info_do_generate_param_t;
 
 static json_network_info_t  g_json_network_info;
-static IRAM_ATTR os_mutex_t g_json_network_mutex;
+static os_mutex_t IRAM_ATTR g_json_network_mutex;
 static os_mutex_static_t    g_json_network_mutex_mem;
 
 static json_network_info_t*

@@ -97,10 +97,10 @@ http_server_task(void);
 static const char TAG[] = "http_server";
 
 static os_mutex_static_t      g_http_server_mutex_mem;
-static IRAM_ATTR os_mutex_t   g_http_server_mutex;
+static os_mutex_t IRAM_ATTR   g_http_server_mutex;
 static os_signal_static_t     g_http_server_signal_mem;
 static os_signal_t* IRAM_ATTR g_p_http_server_sig;
-static IRAM_ATTR os_sema_t    g_p_http_server_sema_send;
+static os_sema_t IRAM_ATTR    g_p_http_server_sema_send;
 static os_sema_static_t       g_http_server_sema_send_mem;
 struct netconn* IRAM_ATTR     g_p_conn_listen;
 

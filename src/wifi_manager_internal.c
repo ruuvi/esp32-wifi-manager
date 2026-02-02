@@ -45,10 +45,10 @@ static os_timer_one_shot_static_t                 g_wifi_scan_timer_mem;
 static os_timer_one_shot_cptr_without_arg_t* IRAM_ATTR g_p_wifi_manager_timer_reconnect_sta;
 static os_timer_one_shot_static_t                      g_wifi_manager_timer_reconnect_sta_mem;
 
-static IRAM_ATTR os_sema_t g_p_scan_sync_sema;
+static os_sema_t IRAM_ATTR g_p_scan_sync_sema;
 static os_sema_static_t    g_scan_sync_sema_mem;
 
-static IRAM_ATTR os_mutex_recursive_t g_p_wifi_mutex;
+static os_mutex_recursive_t IRAM_ATTR g_p_wifi_mutex;
 static os_mutex_recursive_static_t    g_wifi_manager_mutex_mem;
 
 bool

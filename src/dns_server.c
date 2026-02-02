@@ -76,7 +76,7 @@ typedef struct dns_server_tmp_buf_t
 static const char TAG[] = "dns_server";
 
 static os_mutex_static_t                  g_dns_server_mutex_mem;
-static IRAM_ATTR os_mutex_t               g_dns_server_mutex;
+static os_mutex_t IRAM_ATTR               g_dns_server_mutex;
 static os_signal_static_t                 g_dns_server_signal_mem;
 static os_signal_t* IRAM_ATTR             g_p_dns_server_sig;
 static os_timer_sig_periodic_t* IRAM_ATTR g_p_dns_server_timer_sig_watchdog_feed;

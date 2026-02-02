@@ -34,7 +34,7 @@ static wifi_manager_cb_ptr IRAM_ATTR g_wifi_cb_ptr_arr[MESSAGE_CODE_COUNT];
 static wifi_manager_scan_info_t      g_wifi_scan_info;
 static uint16_t                      g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t              g_wifi_ap_records[2 * MAX_AP_NUM]; // TODO: need to optimize memory usage
-static IRAM_ATTR uint32_t            g_wifi_mic_failure_count;
+static uint32_t IRAM_ATTR            g_wifi_mic_failure_count;
 
 bool g_wifi_wps_enabled;
 
