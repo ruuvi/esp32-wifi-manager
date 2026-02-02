@@ -16,11 +16,9 @@
 #include "lwip/dhcp.h"
 #include "esp_netif.h"
 #include "esp_netif_net_stack.h"
-#include "os_sema.h"
 #include "wifi_manager.h"
 #include "wifiman_msg.h"
 #include "wifiman_config.h"
-#include "http_server_resp.h"
 #include "access_points_list.h"
 #include "dns_server.h"
 #include "json_access_points.h"
@@ -34,8 +32,9 @@ static const char TAG[] = "wifi_manager";
 static wifi_manager_cb_ptr IRAM_ATTR g_wifi_cb_ptr_arr[MESSAGE_CODE_COUNT];
 static wifi_manager_scan_info_t      g_wifi_scan_info;
 static uint16_t                      g_wifi_ap_num = MAX_AP_NUM;
-static wifi_ap_record_t              g_wifi_ap_records[2 * MAX_AP_NUM]; // TODO: need to optimize memory usage
-static uint32_t IRAM_ATTR            g_wifi_mic_failure_count;
+static wifi_ap_record_t g_wifi_ap_records[2 * MAX_AP_NUM]; /* TODO: need to optimize memory usage - allocate this array
+                                                              dynamically only when scanning */
+static uint32_t IRAM_ATTR g_wifi_mic_failure_count;
 
 bool g_wifi_wps_enabled;
 
