@@ -6,6 +6,7 @@
  */
 
 #include <esp_wps.h>
+#include <esp_attr.h>
 #include "wifi_manager_internal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"

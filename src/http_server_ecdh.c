@@ -7,6 +7,7 @@
 
 #include "http_server_ecdh.h"
 #include <string.h>
+#include <esp_attr.h>
 #include "mbedtls/ecdh.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha256.h"

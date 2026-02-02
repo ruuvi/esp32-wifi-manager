@@ -33,6 +33,7 @@ Contains the freeRTOS task and all necessary support
 #include "wifi_manager_internal.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <esp_attr.h>
 #include "esp_system.h"
 #include <esp_task_wdt.h>
 #include "freertos/FreeRTOS.h"

@@ -9,6 +9,7 @@
 #define RUUVI_WIFI_MANAGER_INTERNAL_H
 
 #include "wifi_manager_defs.h"
+#include <esp_attr.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "os_wrapper_types.h"

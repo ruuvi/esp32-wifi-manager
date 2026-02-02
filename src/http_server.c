@@ -36,6 +36,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 #include <string.h>
 #include <stdlib.h>
 
+#include <esp_attr.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <esp_task_wdt.h>

@@ -6,6 +6,7 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
+#include <esp_attr.h>
 #include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
