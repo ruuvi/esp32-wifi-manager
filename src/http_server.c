@@ -96,16 +96,16 @@ http_server_task(void);
 /* @brief tag used for ESP serial console messages */
 static const char TAG[] = "http_server";
 
-static os_mutex_static_t  g_http_server_mutex_mem;
-static os_mutex_t         g_http_server_mutex;
-static os_signal_static_t g_http_server_signal_mem;
-static os_signal_t*       g_p_http_server_sig;
-static os_sema_t          g_p_http_server_sema_send;
-static os_sema_static_t   g_http_server_sema_send_mem;
-struct netconn*           g_p_conn_listen;
+static os_mutex_static_t      g_http_server_mutex_mem;
+static IRAM_ATTR os_mutex_t   g_http_server_mutex;
+static os_signal_static_t     g_http_server_signal_mem;
+static os_signal_t* IRAM_ATTR g_p_http_server_sig;
+static IRAM_ATTR os_sema_t    g_p_http_server_sema_send;
+static os_sema_static_t       g_http_server_sema_send_mem;
+struct netconn* IRAM_ATTR     g_p_conn_listen;
 
-static os_timer_sig_periodic_t*       g_p_http_server_timer_sig_watchdog_feed;
-static os_timer_sig_periodic_static_t g_http_server_timer_sig_watchdog_feed_mem;
+static os_timer_sig_periodic_t* IRAM_ATTR g_p_http_server_timer_sig_watchdog_feed;
+static os_timer_sig_periodic_static_t     g_http_server_timer_sig_watchdog_feed_mem;
 
 ATTR_PURE
 static os_signal_num_e

@@ -39,7 +39,7 @@ static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
 
-static os_mutex_t g_p_mutex_accept_conn;
+static IRAM_ATTR os_mutex_t g_p_mutex_accept_conn;
 
 static const char*
 get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)

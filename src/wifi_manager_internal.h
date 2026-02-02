@@ -83,7 +83,7 @@ typedef struct wifi_manager_scan_info_t
     uint16_t num_access_points;
 } wifi_manager_scan_info_t;
 
-extern EventGroupHandle_t g_p_wifi_manager_event_group;
+extern IRAM_ATTR EventGroupHandle_t g_p_wifi_manager_event_group;
 
 extern esp_wps_config_t g_wps_config;
 extern bool             g_wifi_wps_enabled;

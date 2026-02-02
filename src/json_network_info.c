@@ -55,9 +55,9 @@ typedef struct json_network_info_do_generate_param_t
     http_server_resp_status_json_t* p_resp_status_json;
 } json_network_info_do_generate_param_t;
 
-static json_network_info_t g_json_network_info;
-static os_mutex_t          g_json_network_mutex;
-static os_mutex_static_t   g_json_network_mutex_mem;
+static json_network_info_t  g_json_network_info;
+static IRAM_ATTR os_mutex_t g_json_network_mutex;
+static os_mutex_static_t    g_json_network_mutex_mem;
 
 static json_network_info_t*
 json_network_info_lock_with_timeout(const os_delta_ticks_t ticks_to_wait)
