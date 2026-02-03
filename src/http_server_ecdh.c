@@ -7,6 +7,7 @@
 
 #include "http_server_ecdh.h"
 #include <string.h>
+#include <esp_attr.h>
 #include "mbedtls/ecdh.h"
 #include "mbedtls/base64.h"
 #include "mbedtls/sha256.h"
@@ -73,7 +74,7 @@ typedef struct http_server_ecdh_handshake_tmp_buffers_t
 static const char* const TAG = "ECDH";
 
 static wifi_manager_ecdh_f_rng g_http_server_ecdh_f_rng;
-static void*                   g_http_server_ecdh_p_rng;
+static void* IRAM_ATTR         g_http_server_ecdh_p_rng;
 
 static mbedtls_ecdh_context       g_http_server_ecdh_ctx;
 static http_server_ecdh_aes_key_t g_http_server_ecdh_aes_key;

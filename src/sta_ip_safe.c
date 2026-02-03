@@ -6,6 +6,7 @@
  */
 
 #include "sta_ip_safe.h"
+#include <esp_attr.h>
 #include "os_mutex.h"
 #include "sta_ip_unsafe.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_DEBUG
@@ -13,8 +14,8 @@
 
 static const char TAG[] = "wifi_manager";
 
-static os_mutex_t        g_sta_ip_safe_mutex;
-static os_mutex_static_t g_sta_ip_safe_mutex_mem;
+static os_mutex_t IRAM_ATTR g_sta_ip_safe_mutex;
+static os_mutex_static_t    g_sta_ip_safe_mutex_mem;
 
 STA_IP_SAFE_STATIC
 os_mutex_t

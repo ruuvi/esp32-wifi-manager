@@ -9,6 +9,7 @@
 #define RUUVI_WIFI_MANAGER_INTERNAL_H
 
 #include "wifi_manager_defs.h"
+#include <esp_attr.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "os_wrapper_types.h"
@@ -83,7 +84,7 @@ typedef struct wifi_manager_scan_info_t
     uint16_t num_access_points;
 } wifi_manager_scan_info_t;
 
-extern EventGroupHandle_t g_p_wifi_manager_event_group;
+extern EventGroupHandle_t IRAM_ATTR g_p_wifi_manager_event_group;
 
 extern esp_wps_config_t g_wps_config;
 extern bool             g_wifi_wps_enabled;

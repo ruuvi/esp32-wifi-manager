@@ -33,6 +33,7 @@ Contains the freeRTOS task for the DNS server that processes the requests.
 
 #include <lwip/sockets.h>
 #include <string.h>
+#include <esp_attr.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_event.h>
@@ -75,12 +76,12 @@ typedef struct dns_server_tmp_buf_t
 
 static const char TAG[] = "dns_server";
 
-static os_mutex_static_t              g_dns_server_mutex_mem;
-static os_mutex_t                     g_dns_server_mutex;
-static os_signal_static_t             g_dns_server_signal_mem;
-static os_signal_t*                   g_p_dns_server_sig;
-static os_timer_sig_periodic_t*       g_p_dns_server_timer_sig_watchdog_feed;
-static os_timer_sig_periodic_static_t g_dns_server_timer_sig_watchdog_feed_mem;
+static os_mutex_static_t                  g_dns_server_mutex_mem;
+static os_mutex_t IRAM_ATTR               g_dns_server_mutex;
+static os_signal_static_t                 g_dns_server_signal_mem;
+static os_signal_t* IRAM_ATTR             g_p_dns_server_sig;
+static os_timer_sig_periodic_t* IRAM_ATTR g_p_dns_server_timer_sig_watchdog_feed;
+static os_timer_sig_periodic_static_t     g_dns_server_timer_sig_watchdog_feed_mem;
 
 ATTR_PURE
 static os_signal_num_e

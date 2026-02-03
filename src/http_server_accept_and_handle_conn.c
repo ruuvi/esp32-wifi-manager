@@ -6,6 +6,7 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
+#include <esp_attr.h>
 #include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
@@ -39,7 +40,7 @@ static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
 
-static os_mutex_t g_p_mutex_accept_conn;
+static os_mutex_t IRAM_ATTR g_p_mutex_accept_conn;
 
 static const char*
 get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)

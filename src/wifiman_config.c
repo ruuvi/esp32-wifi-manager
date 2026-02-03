@@ -7,6 +7,7 @@
 
 #include "wifiman_config.h"
 #include <string.h>
+#include <esp_attr.h>
 #include "esp_wifi_types.h"
 #include "wifi_manager_defs.h"
 #include "wifi_manager_internal.h"
@@ -102,10 +103,10 @@ static const wifiman_config_t g_wifiman_config_default_const = {
     },
 };
 
-static wifiman_config_t  g_wifiman_config_default;
-static wifiman_config_t  g_wifiman_config;
-static os_mutex_static_t g_wifiman_config_mutex_mem;
-static os_mutex_t        g_p_wifiman_config_mutex;
+static wifiman_config_t     g_wifiman_config_default;
+static wifiman_config_t     g_wifiman_config;
+static os_mutex_static_t    g_wifiman_config_mutex_mem;
+static os_mutex_t IRAM_ATTR g_p_wifiman_config_mutex;
 
 _Static_assert(
     MAX_SSID_SIZE == sizeof(g_wifiman_config.sta.wifi_config_sta.ssid),
