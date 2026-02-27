@@ -797,11 +797,7 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
     switch (p_resp->http_resp_code)
     {
         case HTTP_RESP_CODE_200:
-            http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
-            return;
-        case HTTP_RESP_CODE_206:
-            http_server_netconn_resp_416(p_conn, p_resp); // We do not support requests for partial content
-            return;
+            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_299:
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
@@ -823,6 +819,8 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn, p_resp);
             return;
+        case HTTP_RESP_CODE_206: // We do not support requests for partial content
+            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_416:
             http_server_netconn_resp_416(p_conn, p_resp);
             return;
