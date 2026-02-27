@@ -51,7 +51,7 @@ get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_bod
     if (NULL == p_body)
     {
         LOG_DBG("http body not found: %s", p_msg);
-        return 0;
+        return NULL;
     }
     p_body += strlen(g_newlines);
     if (NULL != p_body_len)
@@ -1041,7 +1041,6 @@ http_server_accept_and_handle_conn(struct netconn* const p_conn)
         }
         if (ERR_TIMEOUT == err)
         {
-            LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
             vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
         }
         else if (ERR_ABRT == err)
