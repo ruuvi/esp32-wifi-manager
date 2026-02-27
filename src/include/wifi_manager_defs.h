@@ -260,7 +260,6 @@ typedef enum http_resp_code_e
     HTTP_RESP_CODE_401 = 401, // Unauthorized
     HTTP_RESP_CODE_403 = 403, // Forbidden
     HTTP_RESP_CODE_404 = 404, // Not Found
-    HTTP_RESP_CODE_416 = 416, // Range Not Satisfiable
     HTTP_RESP_CODE_429 = 429, // Too Many Requests
     HTTP_RESP_CODE_500 = 500, // Internal Server Error
     HTTP_RESP_CODE_502 = 502, // Bad Gateway

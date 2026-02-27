@@ -756,12 +756,6 @@ http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 static void
-http_server_netconn_resp_416(struct netconn* const p_conn, http_server_resp_t* const p_resp)
-{
-    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_416, "Range Not Satisfiable");
-}
-
-static void
 http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_429, "Too Many Requests");
@@ -819,11 +813,6 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn, p_resp);
             return;
-        case HTTP_RESP_CODE_206: // We do not support requests for partial content
-            ATTR_FALLTHROUGH;
-        case HTTP_RESP_CODE_416:
-            http_server_netconn_resp_416(p_conn, p_resp);
-            return;
         case HTTP_RESP_CODE_429:
             http_server_netconn_resp_429(p_conn, p_resp);
             return;
@@ -833,6 +822,8 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         case HTTP_RESP_CODE_502:
             http_server_netconn_resp_502(p_conn, p_resp);
             return;
+        case HTTP_RESP_CODE_206: // We do not support requests for partial content
+            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_503:
             http_server_netconn_resp_503(p_conn, p_resp);
             return;
@@ -927,7 +918,10 @@ http_server_netconn_serve_handle_req(
         const size_t content_len = strlen((const char*)resp.select_location.memory.p_buf);
         if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP)
         {
-            LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
+            LOG_INFO(
+                "Json resp: code=%u, content:\n%s",
+                resp.http_resp_code,
+                (const char*)resp.select_location.memory.p_buf);
         }
         else
         {
