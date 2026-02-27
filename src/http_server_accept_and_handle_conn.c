@@ -756,6 +756,12 @@ http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 static void
+http_server_netconn_resp_416(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+{
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_416, "Range Not Satisfiable");
+}
+
+static void
 http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_429, "Too Many Requests");
@@ -791,9 +797,11 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
     switch (p_resp->http_resp_code)
     {
         case HTTP_RESP_CODE_200:
-            ATTR_FALLTHROUGH;
+            http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
+            return;
         case HTTP_RESP_CODE_206:
-            ATTR_FALLTHROUGH;
+            http_server_netconn_resp_416(p_conn, p_resp); // We do not support requests for partial content
+            return;
         case HTTP_RESP_CODE_299:
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
@@ -814,6 +822,9 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             return;
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn, p_resp);
+            return;
+        case HTTP_RESP_CODE_416:
+            http_server_netconn_resp_416(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_429:
             http_server_netconn_resp_429(p_conn, p_resp);
