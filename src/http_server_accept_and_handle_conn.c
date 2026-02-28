@@ -792,6 +792,8 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
     {
         case HTTP_RESP_CODE_200:
             ATTR_FALLTHROUGH;
+        case HTTP_RESP_CODE_206: // Server supports only HTTP/1.0, so fall back to HTTP status 200 for partial content
+            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_299:
             http_server_netconn_resp_200(p_conn, p_resp, &g_http_server_extra_header_fields);
             return;
@@ -822,8 +824,6 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         case HTTP_RESP_CODE_502:
             http_server_netconn_resp_502(p_conn, p_resp);
             return;
-        case HTTP_RESP_CODE_206: // We do not support requests for partial content
-            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_503:
             http_server_netconn_resp_503(p_conn, p_resp);
             return;
