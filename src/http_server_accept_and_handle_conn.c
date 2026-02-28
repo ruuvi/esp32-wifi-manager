@@ -51,7 +51,7 @@ get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_bod
     if (NULL == p_body)
     {
         LOG_DBG("http body not found: %s", p_msg);
-        return 0;
+        return NULL;
     }
     p_body += strlen(g_newlines);
     if (NULL != p_body_len)
@@ -790,6 +790,10 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
 {
     switch (p_resp->http_resp_code)
     {
+        case HTTP_RESP_CODE_206: // Server supports only HTTP/1.0, so fall back to HTTP status 200 for partial content
+            p_resp->http_resp_code = HTTP_RESP_CODE_200;
+            LOG_WARN("Falling back to HTTP/1.0 status code 200 for partial content");
+            ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_200:
             ATTR_FALLTHROUGH;
         case HTTP_RESP_CODE_299:
@@ -916,7 +920,10 @@ http_server_netconn_serve_handle_req(
         const size_t content_len = strlen((const char*)resp.select_location.memory.p_buf);
         if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP)
         {
-            LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, resp.select_location.memory.p_buf);
+            LOG_INFO(
+                "Json resp: code=%u, content:\n%s",
+                resp.http_resp_code,
+                (const char*)resp.select_location.memory.p_buf);
         }
         else
         {
@@ -1030,7 +1037,6 @@ http_server_accept_and_handle_conn(struct netconn* const p_conn)
         }
         if (ERR_TIMEOUT == err)
         {
-            LOG_VERBOSE("netconn_accept ERR_TIMEOUT");
             vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_ACCEPT_DELAY_MS));
         }
         else if (ERR_ABRT == err)
