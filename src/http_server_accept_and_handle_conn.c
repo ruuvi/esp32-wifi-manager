@@ -6,7 +6,6 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
-#include <esp_attr.h>
 #include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
@@ -18,6 +17,7 @@
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "wifi_manager.h"
+#include "http_server_mutex.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -39,8 +39,6 @@ typedef struct http_header_date_str_t
 static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
-
-static os_mutex_t IRAM_ATTR g_p_mutex_accept_conn;
 
 static const char*
 get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)
@@ -994,32 +992,11 @@ http_server_netconn_serve(struct netconn* const p_conn)
 }
 
 void
-http_server_use_mutex_for_incoming_connection_handling(os_mutex_t p_mutex)
-{
-    if (NULL != p_mutex)
-    {
-        if (NULL == g_p_mutex_accept_conn)
-        {
-            LOG_INFO("Activate using mutex for http_server");
-            g_p_mutex_accept_conn = p_mutex;
-        }
-    }
-    else
-    {
-        if (NULL != g_p_mutex_accept_conn)
-        {
-            LOG_INFO("Deactivate using mutex for http_server");
-            g_p_mutex_accept_conn = NULL;
-        }
-    }
-}
-
-void
 http_server_accept_and_handle_conn(struct netconn* const p_conn)
 {
     struct netconn* p_new_conn = NULL;
 
-    os_mutex_t p_mutex = g_p_mutex_accept_conn;
+    os_mutex_t p_mutex = http_server_get_mutex();
     if ((NULL != p_mutex) && (!os_mutex_try_lock(p_mutex)))
     {
         LOG_DBG("Can't lock mutex, sleep for %u ms", HTTP_SERVER_ACCEPT_DELAY_MS);
