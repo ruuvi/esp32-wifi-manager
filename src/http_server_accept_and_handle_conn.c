@@ -6,7 +6,6 @@
  */
 
 #include "http_server_accept_and_handle_conn.h"
-#include <esp_attr.h>
 #include <esp_task_wdt.h>
 #include "lwip/priv/tcp_priv.h"
 #include "os_sema.h"
@@ -18,6 +17,7 @@
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "wifi_manager.h"
+#include "http_server_mutex.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -39,8 +39,6 @@ typedef struct http_header_date_str_t
 static const char TAG[] = "http_server";
 
 static http_header_extra_fields_t g_http_server_extra_header_fields;
-
-static os_mutex_t IRAM_ATTR g_p_mutex_accept_conn;
 
 static const char*
 get_http_body(const char* const p_msg, const uint32_t len, uint32_t* const p_body_len)
@@ -188,9 +186,9 @@ http_server_netconn_write(
      * then netconn_write_partly will ignore p_conn->send_timeout and will wait much longer,
      * which will trigger task watchdog for http_server.
      */
-    const TickType_t tick_start      = xTaskGetTickCount();
-    const int32_t send_timeout_ticks = (0 != p_conn->send_timeout) ? (int32_t)pdMS_TO_TICKS(p_conn->send_timeout) : 0;
-    size_t        offset             = 0;
+    const TickType_t tick_start         = xTaskGetTickCount();
+    const TickType_t send_timeout_ticks = (0 != p_conn->send_timeout) ? pdMS_TO_TICKS(p_conn->send_timeout) : 0;
+    size_t           offset             = 0;
     do
     {
         size_t bytes_written = 0;
@@ -221,13 +219,10 @@ http_server_netconn_write(
             (printf_uint_t)offset,
             (printf_uint_t)bytes_written);
         offset += bytes_written;
-        if (0 != send_timeout_ticks)
+        if ((0 != send_timeout_ticks) && ((xTaskGetTickCount() - tick_start) > send_timeout_ticks))
         {
-            if ((xTaskGetTickCount() - tick_start) > send_timeout_ticks)
-            {
-                LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
-                return false;
-            }
+            LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
+            return false;
         }
         const esp_err_t err_wdt = esp_task_wdt_reset();
         if (ESP_OK != err_wdt)
@@ -994,32 +989,11 @@ http_server_netconn_serve(struct netconn* const p_conn)
 }
 
 void
-http_server_use_mutex_for_incoming_connection_handling(os_mutex_t p_mutex)
-{
-    if (NULL != p_mutex)
-    {
-        if (NULL == g_p_mutex_accept_conn)
-        {
-            LOG_INFO("Activate using mutex for http_server");
-            g_p_mutex_accept_conn = p_mutex;
-        }
-    }
-    else
-    {
-        if (NULL != g_p_mutex_accept_conn)
-        {
-            LOG_INFO("Deactivate using mutex for http_server");
-            g_p_mutex_accept_conn = NULL;
-        }
-    }
-}
-
-void
 http_server_accept_and_handle_conn(struct netconn* const p_conn)
 {
     struct netconn* p_new_conn = NULL;
 
-    os_mutex_t p_mutex = g_p_mutex_accept_conn;
+    os_mutex_t p_mutex = http_server_get_mutex();
     if ((NULL != p_mutex) && (!os_mutex_try_lock(p_mutex)))
     {
         LOG_DBG("Can't lock mutex, sleep for %u ms", HTTP_SERVER_ACCEPT_DELAY_MS);
