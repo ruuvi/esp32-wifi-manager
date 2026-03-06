@@ -21,4 +21,4 @@ http_server_get_mutex(void);
 }
 #endif
 
-#endif // ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
+#endif // RUUVI_ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
