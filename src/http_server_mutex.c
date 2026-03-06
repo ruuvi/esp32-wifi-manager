@@ -1,4 +1,7 @@
 /**
+ * @file http_server_mutex.c
+ * @author TheSomeMan
+ * @date 2026-03-06
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
  */
 

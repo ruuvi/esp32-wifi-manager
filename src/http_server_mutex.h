@@ -1,9 +1,12 @@
 /**
+ * @file http_server_mutex.h
+ * @author TheSomeMan
+ * @date 2026-03-06
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
  */
 
-#ifndef ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
-#define ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
+#ifndef RUUVI_ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
+#define RUUVI_ESP_WIFI_MANAGER_HTTP_SERVER_MUTEX_H
 
 #include "os_mutex.h"
 
