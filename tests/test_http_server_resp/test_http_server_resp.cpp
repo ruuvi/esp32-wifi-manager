@@ -110,6 +110,19 @@ TEST_F(TestHttpServerResp, resp_404) // NOLINT
     ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
 }
 
+TEST_F(TestHttpServerResp, resp_409) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_409();
+    ASSERT_EQ(HTTP_RESP_CODE_409, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(0, resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
+}
+
 TEST_F(TestHttpServerResp, resp_503) // NOLINT
 {
     const http_server_resp_t resp = http_server_resp_503();
