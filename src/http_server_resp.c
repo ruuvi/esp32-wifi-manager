@@ -189,6 +189,12 @@ http_server_resp_404(void)
 }
 
 http_server_resp_t
+http_server_resp_409(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_409);
+}
+
+http_server_resp_t
 http_server_resp_500(void)
 {
     return http_server_resp_err(HTTP_RESP_CODE_500);
