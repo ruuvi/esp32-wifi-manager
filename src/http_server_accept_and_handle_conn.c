@@ -751,6 +751,12 @@ http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 static void
+http_server_netconn_resp_409(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+{
+    http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_409, "Conflict");
+}
+
+static void
 http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_429, "Too Many Requests");
@@ -811,6 +817,9 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             return;
         case HTTP_RESP_CODE_404:
             http_server_netconn_resp_404(p_conn, p_resp);
+            return;
+        case HTTP_RESP_CODE_409:
+            http_server_netconn_resp_409(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_429:
             http_server_netconn_resp_429(p_conn, p_resp);
