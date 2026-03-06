@@ -186,9 +186,9 @@ http_server_netconn_write(
      * then netconn_write_partly will ignore p_conn->send_timeout and will wait much longer,
      * which will trigger task watchdog for http_server.
      */
-    const TickType_t tick_start      = xTaskGetTickCount();
-    const int32_t send_timeout_ticks = (0 != p_conn->send_timeout) ? (int32_t)pdMS_TO_TICKS(p_conn->send_timeout) : 0;
-    size_t        offset             = 0;
+    const TickType_t tick_start         = xTaskGetTickCount();
+    const TickType_t send_timeout_ticks = (0 != p_conn->send_timeout) ? pdMS_TO_TICKS(p_conn->send_timeout) : 0;
+    size_t           offset             = 0;
     do
     {
         size_t bytes_written = 0;
@@ -219,13 +219,10 @@ http_server_netconn_write(
             (printf_uint_t)offset,
             (printf_uint_t)bytes_written);
         offset += bytes_written;
-        if (0 != send_timeout_ticks)
+        if ((0 != send_timeout_ticks) && ((xTaskGetTickCount() - tick_start) > send_timeout_ticks))
         {
-            if ((xTaskGetTickCount() - tick_start) > send_timeout_ticks)
-            {
-                LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
-                return false;
-            }
+            LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
+            return false;
         }
         const esp_err_t err_wdt = esp_task_wdt_reset();
         if (ESP_OK != err_wdt)
