@@ -588,7 +588,6 @@ wifi_manager_init_start_wifi(
         return false;
     }
 
-    wifi_manager_set_ant_config(p_wifi_ant_config);
     /* SoftAP - Wi-Fi Access Point configuration setup */
     wifi_manager_netif_set_default_ip();
 
@@ -612,6 +611,8 @@ wifi_manager_init_start_wifi(
         LOG_ERR("%s failed", "esp_wifi_start");
         return false;
     }
+
+    wifi_manager_set_ant_config(p_wifi_ant_config);
 
     esp_netif_t* const p_netif_sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
 
