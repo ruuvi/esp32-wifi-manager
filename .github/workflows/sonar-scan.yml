@@ -57,7 +57,7 @@ jobs:
           path: |
             ~/esp
             ~/.espressif
-          key: esp-idf-v4.2.5-${{ runner.os }}-${{ runner.imageOS }}-${{ hashFiles('.github/workflows/sonar-scan.yml') }}
+          key: esp-idf-v4.2.5-${{ runner.os }}-${{ hashFiles('.github/workflows/sonar-scan.yml') }}
 
       - name: Download and install ESP-IDF v4.2.5
         if: steps.cache-esp-idf.outputs.cache-hit != 'true'
