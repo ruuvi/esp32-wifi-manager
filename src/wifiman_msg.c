@@ -141,6 +141,8 @@ wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason)
             return "CONNECTION_FAIL";
         case WIFI_REASON_AP_TSF_RESET:
             return "AP_TSF_RESET";
+        case WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG:
+            return "ASSOC_COMEBACK_TIME_TOO_LONG";
     }
     return "Unknown";
 }
