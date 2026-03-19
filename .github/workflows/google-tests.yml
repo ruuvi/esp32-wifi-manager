@@ -21,20 +21,20 @@ jobs:
       - name: Checkout submodules
         run: git submodule update --init --recursive
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.10
 
       - name: Check Python version
         run: |
           python --version
           python3 --version
-          python3.8 --version
+          python3.10 --version
 
-      - name: Set Python 3.8 as default
+      - name: Set Python 3.10 as default
         run: |
-          echo "alias python=python3.8" >> ~/.bashrc
+          echo "alias python=python3.10" >> ~/.bashrc
           source ~/.bashrc          
 
       - name: Install dependencies
@@ -56,14 +56,14 @@ jobs:
             ~/.espressif
           key: esp-idf-${{ hashFiles('.github/workflows/google-tests.yml') }}
 
-      - name: Download and install ESP-IDF v4.2.2
+      - name: Download and install ESP-IDF v4.2.5
         if: steps.cache-esp-idf.outputs.cache-hit != 'true'
         run: |
           mkdir ~/esp
           cd ~/esp
-          git clone --recursive --branch v4.2.2 https://github.com/espressif/esp-idf.git
+          git clone --recursive --branch v4.2.5 https://github.com/espressif/esp-idf.git
           cd $IDF_PATH
-          ./install.sh --python `which python3.8`
+          ./install.sh --python `which python3.10`
 
       - name: Build
         run: |
