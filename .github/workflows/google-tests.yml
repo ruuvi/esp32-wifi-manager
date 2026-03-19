@@ -57,7 +57,7 @@ jobs:
           cd ~/esp
           git clone --recursive --branch v4.2.5 https://github.com/espressif/esp-idf.git
           cd $IDF_PATH
-          ./install.sh --python "$(which python)"
+          ./install.sh
 
       - name: Verify ESP-IDF installation
         run: |
