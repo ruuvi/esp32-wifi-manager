@@ -24,17 +24,19 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
           submodules: recursive
 
-      - name: Set up Python 3.10
+      - name: Set up Python 3.8
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.8'
 
       - name: Check Python version
         run: |
-          python --version
-          python3 --version
           which python
-          which python3          
+          python --version
+          python -m pip --version
+          which python3
+          python3 --version
+          python3 -m pip --version
 
       - name: Install dependencies
         run: |
