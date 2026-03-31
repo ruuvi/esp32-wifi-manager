@@ -265,10 +265,13 @@ wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits, const bo
  *  206     WIFI_REASON_AP_TSF_RESET
  *  208     WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG
  *
- * @param p_param - pointer to wifiman_msg_param_t
+ * Note: The disconnection reason code is used by this handler (for example, to detect WIFI_REASON_MIC_FAILURE)
+ *       and its string representation is logged for diagnostics.
+ *
+ * @param p_param - pointer to wifiman_msg_param_t that carries the disconnection reason
  */
 static bool
-wifi_handle_ev_sta_disconnected(wifiman_msg_param_t* const p_param)
+wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
 {
     wifiman_disconnection_reason_t reason     = wifiman_conv_param_to_reason(p_param);
     const EventBits_t              event_bits = xEventGroupClearBits(
@@ -728,6 +731,24 @@ wifi_manager_recv_and_handle_msg(void)
     LOG_DBG("Request processed: msg.code=%d", (printf_int_t)msg.code);
     if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
     {
+        /**
+         * NOTE ABOUT CALLBACK ARGUMENT:
+         *
+         *  - The callback type wifi_manager_cb_ptr is declared as: void (*)(void*)
+         *  - Here we always pass &msg.msg_param, i.e. a pointer to msg.msg_param.
+         *  - The actual dynamic type of the argument is: const wifiman_msg_param_t *
+         *  - The pointed-to object is a field of the stack-allocated variable `msg`
+         *    in wifi_manager_recv_and_handle_msg(), so the pointer is only valid
+         *    for the duration of this call and MUST NOT be stored or used after
+         *    the callback returns.
+         *
+         * Callback implementations should therefore cast the argument as:
+         *
+         *    const wifiman_msg_param_t *param =
+         *        (const wifiman_msg_param_t *)arg;
+         *
+         * and must not keep `param` or its address beyond the callback invocation.
+         */
         (*g_wifi_cb_ptr_arr[msg.code])(&msg.msg_param);
     }
     return flag_terminate;
