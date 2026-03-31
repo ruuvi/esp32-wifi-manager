@@ -34,8 +34,6 @@ static wifi_manager_scan_info_t      g_wifi_scan_info;
 static uint16_t                      g_wifi_ap_num = MAX_AP_NUM;
 static wifi_ap_record_t g_wifi_ap_records[2 * MAX_AP_NUM]; /* TODO: need to optimize memory usage - allocate this array
                                                               dynamically only when scanning */
-static uint32_t IRAM_ATTR g_wifi_mic_failure_count;
-
 bool g_wifi_wps_enabled;
 
 static bool
@@ -183,16 +181,12 @@ wifi_handle_cmd_connect_sta(const wifiman_msg_param_t* const p_param)
 }
 
 static void
-wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits)
+wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits, const bool flag_mic_failure)
 {
     if ((!g_wifi_wps_enabled) && (0 != (event_bits & WIFI_MANAGER_STA_ACTIVE_BIT)))
     {
         TimeUnitsSeconds_t delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
-        if (0 == g_wifi_mic_failure_count)
-        {
-            delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
-        }
-        else
+        if (flag_mic_failure)
         {
             delay_sec = WIFI_MANAGER_RECONNECT_STA_AFTER_MIC_FAILURE_TIMEOUT_SEC;
             LOG_INFO("esp_wifi_disconnect after MIC_FAILURE");
@@ -201,6 +195,10 @@ wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits)
             {
                 LOG_ERR_ESP(err, "%s failed", "esp_wifi_disconnect");
             }
+        }
+        else
+        {
+            delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
         }
         LOG_INFO("%s: activate reconnection after timeout: %u seconds", __func__, (printf_uint_t)delay_sec);
         wifi_manager_start_timer_reconnect_sta_after_timeout(pdMS_TO_TICKS(delay_sec * TIME_UNITS_MS_PER_SECOND));
@@ -263,15 +261,17 @@ wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits)
  *  202     AUTH_FAIL
  *  203     ASSOC_FAIL
  *  204     HANDSHAKE_TIMEOUT
- *
+ *  205     WIFI_REASON_CONNECTION_FAIL
+ *  206     WIFI_REASON_AP_TSF_RESET
+ *  208     WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG
  *
  * @param p_param - pointer to wifiman_msg_param_t
  */
 static bool
-wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
+wifi_handle_ev_sta_disconnected(wifiman_msg_param_t* const p_param)
 {
-    const wifiman_disconnection_reason_t reason     = wifiman_conv_param_to_reason(p_param);
-    const EventBits_t                    event_bits = xEventGroupClearBits(
+    wifiman_disconnection_reason_t reason     = wifiman_conv_param_to_reason(p_param);
+    const EventBits_t              event_bits = xEventGroupClearBits(
         g_p_wifi_manager_event_group,
         WIFI_MANAGER_SCAN_BIT | WIFI_MANAGER_INITIAL_CONNECTION_BIT | WIFI_MANAGER_STA_ACTIVE_BIT
             | WIFI_MANAGER_WIFI_CONNECTED_BIT);
@@ -281,15 +281,6 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
         (printf_uint_t)reason,
         wifiman_disconnection_reason_to_str(reason),
         (printf_uint_t)event_bits);
-
-    if (WIFI_REASON_MIC_FAILURE == reason)
-    {
-        g_wifi_mic_failure_count += 1;
-    }
-    else
-    {
-        g_wifi_mic_failure_count = 0;
-    }
 
     /* if a DISCONNECT message is posted while a scan is in progress this scan will NEVER end, causing scan
      * to never work again. For this reason SCAN_BIT is cleared too */
@@ -336,8 +327,9 @@ wifi_handle_ev_sta_disconnected(const wifiman_msg_param_t* const p_param)
             tm_time.tm_hour,
             tm_time.tm_min,
             tm_time.tm_sec);
-        update_reason_code = UPDATE_LOST_CONNECTION;
-        wifi_handle_ev_sta_handle_lost_connection(event_bits);
+        update_reason_code          = UPDATE_LOST_CONNECTION;
+        const bool flag_mic_failure = (WIFI_REASON_MIC_FAILURE == reason) ? true : false;
+        wifi_handle_ev_sta_handle_lost_connection(event_bits, flag_mic_failure);
     }
     const wifiman_wifi_ssid_t ssid = wifiman_config_sta_get_ssid();
     wifi_manager_update_network_connection_info(update_reason_code, &ssid, NULL, NULL);
@@ -736,7 +728,7 @@ wifi_manager_recv_and_handle_msg(void)
     LOG_DBG("Request processed: msg.code=%d", (printf_int_t)msg.code);
     if ((NULL != g_wifi_cb_ptr_arr[msg.code]) && (!flag_do_not_call_cb))
     {
-        (*g_wifi_cb_ptr_arr[msg.code])(NULL);
+        (*g_wifi_cb_ptr_arr[msg.code])(&msg.msg_param);
     }
     return flag_terminate;
 }
