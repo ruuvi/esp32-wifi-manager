@@ -196,10 +196,6 @@ wifi_handle_ev_sta_handle_lost_connection(const EventBits_t event_bits, const bo
                 LOG_ERR_ESP(err, "%s failed", "esp_wifi_disconnect");
             }
         }
-        else
-        {
-            delay_sec = WIFI_MANAGER_RECONNECT_STA_DEFAULT_TIMEOUT_SEC;
-        }
         LOG_INFO("%s: activate reconnection after timeout: %u seconds", __func__, (printf_uint_t)delay_sec);
         wifi_manager_start_timer_reconnect_sta_after_timeout(pdMS_TO_TICKS(delay_sec * TIME_UNITS_MS_PER_SECOND));
     }
@@ -735,8 +731,7 @@ wifi_manager_recv_and_handle_msg(void)
          * NOTE ABOUT CALLBACK ARGUMENT:
          *
          *  - The callback type wifi_manager_cb_ptr is declared as: void (*)(void*)
-         *  - Here we always pass &msg.msg_param, i.e. a pointer to msg.msg_param.
-         *  - The actual dynamic type of the argument is: const wifiman_msg_param_t *
+         *  - Here we always pass &msg.msg_param, i.e. a pointer to the wifiman_msg_param_t union.
          *  - The pointed-to object is a field of the stack-allocated variable `msg`
          *    in wifi_manager_recv_and_handle_msg(), so the pointer is only valid
          *    for the duration of this call and MUST NOT be stored or used after
@@ -744,10 +739,10 @@ wifi_manager_recv_and_handle_msg(void)
          *
          * Callback implementations should therefore cast the argument as:
          *
-         *    const wifiman_msg_param_t *param =
-         *        (const wifiman_msg_param_t *)arg;
+         *    const wifiman_msg_param_t *param = (const wifiman_msg_param_t *)arg;
          *
-         * and must not keep `param` or its address beyond the callback invocation.
+         * and then they can access the parameter using param->ptr or param->val.
+         * They must not keep `param` or its address beyond the callback invocation.
          */
         (*g_wifi_cb_ptr_arr[msg.code])(&msg.msg_param);
     }
