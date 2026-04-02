@@ -197,6 +197,9 @@ wifi_manager_update_network_connection_info(
 void
 wifi_manager_set_extra_info_for_status_json(const char* const p_extra);
 
+const char*
+wifiman_disconnection_reason_to_str(const wifiman_disconnection_reason_t reason);
+
 #ifdef __cplusplus
 }
 #endif

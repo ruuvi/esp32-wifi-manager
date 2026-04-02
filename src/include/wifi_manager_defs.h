@@ -228,6 +228,8 @@ typedef struct
     wifiman_msg_param_t msg_param;
 } queue_message;
 
+typedef wifi_err_reason_t wifiman_disconnection_reason_t;
+
 #define NETWORK_INFO_STRLEN_MAX 16
 
 typedef struct network_dhcp_str_t
