@@ -334,6 +334,15 @@ json_network_info_update(
 static void
 json_network_info_do_set_extra_info(json_network_info_t* const p_info, const void* const p_param)
 {
+    if (NULL == p_info)
+    {
+        // p_info is set to NULL when the lock could not be acquired within the timeout when calling the functions
+        // 'json_network_info_do_action_...'.
+        // However, this function is only used with 'json_network_info_do_action...',
+        // which waits for an infinite amount of time. Therefore, p_info should never be set to NULL here.
+        // This check is for static analysis only.
+        return;
+    }
     const json_network_info_set_extra_t* const p_extra_info = p_param;
     snprintf(
         p_info->extra_info,
