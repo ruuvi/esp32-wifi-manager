@@ -132,8 +132,9 @@ json_network_info_do_action_with_timeout_without_param(
  * @param cb_func - a callback-function to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  * @param ticks_to_wait - timeout waiting for data access to be granted (use OS_DELTA_TICKS_INFINITE for infinite).
+ * @return true if access was granted and action was performed, false otherwise
  */
-void
+bool
 json_network_info_do_const_action_with_timeout(
     json_network_info_do_const_action_callback_t cb_func,
     void* const                                  p_param,
