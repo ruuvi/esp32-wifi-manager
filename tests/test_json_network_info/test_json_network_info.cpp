@@ -469,3 +469,94 @@ TEST_F(
     ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
+
+TEST_F(TestJsonNetworkInfo, test_do_action_wrapper_invokes_callback_with_non_null_info) // NOLINT
+{
+    json_network_info_do_action(&test_cb_do_action_with_timeout, nullptr);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_FALSE(this->m_callback_info_is_null);
+    ASSERT_EQ(200, this->m_callback_http_resp_code);
+    ASSERT_EQ(1, this->m_mutex_unlock_call_cnt);
+}
+
+TEST_F(TestJsonNetworkInfo, test_do_const_action_wrapper_invokes_callback_with_non_null_info) // NOLINT
+{
+    json_network_info_do_const_action(&test_cb_do_const_action_with_timeout, nullptr);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_FALSE(this->m_callback_info_is_null);
+    ASSERT_EQ(200, this->m_callback_http_resp_code);
+    ASSERT_EQ(1, this->m_mutex_unlock_call_cnt);
+}
+
+TEST_F(TestJsonNetworkInfo, test_set_reason_user_disconnect_updates_json_reason) // NOLINT
+{
+    json_network_info_set_reason_user_disconnect();
+    const string json_str = json_network_info_get();
+    ASSERT_EQ(
+        string("{"
+               "\"ssid\":null,"
+               "\"ip\":\"\","
+               "\"netmask\":\"\","
+               "\"gw\":\"\","
+               "\"dhcp\":\"\","
+               "\"urc\":2"
+               "}\n"),
+        json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_update_with_null_network_info_clears_network_fields) // NOLINT
+{
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
+    json_network_info_update(&ssid, nullptr, UPDATE_FAILED_ATTEMPT);
+    const string json_str = json_network_info_get();
+    ASSERT_EQ(
+        string("{"
+               "\"ssid\":\"test_ssid\","
+               "\"ip\":\"\","
+               "\"netmask\":\"\","
+               "\"gw\":\"\","
+               "\"dhcp\":\"\","
+               "\"urc\":1"
+               "}\n"),
+        json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_set_extra_info_is_appended_when_reason_is_defined) // NOLINT
+{
+    const network_info_str_t network_info = {
+        { "192.168.0.50" },
+        { "192.168.0.1" },
+        { "255.255.255.0" },
+        { "192.168.0.2" },
+    };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
+    json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
+    json_network_set_extra_info("\"rssi\":-42");
+    const string json_str = json_network_info_get();
+    ASSERT_EQ(
+        string("{"
+               "\"ssid\":\"test_ssid\","
+               "\"ip\":\"192.168.0.50\","
+               "\"netmask\":\"255.255.255.0\","
+               "\"gw\":\"192.168.0.1\","
+               "\"dhcp\":\"192.168.0.2\","
+               "\"urc\":0,"
+               "\"extra\":{\"rssi\":-42}"
+               "}\n"),
+        json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_set_extra_info_is_generated_when_reason_is_undefined) // NOLINT
+{
+    json_network_set_extra_info("\"state\":\"idle\"");
+    const string json_str = json_network_info_get();
+    ASSERT_EQ(string("{\"extra\":{\"state\":\"idle\"}}\n"), json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_set_extra_info_null_clears_extra_section) // NOLINT
+{
+    json_network_set_extra_info("\"state\":\"idle\"");
+    json_network_set_extra_info(nullptr);
+    const string json_str = json_network_info_get();
+    ASSERT_EQ(string("{}\n"), json_str);
+}
