@@ -181,7 +181,7 @@ bool
 wifi_manager_is_sta_configured(void);
 
 /**
- * @brief Generates the connection status json: ssid and IP addresses.
+ * @brief Updates the connection status info in the status.json: ssid and IP addresses.
  * @param update_reason_code - connection status, see update_reason_code_e
  * @param p_ssid - pointer to wifiman_wifi_ssid_t (WiFi SSID)
  * @param p_ip_info - pointer to esp_netif_ip_info_t
@@ -193,6 +193,13 @@ wifi_manager_update_network_connection_info(
     const wifiman_wifi_ssid_t* const p_ssid,
     const esp_netif_ip_info_t* const p_ip_info,
     const esp_ip4_addr_t* const      p_dhcp_ip);
+
+/**
+ * @brief Updates the time sync info in the status.json.
+ * @param is_time_valid - true if time is valid, false otherwise
+ */
+void
+wifi_manager_update_time_sync_info(const bool is_time_valid);
 
 void
 wifi_manager_set_extra_info_for_status_json(const char* const p_extra);

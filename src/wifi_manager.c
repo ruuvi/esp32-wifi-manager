@@ -218,6 +218,28 @@ wifi_manager_update_network_connection_info(
     json_network_info_update(p_ssid, &ip_info_str, update_reason_code);
 }
 
+typedef struct json_network_info_time_sync_params_t
+{
+    bool is_time_valid;
+} json_network_info_time_sync_params_t;
+
+static void
+json_network_info_do_update_time_sync_params(json_network_info_t* const p_info, const void* const p_param)
+{
+    const json_network_info_time_sync_params_t* const p_time_sync = p_param;
+    LOG_INFO("Set time_valid: %d", p_time_sync->is_time_valid ? 1 : 0);
+    p_info->is_time_valid = p_time_sync->is_time_valid;
+}
+
+void
+wifi_manager_update_time_sync_info(const bool is_time_valid)
+{
+    const json_network_info_time_sync_params_t params = {
+        .is_time_valid = is_time_valid,
+    };
+    json_network_info_do_action_with_const_param(&json_network_info_do_update_time_sync_params, &params);
+}
+
 void
 wifi_manager_connect_async(void)
 {

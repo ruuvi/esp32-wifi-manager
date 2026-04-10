@@ -163,6 +163,20 @@ json_network_info_get(void)
     return json_info_copy;
 }
 
+static void
+json_network_info_set_time_valid_cb(json_network_info_t* const p_info, void* const p_param)
+{
+    const bool is_time_valid = *static_cast<bool*>(p_param);
+    p_info->is_time_valid    = is_time_valid;
+}
+
+static void
+json_network_info_set_time_valid(const bool is_time_valid)
+{
+    bool param = is_time_valid;
+    json_network_info_do_action(&json_network_info_set_time_valid_cb, &param);
+}
+
 /*** Unit-Tests *******************************************************************************************************/
 
 TEST_F(TestJsonNetworkInfo, test_after_init) // NOLINT
@@ -190,7 +204,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_null_lan_false) // NOLINT
     string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":null,\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0}\n"),
+               "\"192.168.0.2\",\"urc\":0,\"is_time_valid\":0}\n"),
         json_str);
 }
 
@@ -206,7 +220,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_null_lan_true) // NOLINT
     string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":null,\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0}\n"),
+               "\"192.168.0.2\",\"urc\":0,\"is_time_valid\":0}\n"),
         json_str);
 }
 
@@ -223,7 +237,7 @@ TEST_F(TestJsonNetworkInfo, test_generate_ssid_empty) // NOLINT
     string json_str = json_network_info_get();
     ASSERT_EQ(
         string("{\"ssid\":\"\",\"ip\":\"192.168.0.50\",\"netmask\":\"255.255.255.0\",\"gw\":\"192.168.0.1\",\"dhcp\":"
-               "\"192.168.0.2\",\"urc\":0}\n"),
+               "\"192.168.0.2\",\"urc\":0,\"is_time_valid\":0}\n"),
         json_str);
 }
 
@@ -246,7 +260,8 @@ TEST_F(TestJsonNetworkInfo, test_generate_connection_ok) // NOLINT
                "\"netmask\":\"255.255.255.0\","
                "\"gw\":\"192.168.0.1\","
                "\"dhcp\":\"192.168.0.2\","
-               "\"urc\":0"
+               "\"urc\":0,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -269,7 +284,8 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":1"
+               "\"urc\":1,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -292,7 +308,8 @@ TEST_F(TestJsonNetworkInfo, test_generate_failed_attempt_2) // NOLINT
                "\"netmask\":\"255.255.255.0\","
                "\"gw\":\"192.168.0.1\","
                "\"dhcp\":\"192.168.0.2\","
-               "\"urc\":1"
+               "\"urc\":1,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -315,7 +332,8 @@ TEST_F(TestJsonNetworkInfo, test_generate_user_disconnect) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":2"
+               "\"urc\":2,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -338,7 +356,61 @@ TEST_F(TestJsonNetworkInfo, test_generate_lost_connection) // NOLINT
                "\"netmask\":\"0\","
                "\"gw\":\"0\","
                "\"dhcp\":\"\","
-               "\"urc\":3"
+               "\"urc\":3,"
+               "\"is_time_valid\":0"
+               "}\n"),
+        json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_generate_is_time_valid_true) // NOLINT
+{
+    const network_info_str_t network_info = {
+        { "192.168.0.50" },
+        { "192.168.0.1" },
+        { "255.255.255.0" },
+        { "192.168.0.2" },
+    };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
+    json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
+    json_network_info_set_time_valid(true);
+    string json_str = json_network_info_get();
+    ASSERT_EQ(
+        string("{"
+               "\"ssid\":\"test_ssid\","
+               "\"ip\":\"192.168.0.50\","
+               "\"netmask\":\"255.255.255.0\","
+               "\"gw\":\"192.168.0.1\","
+               "\"dhcp\":\"192.168.0.2\","
+               "\"urc\":0,"
+               "\"is_time_valid\":1"
+               "}\n"),
+        json_str);
+}
+
+TEST_F(TestJsonNetworkInfo, test_clear_resets_is_time_valid) // NOLINT
+{
+    const network_info_str_t network_info = {
+        { "192.168.0.50" },
+        { "192.168.0.1" },
+        { "255.255.255.0" },
+        { "192.168.0.2" },
+    };
+    const wifiman_wifi_ssid_t ssid = { "test_ssid" };
+    json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
+    json_network_info_set_time_valid(true);
+    json_network_info_clear();
+    json_network_info_update(&ssid, &network_info, UPDATE_CONNECTION_OK);
+
+    string json_str = json_network_info_get();
+    ASSERT_EQ(
+        string("{"
+               "\"ssid\":\"test_ssid\","
+               "\"ip\":\"192.168.0.50\","
+               "\"netmask\":\"255.255.255.0\","
+               "\"gw\":\"192.168.0.1\","
+               "\"dhcp\":\"192.168.0.2\","
+               "\"urc\":0,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }

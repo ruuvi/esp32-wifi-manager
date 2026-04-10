@@ -49,6 +49,7 @@ typedef struct json_network_info_t
     network_info_str_t   network_info;
     update_reason_code_e update_reason_code;
     bool                 is_ssid_null;
+    bool                 is_time_valid;
     char                 extra_info[JSON_NETWORK_EXTRA_INFO_SIZE];
 } json_network_info_t;
 
