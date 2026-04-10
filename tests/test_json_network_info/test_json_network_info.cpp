@@ -70,6 +70,9 @@ protected:
         this->m_malloc_fail_on_cnt             = 0;
         this->m_mutex_lock_with_timeout_result = true;
         this->m_mutex_unlock_call_cnt          = 0;
+        this->m_callback_called                = false;
+        this->m_callback_info_is_null          = false;
+        this->m_callback_http_resp_code        = 0;
     }
 
     void
@@ -89,6 +92,9 @@ public:
     uint32_t      m_malloc_fail_on_cnt {};
     bool          m_mutex_lock_with_timeout_result { true };
     uint32_t      m_mutex_unlock_call_cnt {};
+    bool          m_callback_called {};
+    bool          m_callback_info_is_null {};
+    int           m_callback_http_resp_code {};
 };
 
 TestJsonNetworkInfo::TestJsonNetworkInfo() = default;
@@ -178,44 +184,39 @@ json_network_info_get(void)
     return json_info_copy;
 }
 
-typedef struct callback_result_t
-{
-    bool called;
-    bool is_info_null;
-    int  http_resp_code;
-} callback_result_t;
-
 extern "C" void
 test_cb_do_action_with_timeout(json_network_info_t* const p_info, void* const p_param)
 {
-    callback_result_t* const p_result = static_cast<callback_result_t*>(p_param);
-    p_result->called                  = true;
-    p_result->is_info_null            = (nullptr == p_info);
-    p_result->http_resp_code          = (nullptr == p_info) ? 503 : 200;
+    (void)p_param;
+    g_pTestClass->m_callback_called         = true;
+    g_pTestClass->m_callback_info_is_null   = (nullptr == p_info);
+    g_pTestClass->m_callback_http_resp_code = (nullptr == p_info) ? 503 : 200;
 }
 
 extern "C" void
 test_cb_do_action_with_timeout_with_const_param(json_network_info_t* const p_info, const void* const p_param)
 {
-    callback_result_t* const p_result = static_cast<callback_result_t*>(const_cast<void*>(p_param));
-    p_result->called                  = true;
-    p_result->is_info_null            = (nullptr == p_info);
-    p_result->http_resp_code          = (nullptr == p_info) ? 503 : 200;
+    (void)p_param;
+    g_pTestClass->m_callback_called         = true;
+    g_pTestClass->m_callback_info_is_null   = (nullptr == p_info);
+    g_pTestClass->m_callback_http_resp_code = (nullptr == p_info) ? 503 : 200;
 }
 
 extern "C" void
 test_cb_do_action_with_timeout_without_param(json_network_info_t* const p_info)
 {
-    ASSERT_EQ(nullptr, p_info);
+    g_pTestClass->m_callback_called         = true;
+    g_pTestClass->m_callback_info_is_null   = (nullptr == p_info);
+    g_pTestClass->m_callback_http_resp_code = (nullptr == p_info) ? 503 : 200;
 }
 
 extern "C" void
 test_cb_do_const_action_with_timeout(const json_network_info_t* const p_info, void* const p_param)
 {
-    callback_result_t* const p_result = static_cast<callback_result_t*>(p_param);
-    p_result->called                  = true;
-    p_result->is_info_null            = (nullptr == p_info);
-    p_result->http_resp_code          = (nullptr == p_info) ? 503 : 200;
+    (void)p_param;
+    g_pTestClass->m_callback_called         = true;
+    g_pTestClass->m_callback_info_is_null   = (nullptr == p_info);
+    g_pTestClass->m_callback_http_resp_code = (nullptr == p_info) ? 503 : 200;
 }
 
 extern "C" void
@@ -223,10 +224,10 @@ test_cb_do_const_action_with_timeout_with_const_param(
     const json_network_info_t* const p_info,
     const void* const                p_param)
 {
-    callback_result_t* const p_result = static_cast<callback_result_t*>(const_cast<void*>(p_param));
-    p_result->called                  = true;
-    p_result->is_info_null            = (nullptr == p_info);
-    p_result->http_resp_code          = (nullptr == p_info) ? 503 : 200;
+    (void)p_param;
+    g_pTestClass->m_callback_called         = true;
+    g_pTestClass->m_callback_info_is_null   = (nullptr == p_info);
+    g_pTestClass->m_callback_http_resp_code = (nullptr == p_info) ? 503 : 200;
 }
 
 /*** Unit-Tests *******************************************************************************************************/
@@ -412,11 +413,10 @@ TEST_F(TestJsonNetworkInfo, test_generate_lost_connection) // NOLINT
 TEST_F(TestJsonNetworkInfo, test_do_action_with_timeout_lock_failure_invokes_callback_with_null) // NOLINT
 {
     this->m_mutex_lock_with_timeout_result = false;
-    callback_result_t result               = {};
-    json_network_info_do_action_with_timeout(&test_cb_do_action_with_timeout, &result, 1U);
-    ASSERT_TRUE(result.called);
-    ASSERT_TRUE(result.is_info_null);
-    ASSERT_EQ(503, result.http_resp_code);
+    json_network_info_do_action_with_timeout(&test_cb_do_action_with_timeout, nullptr, 1U);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_TRUE(this->m_callback_info_is_null);
+    ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
 
@@ -425,14 +425,13 @@ TEST_F(
     test_do_action_with_timeout_with_const_param_lock_failure_invokes_callback_with_null) // NOLINT
 {
     this->m_mutex_lock_with_timeout_result = false;
-    callback_result_t result               = {};
     json_network_info_do_action_with_timeout_with_const_param(
         &test_cb_do_action_with_timeout_with_const_param,
-        &result,
+        nullptr,
         1U);
-    ASSERT_TRUE(result.called);
-    ASSERT_TRUE(result.is_info_null);
-    ASSERT_EQ(503, result.http_resp_code);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_TRUE(this->m_callback_info_is_null);
+    ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
 
@@ -440,17 +439,19 @@ TEST_F(TestJsonNetworkInfo, test_do_action_with_timeout_without_param_lock_failu
 {
     this->m_mutex_lock_with_timeout_result = false;
     json_network_info_do_action_with_timeout_without_param(&test_cb_do_action_with_timeout_without_param, 1U);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_TRUE(this->m_callback_info_is_null);
+    ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
 
 TEST_F(TestJsonNetworkInfo, test_do_const_action_with_timeout_lock_failure_invokes_callback_with_null) // NOLINT
 {
     this->m_mutex_lock_with_timeout_result = false;
-    callback_result_t result               = {};
-    json_network_info_do_const_action_with_timeout(&test_cb_do_const_action_with_timeout, &result, 1U);
-    ASSERT_TRUE(result.called);
-    ASSERT_TRUE(result.is_info_null);
-    ASSERT_EQ(503, result.http_resp_code);
+    json_network_info_do_const_action_with_timeout(&test_cb_do_const_action_with_timeout, nullptr, 1U);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_TRUE(this->m_callback_info_is_null);
+    ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
 
@@ -459,13 +460,12 @@ TEST_F(
     test_do_const_action_with_timeout_with_const_param_lock_failure_invokes_callback_with_null) // NOLINT
 {
     this->m_mutex_lock_with_timeout_result = false;
-    callback_result_t result               = {};
     json_network_info_do_const_action_with_timeout_with_const_param(
         &test_cb_do_const_action_with_timeout_with_const_param,
-        &result,
+        nullptr,
         1U);
-    ASSERT_TRUE(result.called);
-    ASSERT_TRUE(result.is_info_null);
-    ASSERT_EQ(503, result.http_resp_code);
+    ASSERT_TRUE(this->m_callback_called);
+    ASSERT_TRUE(this->m_callback_info_is_null);
+    ASSERT_EQ(503, this->m_callback_http_resp_code);
     ASSERT_EQ(0, this->m_mutex_unlock_call_cnt);
 }
