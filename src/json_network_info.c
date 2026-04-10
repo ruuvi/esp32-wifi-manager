@@ -101,11 +101,8 @@ json_network_info_do_action_with_timeout(
     const os_delta_ticks_t                 ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock(&p_info);
 }
 
 void
@@ -115,11 +112,8 @@ json_network_info_do_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                  ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock(&p_info);
 }
 
 void
@@ -128,27 +122,19 @@ json_network_info_do_action_with_timeout_without_param(
     const os_delta_ticks_t                               ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info);
+    json_network_info_unlock(&p_info);
 }
 
-bool
+void
 json_network_info_do_const_action_with_timeout(
     json_network_info_do_const_action_callback_t cb_func,
     void* const                                  p_param,
     const os_delta_ticks_t                       ticks_to_wait)
 {
     const json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL == p_info)
-    {
-        return false;
-    }
     cb_func(p_info, p_param);
     json_network_info_unlock_const(&p_info);
-    return true;
 }
 
 void
@@ -158,11 +144,8 @@ json_network_info_do_const_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                        ticks_to_wait)
 {
     const json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock_const(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock_const(&p_info);
 }
 
 void

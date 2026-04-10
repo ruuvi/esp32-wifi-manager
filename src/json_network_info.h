@@ -85,7 +85,7 @@ void
 json_network_info_deinit(void);
 
 /**
- * @brief Try to lock access to json_network_info in read-write mode and perform specified action.
+ * @brief Try to lock access to json_network_info in read-write mode and perform the specified action.
  * @note If access could not be gained within the specified timeout,
  *          then the callback-function will be called with NULL as the first argument.
  * @param cb_func - a callback-function to call after granting access to json_network_info
@@ -99,9 +99,9 @@ json_network_info_do_action_with_timeout(
     const os_delta_ticks_t                 ticks_to_wait);
 
 /**
- * @brief Try to lock access to json_network_info in read-write mode and perform specified action.
+ * @brief Try to lock access to json_network_info in read-write mode and perform the specified action.
  * @note If access could not be gained within the specified timeout,
- *          then the callback-function will be called with NULL as the first argument.
+ *       then the callback-function will be called with NULL as the first argument.
  * @param cb_func - a callback-function (with const-param) to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  * @param ticks_to_wait - timeout waiting for data access to be granted (use OS_DELTA_TICKS_INFINITE for infinite).
@@ -113,11 +113,10 @@ json_network_info_do_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                  ticks_to_wait);
 
 /**
- * @brief Try to lock access to json_network_info in read-write mode and perform specified action.
+ * @brief Try to lock access to json_network_info in read-write mode and perform the specified action.
  * @note If access could not be gained within the specified timeout,
- *          then the callback-function will be called with NULL as the first argument.
+ *       then the callback-function will be called with NULL as the first argument.
  * @param cb_func - a callback-function (without param) to call after granting access to json_network_info
- * @param p_param - pointer to be passed to the callback-function
  * @param ticks_to_wait - timeout waiting for data access to be granted (use OS_DELTA_TICKS_INFINITE for infinite).
  */
 void
@@ -126,24 +125,23 @@ json_network_info_do_action_with_timeout_without_param(
     const os_delta_ticks_t                               ticks_to_wait);
 
 /**
- * @brief Try to lock access to json_network_info in read-only mode and perform specified action.
+ * @brief Try to lock access to json_network_info in read-only mode and perform the specified action.
  * @note If access could not be gained within the specified timeout,
- *          then the callback-function will be called with NULL as the first argument.
+ *       then the callback-function will be called with NULL as the first argument.
  * @param cb_func - a callback-function to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  * @param ticks_to_wait - timeout waiting for data access to be granted (use OS_DELTA_TICKS_INFINITE for infinite).
- * @return true if access was granted and action was performed, false otherwise
  */
-bool
+void
 json_network_info_do_const_action_with_timeout(
     json_network_info_do_const_action_callback_t cb_func,
     void* const                                  p_param,
     const os_delta_ticks_t                       ticks_to_wait);
 
 /**
- * @brief Try to lock access to json_network_info in read-only mode and perform specified action.
+ * @brief Try to lock access to json_network_info in read-only mode and perform the specified action.
  * @note If access could not be gained within the specified timeout,
- *          then the callback-function will be called with NULL as the first argument.
+ *       then the callback-function will be called with NULL as the first argument.
  * @param cb_func - a callback-function (with const-param) to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  * @param ticks_to_wait - timeout waiting for data access to be granted (use OS_DELTA_TICKS_INFINITE for infinite).
@@ -155,7 +153,7 @@ json_network_info_do_const_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                        ticks_to_wait);
 
 /**
- * @brief Lock access to json_network_info in read-write mode and perform specified action.
+ * @brief Lock access to json_network_info in read-write mode and perform the specified action.
  * @param cb_func - a callback-function to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  */
@@ -163,7 +161,7 @@ void
 json_network_info_do_action(json_network_info_do_action_callback_t cb_func, void* const p_param);
 
 /**
- * @brief Lock access to json_network_info in read-write mode and perform specified action.
+ * @brief Lock access to json_network_info in read-write mode and perform the specified action.
  * @param cb_func - a callback-function (with const-param) to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  */
@@ -173,15 +171,14 @@ json_network_info_do_action_with_const_param(
     const void* const                                       p_param);
 
 /**
- * @brief Lock access to json_network_info in read-write mode and perform specified action.
- * @param cb_func - a callback-function without param to call after granting access to json_network_info
- * @param p_param - pointer to be passed to the callback-function
+ * @brief Lock access to json_network_info in read-write mode and perform the specified action.
+ * @param cb_func - a callback-function without a param to call after granting access to json_network_info
  */
 void
 json_network_info_do_action_without_param(json_network_info_do_action_callback_without_param_t cb_func);
 
 /**
- * @brief Lock access to json_network_info in read-only mode and perform specified action.
+ * @brief Lock access to json_network_info in read-only mode and perform the specified action.
  * @param cb_func - a callback-function to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  */
@@ -189,7 +186,7 @@ void
 json_network_info_do_const_action(json_network_info_do_const_action_callback_t cb_func, void* const p_param);
 
 /**
- * @brief Lock access to json_network_info in read-only mode and perform specified action.
+ * @brief Lock access to json_network_info in read-only mode and perform the specified action.
  * @param cb_func - a callback-function (with const-param) to call after granting access to json_network_info
  * @param p_param - pointer to be passed to the callback-function
  */
@@ -199,13 +196,13 @@ json_network_info_do_const_action_with_const_param(
     const void* const                                             p_param);
 
 /**
- * @brief Generates the connection status json: ssid and IP addresses.
+ * @brief Generates the connection status JSON: ssid and IP addresses.
  */
 void
 json_network_info_generate(http_server_resp_status_json_t* const p_resp_status_json);
 
 /**
- * @brief Generates the connection status json: ssid and IP addresses.
+ * @brief Generates the connection status JSON: ssid and IP addresses.
  */
 void
 json_network_info_do_generate_internal(
@@ -228,15 +225,15 @@ void
 json_network_set_extra_info(const char* const p_extra);
 
 /**
- * @brief Clears the connection status json.
- * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
+ * @brief Clears the connection status JSON.
+ * @note This is not thread-safe and should be called only if the wifi_manager_lock_json_buffer call is successful.
  */
 void
 json_network_info_clear(void);
 
 /**
- * @brief Updates the connection status json - sets reason to "user disconnect".
- * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
+ * @brief Updates the connection status JSON - sets reason to "user disconnect".
+ * @note This is not thread-safe and should be called only if the wifi_manager_lock_json_buffer call is successful.
  */
 void
 json_network_info_set_reason_user_disconnect(void);
