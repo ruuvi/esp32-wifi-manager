@@ -101,11 +101,8 @@ json_network_info_do_action_with_timeout(
     const os_delta_ticks_t                 ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock(&p_info);
 }
 
 void
@@ -115,11 +112,8 @@ json_network_info_do_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                  ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock(&p_info);
 }
 
 void
@@ -128,11 +122,8 @@ json_network_info_do_action_with_timeout_without_param(
     const os_delta_ticks_t                               ticks_to_wait)
 {
     json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info);
-        json_network_info_unlock(&p_info);
-    }
+    cb_func(p_info);
+    json_network_info_unlock(&p_info);
 }
 
 void
@@ -142,11 +133,8 @@ json_network_info_do_const_action_with_timeout(
     const os_delta_ticks_t                       ticks_to_wait)
 {
     const json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock_const(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock_const(&p_info);
 }
 
 void
@@ -156,11 +144,8 @@ json_network_info_do_const_action_with_timeout_with_const_param(
     const os_delta_ticks_t                                        ticks_to_wait)
 {
     const json_network_info_t* p_info = json_network_info_lock_with_timeout(ticks_to_wait);
-    if (NULL != p_info)
-    {
-        cb_func(p_info, p_param);
-        json_network_info_unlock_const(&p_info);
-    }
+    cb_func(p_info, p_param);
+    json_network_info_unlock_const(&p_info);
 }
 
 void
@@ -352,6 +337,15 @@ json_network_info_update(
 static void
 json_network_info_do_set_extra_info(json_network_info_t* const p_info, const void* const p_param)
 {
+    if (NULL == p_info)
+    {
+        // p_info is set to NULL when the lock could not be acquired within the timeout when calling the functions
+        // 'json_network_info_do_action_...'.
+        // However, this function is only used with 'json_network_info_do_action...',
+        // which waits for an infinite amount of time. Therefore, p_info should never be set to NULL here.
+        // This check is for static analysis only.
+        return;
+    }
     const json_network_info_set_extra_t* const p_extra_info = p_param;
     snprintf(
         p_info->extra_info,
