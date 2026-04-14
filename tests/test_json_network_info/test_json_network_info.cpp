@@ -518,7 +518,8 @@ TEST_F(TestJsonNetworkInfo, test_set_reason_user_disconnect_updates_json_reason)
                "\"netmask\":\"\","
                "\"gw\":\"\","
                "\"dhcp\":\"\","
-               "\"urc\":2"
+               "\"urc\":2,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -535,7 +536,8 @@ TEST_F(TestJsonNetworkInfo, test_update_with_null_network_info_clears_network_fi
                "\"netmask\":\"\","
                "\"gw\":\"\","
                "\"dhcp\":\"\","
-               "\"urc\":1"
+               "\"urc\":1,"
+               "\"is_time_valid\":0"
                "}\n"),
         json_str);
 }
@@ -560,6 +562,7 @@ TEST_F(TestJsonNetworkInfo, test_set_extra_info_is_appended_when_reason_is_defin
                "\"gw\":\"192.168.0.1\","
                "\"dhcp\":\"192.168.0.2\","
                "\"urc\":0,"
+               "\"is_time_valid\":0,"
                "\"extra\":{\"rssi\":-42}"
                "}\n"),
         json_str);
