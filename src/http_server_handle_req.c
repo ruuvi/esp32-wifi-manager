@@ -162,7 +162,7 @@ http_server_handle_req_get(
                .p_http_resp          = &http_resp,
                .flag_access_from_lan = p_param->flag_access_from_lan,
         };
-        const os_delta_ticks_t ticks_to_wait = 10U;
+        const os_delta_ticks_t ticks_to_wait = pdMS_TO_TICKS(500U);
         json_network_info_do_const_action_with_timeout(&http_server_gen_resp_status_json, &params, ticks_to_wait);
         wifi_manager_cb_on_request_status_json();
         return http_resp;

@@ -837,6 +837,7 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             http_server_netconn_resp_504(p_conn, p_resp);
             return;
     }
+    LOG_ERR("Unsupported HTTP response code: %u", (printf_uint_t)p_resp->http_resp_code);
     assert(0);
     http_server_netconn_resp_503(p_conn, p_resp);
 }
