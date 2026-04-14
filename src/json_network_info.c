@@ -201,6 +201,7 @@ static void
 json_network_info_do_clear(json_network_info_t* const p_info)
 {
     p_info->is_ssid_null             = true;
+    p_info->is_time_valid            = false;
     p_info->ssid.ssid_buf[0]         = '\0';
     p_info->network_info.ip[0]       = '\0';
     p_info->network_info.netmask[0]  = '\0';
@@ -260,6 +261,8 @@ json_network_info_do_generate_internal(
             p_info->network_info.gw,
             p_info->network_info.dhcp.buf,
             (printf_int_t)p_info->update_reason_code);
+
+        str_buf_printf(&str_buf, ",\"is_time_valid\":%d", (printf_int_t)p_info->is_time_valid);
 
         if ('\0' != p_info->extra_info[0])
         {

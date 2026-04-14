@@ -192,7 +192,7 @@ typedef int (*wifi_manager_ecdh_f_rng)(void*, unsigned char*, size_t);
 /**
  * @brief simplified reason codes for a lost connection.
  *
- * esp-idf maintains a big list of reason codes which in practice are useless for most typical application.
+ * esp-idf maintains a big list of reason codes which in practice are useless for most typical applications.
  */
 typedef enum update_reason_code_e
 {
