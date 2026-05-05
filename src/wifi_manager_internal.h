@@ -229,6 +229,9 @@ wifi_manager_stop_timer_reconnect_sta_after_timeout(void);
 bool
 wifi_man_set_wdog_feed_flag(void);
 
+void
+http_server_task_wdt_reset(void);
+
 #ifdef __cplusplus
 }
 #endif

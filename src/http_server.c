@@ -87,6 +87,8 @@ typedef enum http_server_sig_e
 
 #define HTTP_SERVER_TASK_PRIORITY (1)
 
+#define HTTP_SERVER_SLEEP_AFTER_WDT_RESET_MS (5U)
+
 /**
  * @brief RTOS task for the HTTP server. Do not start manually.
  * @see void http_server_start()
@@ -263,7 +265,7 @@ http_server_task_wdt_add_and_start(void)
     os_timer_sig_periodic_start(g_p_http_server_timer_sig_watchdog_feed);
 }
 
-static void
+void
 http_server_task_wdt_reset(void)
 {
     LOG_DBG("Feed watchdog");
@@ -272,6 +274,9 @@ http_server_task_wdt_reset(void)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
     }
+    // After resetting the watchdog, it's good to give some time to other tasks to run,
+    // especially if the HTTP server task is running with a high priority.
+    vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_SLEEP_AFTER_WDT_RESET_MS));
 }
 
 static void
