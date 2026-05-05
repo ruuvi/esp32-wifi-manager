@@ -205,7 +205,7 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
             if (p_ctx->content_len > HTTP_SERVER_MAX_CONTENT_SIZE)
             {
                 LOG_ERR(
-                    "Content-Length %zu exceeds maximum allowed %zu",
+                    "Content-Length %zu exceeds maximum allowed %u",
                     p_ctx->content_len,
                     (printf_uint_t)HTTP_SERVER_MAX_CONTENT_SIZE);
                 os_free(p_ctx->p_req_buf);
@@ -262,7 +262,7 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
                                          ? rem_len
                                          : HTTP_SERVER_LOG_DUMP_PRINT_MAX_LEN;
             LOG_DUMP_DBG(
-                (const uint8_t*)p_ctx->p_req_buf,
+                (const uint8_t*)p_ctx->p_req_buf + offset,
                 print_len,
                 "Full request buffer (size: %zu), print from offset 0x%04zx",
                 p_ctx->req_buf_size,
