@@ -35,6 +35,8 @@
 
 #define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP (256U)
 
+#define BASE_10 (10U)
+
 typedef struct http_server_recv_ctx_t
 {
     char*  p_req_buf;
@@ -64,83 +66,123 @@ get_http_body(const char* const p_msg)
 }
 
 static bool
-http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t* const p_ctx)
+http_server_handle_received_buf_alloc_mem_for_first_frame(
+    const char* const             p_buf,
+    const u16_t                   buflen,
+    http_server_recv_ctx_t* const p_ctx)
 {
-    struct netbuf* p_netbuf_in = NULL;
-
-    const os_delta_ticks_t t0                    = xTaskGetTickCount();
-    const err_t            err                   = netconn_recv(p_conn, &p_netbuf_in);
-    const os_delta_ticks_t time_for_netconn_recv = xTaskGetTickCount() - t0;
-    if (ERR_OK != err)
+    p_ctx->is_header_completed = false;
+    if (buflen > HTTP_SERVER_MAX_REQUEST_SIZE)
     {
-        LOG_ERR("netconn recv: %d (time: %lu ticks)", (printf_int_t)err, (printf_ulong_t)time_for_netconn_recv);
-        if (NULL != p_ctx->p_req_buf)
-        {
-            os_free(p_ctx->p_req_buf);
-            p_ctx->p_req_buf = NULL;
-        }
+        LOG_ERR(
+            "Received request size %u exceeds maximum allowed %u",
+            (printf_uint_t)buflen,
+            (printf_uint_t)HTTP_SERVER_MAX_REQUEST_SIZE);
         return false;
     }
-
-    char* p_buf  = NULL;
-    u16_t buflen = 0;
-    netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
-    LOG_DUMP_DBG((const uint8_t*)p_buf, buflen, "Received data (len: %u)", (printf_uint_t)buflen);
-
+    LOG_DBG("Allocating request buffer for the first time, size: %u", (printf_uint_t)buflen);
+    p_ctx->p_req_buf = os_malloc(buflen + 1);
     if (NULL == p_ctx->p_req_buf)
     {
-        p_ctx->is_header_completed = false;
-        if (buflen > HTTP_SERVER_MAX_REQUEST_SIZE)
+        LOG_ERR("Failed to allocate %u bytes for request buffer", (printf_uint_t)buflen);
+        return false;
+    }
+    p_ctx->req_buf_size = buflen;
+    return true;
+}
+
+static bool
+http_server_handle_received_buf_alloc_mem_for_non_first_frame(
+    const char* const             p_buf,
+    const u16_t                   buflen,
+    http_server_recv_ctx_t* const p_ctx)
+{
+    if (p_ctx->req_buf_size == p_ctx->accum_len)
+    {
+        const size_t new_size = p_ctx->req_buf_size + buflen;
+        if (new_size > HTTP_SERVER_MAX_REQUEST_SIZE)
         {
             LOG_ERR(
-                "Received request size %u exceeds maximum allowed %u",
+                "Can't fit new data to request buffer, max request size exceeded, accum_len: %zu, buf_len: %u, "
+                "req_buf_size: %zu, max_request_size: %u",
+                p_ctx->accum_len,
                 (printf_uint_t)buflen,
+                p_ctx->req_buf_size,
                 (printf_uint_t)HTTP_SERVER_MAX_REQUEST_SIZE);
-            netbuf_delete(p_netbuf_in);
+            os_free(p_ctx->p_req_buf);
+            p_ctx->p_req_buf = NULL;
             return false;
         }
-        LOG_DBG("Allocating request buffer for the first time, size: %u", (printf_uint_t)buflen);
-        p_ctx->p_req_buf = os_malloc(buflen + 1);
-        if (NULL == p_ctx->p_req_buf)
+        LOG_DBG("Reallocating request buffer, old size: %zu, new size: %zu", p_ctx->req_buf_size, new_size);
+        if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, new_size + 1))
         {
-            LOG_ERR("Failed to allocate %u bytes for request buffer", (printf_uint_t)buflen);
-            netbuf_delete(p_netbuf_in);
+            LOG_ERR(
+                "Failed to reallocate request buffer to %u bytes (accum_len: %u, buf_len: %u)",
+                (printf_uint_t)(p_ctx->accum_len + buflen),
+                (printf_uint_t)p_ctx->accum_len,
+                (printf_uint_t)buflen);
+            p_ctx->p_req_buf = NULL;
             return false;
         }
-        p_ctx->req_buf_size = buflen;
+        p_ctx->req_buf_size += buflen;
+    }
+    return true;
+}
+
+static bool
+http_server_handle_request_content_len(http_server_recv_ctx_t* const p_ctx, const char* const p_content_len_str)
+{
+    p_ctx->content_len = (size_t)strtoul(p_content_len_str, NULL, BASE_10);
+    LOG_DBG("Header Content-Length: %zu", p_ctx->content_len);
+    if (p_ctx->content_len > HTTP_SERVER_MAX_CONTENT_SIZE)
+    {
+        LOG_ERR(
+            "Content-Length %zu exceeds maximum allowed %u",
+            p_ctx->content_len,
+            (printf_uint_t)HTTP_SERVER_MAX_CONTENT_SIZE);
+        os_free(p_ctx->p_req_buf);
+        p_ctx->p_req_buf = NULL;
+        return false;
+    }
+    const size_t size_of_header_and_body = p_ctx->header_len + p_ctx->content_len;
+    if (p_ctx->req_buf_size < size_of_header_and_body)
+    {
+        LOG_DBG(
+            "Reallocating request buffer to fit header and body, new size: %zu (header_len: %zu, content_len: "
+            "%zu)",
+            size_of_header_and_body,
+            p_ctx->header_len,
+            p_ctx->content_len);
+        if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, size_of_header_and_body + 1))
+        {
+            LOG_ERR(
+                "Failed to reallocate request buffer to %zu bytes (header_len: %zu, content_len: %zu)",
+                size_of_header_and_body,
+                p_ctx->header_len,
+                p_ctx->content_len);
+            p_ctx->p_req_buf = NULL;
+            return false;
+        }
+        p_ctx->req_buf_size = size_of_header_and_body;
+    }
+    return true;
+}
+
+static bool
+http_server_handle_received_buf(const char* const p_buf, const u16_t buflen, http_server_recv_ctx_t* const p_ctx)
+{
+    if (NULL == p_ctx->p_req_buf)
+    {
+        if (!http_server_handle_received_buf_alloc_mem_for_first_frame(p_buf, buflen, p_ctx))
+        {
+            return false;
+        }
     }
     else
     {
-        if (p_ctx->req_buf_size == p_ctx->accum_len)
+        if (!http_server_handle_received_buf_alloc_mem_for_non_first_frame(p_buf, buflen, p_ctx))
         {
-            const size_t new_size = p_ctx->req_buf_size + buflen;
-            if (new_size > HTTP_SERVER_MAX_REQUEST_SIZE)
-            {
-                LOG_ERR(
-                    "Can't fit new data to request buffer, max request size exceeded, accum_len: %zu, buf_len: %u, "
-                    "req_buf_size: %zu, max_request_size: %u",
-                    p_ctx->accum_len,
-                    (printf_uint_t)buflen,
-                    p_ctx->req_buf_size,
-                    (printf_uint_t)HTTP_SERVER_MAX_REQUEST_SIZE);
-                netbuf_delete(p_netbuf_in);
-                os_free(p_ctx->p_req_buf);
-                p_ctx->p_req_buf = NULL;
-                return false;
-            }
-            LOG_DBG("Reallocating request buffer, old size: %zu, new size: %zu", p_ctx->req_buf_size, new_size);
-            if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, new_size + 1))
-            {
-                LOG_ERR(
-                    "Failed to reallocate request buffer to %u bytes (accum_len: %u, buf_len: %u)",
-                    (printf_uint_t)(p_ctx->accum_len + buflen),
-                    (printf_uint_t)p_ctx->accum_len,
-                    (printf_uint_t)buflen);
-                netbuf_delete(p_netbuf_in);
-                p_ctx->p_req_buf = NULL;
-                return false;
-            }
-            p_ctx->req_buf_size += buflen;
+            return false;
         }
     }
     if ((p_ctx->accum_len + buflen) > p_ctx->req_buf_size)
@@ -150,7 +192,6 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
             p_ctx->accum_len,
             (printf_uint_t)buflen,
             p_ctx->req_buf_size);
-        netbuf_delete(p_netbuf_in);
         os_free(p_ctx->p_req_buf);
         p_ctx->p_req_buf = NULL;
         return false;
@@ -158,9 +199,6 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
     memcpy(&p_ctx->p_req_buf[p_ctx->accum_len], p_buf, buflen);
     p_ctx->accum_len += buflen;
     p_ctx->p_req_buf[p_ctx->accum_len] = '\0'; // zero terminated string
-
-    netbuf_delete(p_netbuf_in);
-    p_netbuf_in = NULL;
 
     if (!p_ctx->is_header_completed)
     {
@@ -188,38 +226,9 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
         p_ctx->p_req_buf[p_ctx->header_len] = prev_char; // restore original char after parsing header
         if (NULL != p_content_len_str)
         {
-            p_ctx->content_len = (size_t)strtoul(p_content_len_str, NULL, 10);
-            LOG_DBG("Header Content-Length: %zu", p_ctx->content_len);
-            if (p_ctx->content_len > HTTP_SERVER_MAX_CONTENT_SIZE)
+            if (!http_server_handle_request_content_len(p_ctx, p_content_len_str))
             {
-                LOG_ERR(
-                    "Content-Length %zu exceeds maximum allowed %u",
-                    p_ctx->content_len,
-                    (printf_uint_t)HTTP_SERVER_MAX_CONTENT_SIZE);
-                os_free(p_ctx->p_req_buf);
-                p_ctx->p_req_buf = NULL;
                 return false;
-            }
-            const size_t size_of_header_and_body = p_ctx->header_len + p_ctx->content_len;
-            if (p_ctx->req_buf_size < size_of_header_and_body)
-            {
-                LOG_DBG(
-                    "Reallocating request buffer to fit header and body, new size: %zu (header_len: %zu, content_len: "
-                    "%zu)",
-                    size_of_header_and_body,
-                    p_ctx->header_len,
-                    p_ctx->content_len);
-                if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, size_of_header_and_body + 1))
-                {
-                    LOG_ERR(
-                        "Failed to reallocate request buffer to %zu bytes (header_len: %zu, content_len: %zu)",
-                        size_of_header_and_body,
-                        p_ctx->header_len,
-                        p_ctx->content_len);
-                    p_ctx->p_req_buf = NULL;
-                    return false;
-                }
-                p_ctx->req_buf_size = size_of_header_and_body;
             }
         }
         else
@@ -261,6 +270,39 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
     }
     p_ctx->is_ready = true;
     return true;
+}
+
+static bool
+http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t* const p_ctx)
+{
+    struct netbuf* p_netbuf_in = NULL;
+
+    const os_delta_ticks_t t0 = xTaskGetTickCount();
+
+    const err_t err = netconn_recv(p_conn, &p_netbuf_in);
+
+    const os_delta_ticks_t time_for_netconn_recv = xTaskGetTickCount() - t0;
+    if (ERR_OK != err)
+    {
+        LOG_ERR("netconn recv: %d (time: %lu ticks)", (printf_int_t)err, (printf_ulong_t)time_for_netconn_recv);
+        if (NULL != p_ctx->p_req_buf)
+        {
+            os_free(p_ctx->p_req_buf);
+            p_ctx->p_req_buf = NULL;
+        }
+        return false;
+    }
+
+    char* p_buf  = NULL;
+    u16_t buflen = 0;
+    netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
+    LOG_DUMP_DBG((const uint8_t*)p_buf, buflen, "Received data (len: %u)", (printf_uint_t)buflen);
+
+    const bool res = http_server_handle_received_buf(p_buf, buflen, p_ctx);
+
+    netbuf_delete(p_netbuf_in);
+
+    return res;
 }
 
 static void
