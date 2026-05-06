@@ -1,5 +1,5 @@
 /**
- * @file http_server_netconn_resp.h
+ * @file http_server_netconn_resp.c
  * @author TheSomeMan
  * @date 2026-05-07
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.

@@ -64,9 +64,6 @@ void
 http_server_netconn_resp_409(struct netconn* const p_conn, http_server_resp_t* const p_resp);
 
 void
-http_server_netconn_resp_409(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
 http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp);
 
 void
