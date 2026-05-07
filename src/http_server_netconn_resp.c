@@ -6,10 +6,12 @@
  */
 
 #include "http_server_netconn_resp.h"
+#include <time.h>
 #include <esp_task_wdt.h>
 #include "lwip/api.h"
 #include "os_malloc.h"
 #include "wifi_manager_defs.h"
+#include "wifi_manager_internal.h"
 #include "wifiman_config.h"
 #include "http_server_resp.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
@@ -118,11 +120,7 @@ http_server_netconn_write(
             LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
             return false;
         }
-        const esp_err_t err_wdt = esp_task_wdt_reset();
-        if (ESP_OK != err_wdt)
-        {
-            LOG_ERR_ESP(err_wdt, "%s failed", "esp_task_wdt_reset");
-        }
+        http_server_task_wdt_reset();
     } while (offset != buf_len);
     return true;
 }
