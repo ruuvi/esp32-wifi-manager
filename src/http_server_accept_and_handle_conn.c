@@ -44,6 +44,7 @@ typedef struct http_server_recv_ctx_t
     size_t accum_len;
     size_t header_len;
     size_t content_len;
+    size_t expected_len;
     bool   is_ready;
     bool   is_header_completed;
 } http_server_recv_ctx_t;
@@ -134,25 +135,36 @@ http_server_handle_request_content_len(http_server_recv_ctx_t* const p_ctx, cons
             (printf_uint_t)HTTP_SERVER_MAX_CONTENT_SIZE);
         return false;
     }
-    const size_t size_of_header_and_body = p_ctx->header_len + p_ctx->content_len;
-    if (p_ctx->req_buf_size < size_of_header_and_body)
+    p_ctx->expected_len = p_ctx->header_len + p_ctx->content_len;
+    if (p_ctx->accum_len > p_ctx->expected_len)
+    {
+        LOG_WARN(
+            "Received data (%zu bytes) exceeds declared Content-Length, "
+            "expected %zu (header_len: %zu, content_len: %zu) - discard excess data",
+            p_ctx->accum_len,
+            p_ctx->expected_len,
+            p_ctx->header_len,
+            p_ctx->content_len);
+        p_ctx->accum_len = p_ctx->expected_len;
+    }
+    if (p_ctx->req_buf_size != p_ctx->expected_len)
     {
         LOG_DBG(
             "Reallocating request buffer to fit header and body, new size: %zu (header_len: %zu, content_len: %zu)",
-            size_of_header_and_body,
+            p_ctx->expected_len,
             p_ctx->header_len,
             p_ctx->content_len);
-        if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, size_of_header_and_body + 1))
+        if (!os_realloc_safe_and_clean((void**)&p_ctx->p_req_buf, p_ctx->expected_len + 1))
         {
             LOG_ERR(
                 "Failed to reallocate request buffer to %zu bytes (header_len: %zu, content_len: %zu)",
-                size_of_header_and_body,
+                p_ctx->expected_len,
                 p_ctx->header_len,
                 p_ctx->content_len);
             p_ctx->p_req_buf = NULL;
             return false;
         }
-        p_ctx->req_buf_size = size_of_header_and_body;
+        p_ctx->req_buf_size = p_ctx->expected_len;
     }
     return true;
 }
@@ -226,7 +238,7 @@ http_server_handle_received_buf(const char* const p_buf, const u16_t buflen, htt
         }
     }
 
-    if (p_ctx->accum_len < p_ctx->req_buf_size)
+    if (p_ctx->accum_len < p_ctx->expected_len)
     {
         LOG_DBG(
             "Request not full yet, waiting for more data, accum_len: %zu, expected len: %zu "
@@ -437,6 +449,7 @@ http_server_netconn_serve(struct netconn* const p_conn)
         .accum_len           = 0,
         .header_len          = 0,
         .content_len         = 0,
+        .expected_len        = 0,
         .is_ready            = false,
         .is_header_completed = false,
     };
