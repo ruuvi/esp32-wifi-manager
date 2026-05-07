@@ -486,13 +486,17 @@ http_server_netconn_serve(struct netconn* const p_conn)
         }
         return;
     }
-    LOG_DBG(
-        "Connection from %s to %s: Received request (%zu bytes): %.*s",
-        remote_ip_str.buf,
-        local_ip_str.buf,
-        ctx.accum_len,
-        (printf_int_t)ctx.accum_len,
-        ctx.p_req_buf);
+    if (LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG)
+    {
+        http_server_task_wdt_reset();
+        LOG_DBG(
+            "Connection from %s to %s: Received request (%zu bytes): %.*s",
+            remote_ip_str.buf,
+            local_ip_str.buf,
+            ctx.accum_len,
+            (printf_int_t)ctx.accum_len,
+            ctx.p_req_buf);
+    }
 
     http_server_task_wdt_reset();
     http_server_netconn_serve_handle_req(p_conn, ctx.p_req_buf, &local_ip_str, &remote_ip_str);
