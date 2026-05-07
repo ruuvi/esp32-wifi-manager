@@ -8,7 +8,6 @@
 #include "http_server_netconn_resp.h"
 #include <esp_task_wdt.h>
 #include "lwip/api.h"
-#include "lwip/priv/tcp_priv.h"
 #include "os_malloc.h"
 #include "wifi_manager_defs.h"
 #include "wifiman_config.h"
@@ -95,7 +94,7 @@ http_server_netconn_write(
             buf_len - offset,
             netconn_flags | (uint8_t)NETCONN_DONTBLOCK,
             &bytes_written);
-        if (ESP_OK != err)
+        if (ERR_OK != err)
         {
             if (ERR_WOULDBLOCK != err)
             {
