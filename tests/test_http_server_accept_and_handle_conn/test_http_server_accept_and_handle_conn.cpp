@@ -85,15 +85,15 @@ protected:
         http_server_use_mutex_for_incoming_connection_handling(nullptr);
         esp_log_wrapper_clear();
 
-        this->m_malloc_call_count            = 0;
-        this->m_flag_malloc_counting_enabled = true;
+        this->m_alloc_free_call_count       = 0;
+        this->m_flag_alloc_counting_enabled = true;
     }
 
     void
     TearDown() override
     {
-        this->m_flag_malloc_counting_enabled = false;
-        this->m_malloc_call_count            = 0;
+        this->m_flag_alloc_counting_enabled = false;
+        this->m_alloc_free_call_count       = 0;
         os_malloc_trace_deinit();
         http_server_use_mutex_for_incoming_connection_handling(nullptr);
         if (nullptr != this->m_p_new_conn)
@@ -168,8 +168,10 @@ public:
     // Capture from serve_handle_req
     ServeHandleReqCapture m_serve_capture;
 
-    bool m_flag_malloc_counting_enabled;
-    int  m_malloc_call_count;
+    bool m_flag_alloc_counting_enabled;
+    int  m_alloc_free_call_count;
+    int  m_alloc_call_cnt;
+    int  m_alloc_fail_on_call_idx;
 
     TestHttpServerAcceptAndHandleConn();
 
@@ -191,8 +193,10 @@ TestHttpServerAcceptAndHandleConn::TestHttpServerAcceptAndHandleConn()
     , m_vTaskDelay_ticks(0)
     , m_netconn_delete_call_count(0)
     , m_serve_capture()
-    , m_flag_malloc_counting_enabled(false)
-    , m_malloc_call_count(0)
+    , m_flag_alloc_counting_enabled(false)
+    , m_alloc_free_call_count(0)
+    , m_alloc_call_cnt(0)
+    , m_alloc_fail_on_call_idx(-1)
 {
 }
 
@@ -203,37 +207,53 @@ extern "C" {
 #endif
 
 void*
-__wrap_malloc(size_t __size)
+__wrap_malloc(size_t size)
 {
-    extern void* __real_malloc(size_t __size) __THROW __attribute_malloc__ __attribute_alloc_size__((1)) __wur;
-    if (g_pTestClass && g_pTestClass->m_flag_malloc_counting_enabled)
+    extern void* __real_malloc(size_t _size) __THROW __attribute_malloc__ __attribute_alloc_size__((1)) __wur;
+    if (g_pTestClass && g_pTestClass->m_alloc_fail_on_call_idx >= 0)
     {
-        g_pTestClass->m_malloc_call_count += 1;
+        g_pTestClass->m_alloc_call_cnt += 1;
+        if (g_pTestClass->m_alloc_call_cnt == g_pTestClass->m_alloc_fail_on_call_idx)
+        {
+            return nullptr;
+        }
     }
-    return __real_malloc(__size);
+    if (g_pTestClass && g_pTestClass->m_flag_alloc_counting_enabled)
+    {
+        g_pTestClass->m_alloc_free_call_count += 1;
+    }
+    return __real_malloc(size);
 }
 
 void*
-__wrap_calloc(size_t __nmemb, size_t __size)
+__wrap_calloc(size_t nmemb, size_t size)
 {
-    extern void*                     __real_calloc(size_t __nmemb, size_t __size)
+    extern void*                     __real_calloc(size_t _nmemb, size_t _size)
         __THROW __attribute_malloc__ __attribute_alloc_size__((1, 2)) __wur;
-    if (g_pTestClass && g_pTestClass->m_flag_malloc_counting_enabled)
+    if (g_pTestClass && g_pTestClass->m_alloc_fail_on_call_idx >= 0)
     {
-        g_pTestClass->m_malloc_call_count += 1;
+        g_pTestClass->m_alloc_call_cnt += 1;
+        if (g_pTestClass->m_alloc_call_cnt == g_pTestClass->m_alloc_fail_on_call_idx)
+        {
+            return nullptr;
+        }
     }
-    return __real_calloc(__nmemb, __size);
+    if (g_pTestClass && g_pTestClass->m_flag_alloc_counting_enabled)
+    {
+        g_pTestClass->m_alloc_free_call_count += 1;
+    }
+    return __real_calloc(nmemb, size);
 }
 
 void
-__wrap_free(void* __ptr)
+__wrap_free(void* ptr)
 {
-    extern void __real_free(void* __ptr) __THROW;
-    if (g_pTestClass && g_pTestClass->m_flag_malloc_counting_enabled)
+    extern void __real_free(void* _ptr) __THROW;
+    if (g_pTestClass && g_pTestClass->m_flag_alloc_counting_enabled)
     {
-        g_pTestClass->m_malloc_call_count -= 1;
+        g_pTestClass->m_alloc_free_call_count -= 1;
     }
-    __real_free(__ptr);
+    __real_free(ptr);
 }
 
 void
@@ -375,7 +395,10 @@ netconn_recv(struct netconn* conn, struct netbuf** new_buf)
     }
 
     struct netbuf* p_netbuf = static_cast<struct netbuf*>(calloc(1, sizeof(struct netbuf)));
-    assert(nullptr != p_netbuf);
+    if (!p_netbuf)
+    {
+        assert(nullptr != p_netbuf);
+    }
     // Store the frame index in the port field so netbuf_data can find the data
     p_netbuf->port = static_cast<u16_t>(idx);
     *new_buf       = p_netbuf;
@@ -517,7 +540,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_no_mutex__err_timeout) // 
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_no_mutex__err_abrt) // NOLINT
@@ -534,7 +557,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_no_mutex__err_abrt) // NOL
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_no_mutex__err_other) // NOLINT
@@ -551,7 +574,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_no_mutex__err_other) // NO
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_with_mutex__lock_fails) // NOLINT
@@ -572,7 +595,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_with_mutex__lock_fails) //
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_ok_but_new_conn_null) // NOLINT
@@ -589,7 +612,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_ok_but_new_conn_null) // N
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_ok_but_listen_conn_pcb_tcp_null) // NOLINT
@@ -614,7 +637,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_ok_but_listen_conn_pcb_tcp
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_with_mutex__err_timeout__mutex_unlocked) // NOLINT
@@ -637,7 +660,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_with_mutex__err_timeout__m
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== http_server_netconn_serve: connection setup tests =====
@@ -665,7 +688,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_new_conn_pcb_tcp_null) // N
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== http_server_netconn_serve: recv and handling tests =====
@@ -694,7 +717,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_recv_error) // NOLINT
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_simple_get_no_body) // NOLINT
@@ -719,7 +742,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_simple_get_no_body) // NOLI
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_with_body_single_frame) // NOLINT
@@ -743,7 +766,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_with_body_single_frame
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_with_body_multi_frame) // NOLINT
@@ -768,7 +791,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_with_body_multi_frame)
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_header_split_across_frames) // NOLINT
@@ -794,7 +817,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_header_split_across_frames)
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_body_in_three_frames) // NOLINT
@@ -821,7 +844,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_body_in_three_frames) 
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_first_frame_exceeds_max_request_size) // NOLINT
@@ -848,7 +871,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_first_frame_exceeds_max_req
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_accum_frames_exceed_max_request_size) // NOLINT
@@ -882,7 +905,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_accum_frames_exceed_max_req
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_length_exceeds_max_content_size) // NOLINT
@@ -908,7 +931,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_length_exceeds_max_
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_excess_data_trimmed) // NOLINT
@@ -944,7 +967,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_excess_data_trimmed) // NOL
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_request_timeout) // NOLINT
@@ -985,7 +1008,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_request_timeout) // NOLINT
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_timeout) // NOLINT
@@ -1023,7 +1046,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_timeout) // NOLINT
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_recv_error_after_partial_data) // NOLINT
@@ -1053,7 +1076,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_recv_error_after_partial_da
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== netconn_close/delete error handling =====
@@ -1084,7 +1107,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_netconn_close_error) // NOLINT
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_netconn_delete_error) // NOLINT
@@ -1113,7 +1136,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_netconn_delete_error) // NOLINT
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== Buffer handling edge cases =====
@@ -1145,7 +1168,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_realloc_to_fit_content
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_get_with_various_headers) // NOLINT
@@ -1173,7 +1196,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_get_with_various_headers) /
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_max_content_size) // NOLINT
@@ -1207,7 +1230,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_post_max_content_size) // N
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_connection_closed_during_body_recv) // NOLINT
@@ -1238,7 +1261,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_connection_closed_during_bo
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== Mutex + successful serve =====
@@ -1269,7 +1292,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_accept_with_mutex__successful_ser
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 // ===== Buffer overflow check: accum_len + buflen > req_buf_size =====
@@ -1299,5 +1322,157 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_buffer_overflow_check) // N
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
-    ASSERT_EQ(0, this->m_malloc_call_count);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== Allocation failure tests =====
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_malloc_failure_first_frame) // NOLINT
+{
+    // Lines 79-83: os_malloc failure for the first frame allocation
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    const string request = "GET / HTTP/1.1\r\nHost: 192.168.1.1\r\n\r\n";
+    add_recv_frame(request);
+
+    // Fail the first os_malloc_internal call (the allocation for the first frame buffer)
+    this->m_alloc_fail_on_call_idx = 2;
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_ERROR,
+        "Failed to allocate " + to_string(request.size()) + " bytes for request buffer");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_realloc_failure_non_first_frame) // NOLINT
+{
+    // Lines 106-115: os_realloc_safe_and_clean failure when receiving a non-first frame
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    // Split header across two frames; second triggers realloc because req_buf_size == accum_len
+    const string part1 = "GET / HTTP/1.1\r\n";
+    const string part2 = "Host: 192.168.1.1\r\n\r\n";
+    add_recv_frame(part1);
+    add_recv_frame(part2);
+
+    // Calloc calls: #1 netbuf for frame1, #2 os_calloc_internal for os_malloc(frame1),
+    // #3 netbuf for frame2, #4 os_calloc_internal inside os_realloc_safe for frame2.
+    // Fail #4 to simulate realloc failure.
+    this->m_alloc_fail_on_call_idx = 4;
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_ERROR,
+        "Failed to reallocate request buffer to " + to_string(part1.size() + part2.size())
+            + " bytes (accum_len: " + to_string(part1.size()) + ", buf_len: " + to_string(part2.size()) + ")");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_realloc_failure_content_length_handler) // NOLINT
+{
+    // Lines 153-162: os_realloc_safe_and_clean failure in content-length handler
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    // Send header with Content-Length that requires realloc (expected_len > req_buf_size)
+    const string header = "POST /data HTTP/1.1\r\nContent-Length: 100\r\n\r\n";
+    add_recv_frame(header);
+
+    // Calloc calls: #1 netbuf for frame, #2 os_calloc_internal for os_malloc(frame buffer),
+    // #3 os_calloc_internal inside os_realloc_safe for content-length realloc.
+    // Fail #3 to simulate realloc failure.
+    this->m_alloc_fail_on_call_idx = 3;
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+    const size_t header_len   = header.size(); // everything up to body start
+    const size_t content_len  = 100;
+    const size_t expected_len = header_len + content_len;
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_ERROR,
+        "Failed to reallocate request buffer to " + to_string(expected_len)
+            + " bytes (header_len: " + to_string(header_len) + ", content_len: " + to_string(content_len) + ")");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== Buffer overflow: accum_len + buflen > req_buf_size (lines 185-193) =====
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_buffer_overflow_accum_plus_buflen_exceeds_req_buf_size) // NOLINT
+{
+    // Lines 185-193: After content-length realloc sets req_buf_size = expected_len,
+    // a new frame arrives that exceeds remaining space.
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    // First frame: header + 2 bytes body. Content-Length says 5 bytes.
+    // After content-length handler: realloc to expected_len = header_len + 5
+    // accum_len = header_len + 2, req_buf_size = header_len + 5
+    const string header = "POST /d HTTP/1.1\r\nContent-Length: 5\r\n\r\n";
+    const string body1  = "AB";
+    add_recv_frame(header + body1);
+
+    // Second frame: 10 bytes → accum_len + 10 > req_buf_size
+    const string body2 = "ABCDEFGHIJ";
+    add_recv_frame(body2);
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+
+    const size_t header_len   = header.size();
+    const size_t accum_len    = header_len + body1.size();
+    const size_t req_buf_size = header_len + 5;
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_ERROR,
+        "Request buffer is full, can't fit new data, accum_len: " + to_string(accum_len)
+            + ", buf_len: " + to_string(body2.size()) + ", req_buf_size: " + to_string(req_buf_size));
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
