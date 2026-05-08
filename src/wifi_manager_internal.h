@@ -74,6 +74,8 @@ extern "C" {
 
 #define WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS (pdMS_TO_TICKS(1000))
 
+#define HTTP_SERVER_SLEEP_AFTER_WDT_RESET_MS (5U)
+
 typedef struct wifi_manager_antenna_config_t wifi_manager_antenna_config_t;
 
 typedef struct wifi_manager_scan_info_t

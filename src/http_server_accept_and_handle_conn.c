@@ -248,6 +248,9 @@ http_server_handle_received_buf(const char* const p_buf, const u16_t buflen, htt
     if (LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG)
     {
         http_server_task_wdt_reset();
+        // After resetting the watchdog, it's good to give some time to other tasks to run,
+        // especially if the HTTP server task is running with a high priority.
+        vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_SLEEP_AFTER_WDT_RESET_MS));
         size_t offset = 0;
         while (offset < p_ctx->req_buf_size)
         {
