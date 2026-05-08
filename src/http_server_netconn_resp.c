@@ -326,7 +326,16 @@ write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t
 static void
 write_content_from_heap(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    write_content_from_memory(p_conn, p_resp);
+    LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
+    const bool res = http_server_netconn_write(
+        p_conn,
+        p_resp->select_location.memory.p_buf,
+        p_resp->content_len,
+        NETCONN_COPY);
+    if (!res)
+    {
+        LOG_ERR("%s failed", "http_server_netconn_write");
+    }
     os_free(p_resp->select_location.memory.p_buf);
 }
 
