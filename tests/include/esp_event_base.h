@@ -30,7 +30,8 @@ typedef void (*esp_event_handler_t)(
     void*            event_handler_arg,
     esp_event_base_t event_base,
     int32_t          event_id,
-    void*            event_data); /**< function called when an event is posted to the queue */
+    void*            event_data);                      /**< function called when an event is posted to the queue */
+typedef void* esp_event_handler_instance_t; /**< context identifying an instance of a registered event handler */
 
 // Defines for registering/unregistering event handlers
 #define ESP_EVENT_ANY_BASE NULL /**< register handler for any event base */

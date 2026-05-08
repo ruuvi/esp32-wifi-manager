@@ -25,6 +25,7 @@ target_include_directories(${ProjectId} PUBLIC
         ../../src/include
         ../../src
         include
+        ../include
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
