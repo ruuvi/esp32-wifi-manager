@@ -11,12 +11,12 @@ add_executable(${ProjectId}
         ../../src/http_req.h
         ../../src/http_server_mutex.c
         ../../src/http_server_mutex.h
-        ../../../ruuvi.esp_wrappers.c/src/os_malloc.c
-        ../../../ruuvi.esp_wrappers.c/include/os_malloc.h
-        ../../../ruuvi.esp_wrappers.c/src/str_buf.c
-        ../../../ruuvi.esp_wrappers.c/include/str_buf.h
-        ../../../ruuvi.esp_wrappers.c/src/snprintf_with_esp_err_desc.c
-        ../../../ruuvi.esp_wrappers.c/include/snprintf_with_esp_err_desc.h
+        ../ruuvi.esp_wrappers.c/src/os_malloc.c
+        ../ruuvi.esp_wrappers.c/include/os_malloc.h
+        ../ruuvi.esp_wrappers.c/src/str_buf.c
+        ../ruuvi.esp_wrappers.c/include/str_buf.h
+        ../ruuvi.esp_wrappers.c/src/snprintf_with_esp_err_desc.c
+        ../ruuvi.esp_wrappers.c/include/snprintf_with_esp_err_desc.h
 )
 
 set_target_properties(${ProjectId} PROPERTIES
@@ -41,6 +41,8 @@ target_compile_definitions(${ProjectId} PUBLIC
         RUUVI_TESTS_HTTP_SERVER_RESP=1
         LWIP_SO_SNDTIMEO=1
         LWIP_SO_RCVTIMEO=1
+        OS_MALLOC_TRACE=1
+        OS_MALLOC_TRACE_DISABLE_TIMESTAMP=1
 )
 
 target_compile_options(${ProjectId} PUBLIC
@@ -63,4 +65,10 @@ target_link_libraries(${ProjectId}
 #        ruuvi_esp_wrappers
         ruuvi_esp_wrappers-common_test_funcs
         --coverage
+)
+
+target_link_options(${ProjectId} PRIVATE
+        "-Wl,--wrap=malloc"
+        "-Wl,--wrap=calloc"
+        "-Wl,--wrap=free"
 )
