@@ -1788,11 +1788,12 @@ TEST_F(TestHttpServerNetconnResp, test_content_type_css_js_png_svg) // NOLINT
     {
         http_content_type_e type;
         const char*         expected_str;
+        bool                expect_charset;
     } types[] = {
-        { HTTP_CONTENT_TYPE_TEXT_CSS, "text/css" },
-        { HTTP_CONTENT_TYPE_TEXT_JAVASCRIPT, "text/javascript" },
-        { HTTP_CONTENT_TYPE_IMAGE_PNG, "image/png" },
-        { HTTP_CONTENT_TYPE_IMAGE_SVG_XML, "image/svg+xml" },
+        { HTTP_CONTENT_TYPE_TEXT_CSS, "text/css", true },
+        { HTTP_CONTENT_TYPE_TEXT_JAVASCRIPT, "text/javascript", true },
+        { HTTP_CONTENT_TYPE_IMAGE_PNG, "image/png", false },
+        { HTTP_CONTENT_TYPE_IMAGE_SVG_XML, "image/svg+xml", false },
     };
 
     for (const auto& tc : types)
@@ -1823,7 +1824,14 @@ TEST_F(TestHttpServerNetconnResp, test_content_type_css_js_png_svg) // NOLINT
 
         const string written = this->get_all_written_data();
         char         expected[128];
-        snprintf(expected, sizeof(expected), "Content-type: %s; charset=utf-8\r\n", tc.expected_str);
+        if (tc.expect_charset)
+        {
+            snprintf(expected, sizeof(expected), "Content-type: %s; charset=utf-8\r\n", tc.expected_str);
+        }
+        else
+        {
+            snprintf(expected, sizeof(expected), "Content-type: %s\r\n", tc.expected_str);
+        }
         ASSERT_NE(string::npos, written.find(expected)) << "Failed for content type: " << tc.expected_str;
 
         TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: OK");

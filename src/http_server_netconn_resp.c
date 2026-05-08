@@ -188,6 +188,25 @@ http_get_content_type_str(const http_content_type_e content_type)
     return p_content_type_str;
 }
 
+static bool
+http_content_type_is_textual(const http_content_type_e content_type)
+{
+    switch (content_type)
+    {
+        case HTTP_CONTENT_TYPE_TEXT_HTML:
+        case HTTP_CONTENT_TYPE_TEXT_PLAIN:
+        case HTTP_CONTENT_TYPE_TEXT_CSS:
+        case HTTP_CONTENT_TYPE_TEXT_JAVASCRIPT:
+        case HTTP_CONTENT_TYPE_APPLICATION_JSON:
+            return true;
+        case HTTP_CONTENT_TYPE_IMAGE_PNG:
+        case HTTP_CONTENT_TYPE_IMAGE_SVG_XML:
+        case HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM:
+            return false;
+    }
+    return false;
+}
+
 static const char*
 http_get_content_encoding_str(const http_server_resp_t* const p_resp)
 {
@@ -233,7 +252,7 @@ http_server_netconn_resp_content_with_len(
             "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "Content-type: %s%s%s%s\r\n"
             "Content-Length: %lu\r\n"
             "%s"
             "%s"
@@ -243,6 +262,7 @@ http_server_netconn_resp_content_with_len(
             p_status_msg,
             p_date_str->buf,
             http_get_content_type_str(p_resp->content_type),
+            http_content_type_is_textual(p_resp->content_type) ? "; charset=utf-8" : "",
             use_extra_content_type_param ? "; " : "",
             use_extra_content_type_param ? p_resp->p_content_type_param : "",
             (printf_ulong_t)p_resp->content_len,
@@ -271,7 +291,7 @@ http_server_netconn_resp_content_without_len(
             "HTTP/1.0 %u %s\r\n"
             "Server: Ruuvi Gateway\r\n"
             "%s"
-            "Content-type: %s; charset=utf-8%s%s\r\n"
+            "Content-type: %s%s%s%s\r\n"
             "%s"
             "%s"
             "%s"
@@ -280,6 +300,7 @@ http_server_netconn_resp_content_without_len(
             p_status_msg,
             p_date_str->buf,
             http_get_content_type_str(p_resp->content_type),
+            http_content_type_is_textual(p_resp->content_type) ? "; charset=utf-8" : "",
             use_extra_content_type_param ? "; " : "",
             use_extra_content_type_param ? p_resp->p_content_type_param : "",
             (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
