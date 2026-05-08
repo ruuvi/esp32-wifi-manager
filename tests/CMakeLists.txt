@@ -61,6 +61,7 @@ add_subdirectory(test_ap_ssid)
 add_subdirectory(test_http_req)
 add_subdirectory(test_http_server_accept_and_handle_conn)
 add_subdirectory(test_http_server_handle_req_get_auth)
+add_subdirectory(test_http_server_netconn_serve_handle_req)
 add_subdirectory(test_http_server_resp)
 add_subdirectory(test_json)
 add_subdirectory(test_json_access_points)
@@ -92,6 +93,11 @@ add_test(NAME test_http_server_accept_and_handle_conn
 add_test(NAME test_http_server_handle_req_get_auth
         COMMAND ruuvi_esp32-wifi-manager-test-http_server_handle_req_get_auth
         --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-http_server_handle_req_get_auth>/gtestresults.xml
+)
+
+add_test(NAME test_http_server_netconn_serve_handle_req
+        COMMAND ruuvi_esp32-wifi-manager-test-http_server_netconn_serve_handle_req
+        --gtest_output=xml:$<TARGET_FILE_DIR:ruuvi_esp32-wifi-manager-test-http_server_netconn_serve_handle_req>/gtestresults.xml
 )
 
 add_test(NAME test_http_server_resp

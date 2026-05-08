@@ -1,16 +1,14 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(ruuvi_esp32-wifi-manager-test-http_server_accept_and_handle_conn)
-set(ProjectId ruuvi_esp32-wifi-manager-test-http_server_accept_and_handle_conn)
+project(ruuvi_esp32-wifi-manager-test-http_server_netconn_serve_handle_req)
+set(ProjectId ruuvi_esp32-wifi-manager-test-http_server_netconn_serve_handle_req)
 
 add_executable(${ProjectId}
-        test_http_server_accept_and_handle_conn.cpp
-        ../../src/http_server_accept_and_handle_conn.c
-        ../../src/http_server_accept_and_handle_conn.h
+        test_http_server_netconn_serve_handle_req.cpp
+        ../../src/http_server_netconn_serve_handle_req.c
+        ../../src/http_server_netconn_serve_handle_req.h
         ../../src/http_req.c
         ../../src/http_req.h
-        ../../src/http_server_mutex.c
-        ../../src/http_server_mutex.h
         ../ruuvi.esp_wrappers.c/src/os_malloc.c
         ../ruuvi.esp_wrappers.c/include/os_malloc.h
         ../ruuvi.esp_wrappers.c/src/str_buf.c
@@ -38,9 +36,7 @@ target_include_directories(${ProjectId} PUBLIC
 )
 
 target_compile_definitions(${ProjectId} PUBLIC
-        RUUVI_TESTS_HTTP_SERVER_ACCEPT_AND_HANDLE_CONN=1
-        LWIP_SO_SNDTIMEO=1
-        LWIP_SO_RCVTIMEO=1
+        RUUVI_TESTS_HTTP_SERVER_NETCONN_SERVE_HANDLE_REQ=1
         OS_MALLOC_TRACE=1
         OS_MALLOC_TRACE_DISABLE_TIMESTAMP=1
 )
