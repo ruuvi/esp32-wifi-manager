@@ -117,6 +117,12 @@ http_server_netconn_serve_handle_req(
 
     str_buf_t hostname = ((NULL != p_host) && (0 != host_len)) ? str_buf_printf_with_alloc("%.*s", host_len, p_host)
                                                                : str_buf_printf_with_alloc("%s", p_local_ip_str->buf);
+    if (NULL == hostname.buf)
+    {
+        LOG_ERR("Failed to allocate memory for hostname string");
+        http_server_netconn_resp_500(p_conn, NULL);
+        return;
+    }
     http_server_netconn_resp(p_conn, &resp, hostname.buf);
     str_buf_free_buf(&hostname);
 }
