@@ -33,6 +33,7 @@ target_include_directories(${ProjectId} PUBLIC
         ../../src/include
         ../../src
         include
+        ../include
         ${CMAKE_CURRENT_SOURCE_DIR}
         $ENV{IDF_PATH}/components/esp_wifi/include
         $ENV{IDF_PATH}/components/esp_common/include
