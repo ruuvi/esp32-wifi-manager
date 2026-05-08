@@ -367,21 +367,21 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
         LOG_ERR("Can't allocate memory for temporary buffer");
         return;
     }
-    uint32_t rem_len = p_resp->content_len;
+    size_t rem_len = p_resp->content_len;
     while (rem_len > 0)
     {
-        const uint32_t num_bytes       = (rem_len <= tmp_buf_size) ? rem_len : tmp_buf_size;
-        const bool     flag_last_block = (num_bytes == rem_len) ? true : false;
+        const size_t num_bytes       = (rem_len <= tmp_buf_size) ? rem_len : tmp_buf_size;
+        const bool   flag_last_block = (num_bytes == rem_len) ? true : false;
 
         const file_read_result_t read_result = read(p_resp->select_location.fatfs.fd, p_tmp_buf, num_bytes);
         if (read_result < 0)
         {
-            LOG_ERR("Failed to read %" PRIu32 " bytes", num_bytes);
+            LOG_ERR("Failed to read %zu bytes", num_bytes);
             break;
         }
         if (read_result != num_bytes)
         {
-            LOG_ERR("Read %d bytes, while requested %" PRIu32 " bytes", (printf_int_t)read_result, num_bytes);
+            LOG_ERR("Read %d bytes, while requested %zu bytes", (printf_int_t)read_result, num_bytes);
             break;
         }
         rem_len -= read_result;
@@ -390,7 +390,7 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
         {
             netconn_flags |= (uint8_t)NETCONN_MORE;
         }
-        LOG_DBG("netconn_write: %" PRIu32 " bytes", num_bytes);
+        LOG_DBG("netconn_write: %zu bytes", num_bytes);
         const bool res = http_server_netconn_write(p_conn, p_tmp_buf, num_bytes, netconn_flags);
         if (!res)
         {
