@@ -6,10 +6,15 @@
  */
 
 #include "http_server_netconn_resp.h"
+#include <assert.h>
+#include <inttypes.h>
+#include <stdarg.h>
 #include <time.h>
 #include <esp_task_wdt.h>
 #include "lwip/api.h"
 #include "os_malloc.h"
+#include "str_buf.h"
+#include "esp_type_wrapper.h"
 #include "wifi_manager_defs.h"
 #include "wifi_manager_internal.h"
 #include "wifiman_config.h"
