@@ -74,7 +74,8 @@ http_server_netconn_serve_handle_req(
     else
     {
         /* captive portal functionality: redirect to access point IP for HOST that are not the access point IP */
-        const bool is_request_to_ap_ip = ((host_len > 0) && (NULL != strstr(p_host, ap_ip_str.buf)));
+        const bool is_request_to_ap_ip
+            = ((host_len > 0) && (NULL != memmem(p_host, host_len, ap_ip_str.buf, strlen(ap_ip_str.buf))));
         if (!is_request_to_ap_ip)
         {
             http_server_netconn_resp_302(p_conn);
