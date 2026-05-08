@@ -285,11 +285,6 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
     if (ERR_OK != err)
     {
         LOG_ERR("netconn recv: %d (time: %lu ticks)", (printf_int_t)err, (printf_ulong_t)time_for_netconn_recv);
-        if (NULL != p_ctx->p_req_buf)
-        {
-            os_free(p_ctx->p_req_buf);
-            p_ctx->p_req_buf = NULL;
-        }
         return false;
     }
 
@@ -302,17 +297,7 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
 
     netbuf_delete(p_netbuf_in);
 
-    if (!res)
-    {
-        if (NULL != p_ctx->p_req_buf)
-        {
-            os_free(p_ctx->p_req_buf);
-            p_ctx->p_req_buf = NULL;
-        }
-        return false;
-    }
-
-    return true;
+    return res;
 }
 
 /**
@@ -376,30 +361,34 @@ http_server_netconn_serve(struct netconn* const p_conn)
             break;
         }
     }
-    if (!ctx.is_ready)
+    if (ctx.is_ready)
+    {
+        if (LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG)
+        {
+            http_server_task_wdt_reset();
+            LOG_DBG(
+                "Connection from %s to %s: Received request (%zu bytes): %.*s",
+                remote_ip_str.buf,
+                local_ip_str.buf,
+                ctx.accum_len,
+                (printf_int_t)ctx.accum_len,
+                ctx.p_req_buf);
+        }
+
+        http_server_task_wdt_reset();
+        http_server_netconn_serve_handle_req(p_conn, ctx.p_req_buf, &local_ip_str, &remote_ip_str);
+    }
+    else
     {
         LOG_WARN("Connection from %s to %s: The connection was closed", remote_ip_str.buf, local_ip_str.buf);
-        if (NULL != ctx.p_req_buf)
-        {
-            os_free(ctx.p_req_buf);
-        }
-        return;
     }
-    if (LOG_LOCAL_LEVEL >= LOG_LEVEL_DEBUG)
+    if (NULL != ctx.p_req_buf)
     {
-        http_server_task_wdt_reset();
-        LOG_DBG(
-            "Connection from %s to %s: Received request (%zu bytes): %.*s",
-            remote_ip_str.buf,
-            local_ip_str.buf,
-            ctx.accum_len,
-            (printf_int_t)ctx.accum_len,
-            ctx.p_req_buf);
+        // ctx.p_req_buf is allocated and dynamically increased when the 'Content-Length' header is received
+        // in http_server_recv_and_handle().
+        // Once the HTTP request has been processed, the buffer can be freed.
+        os_free(ctx.p_req_buf);
     }
-
-    http_server_task_wdt_reset();
-    http_server_netconn_serve_handle_req(p_conn, ctx.p_req_buf, &local_ip_str, &remote_ip_str);
-    os_free(ctx.p_req_buf);
 }
 
 void
