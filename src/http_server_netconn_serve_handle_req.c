@@ -17,6 +17,8 @@ static const char TAG[] = "http_server";
 
 #define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP (256U)
 
+#define HTTP_SERVER_MAX_REQ_BUF_LEN_TO_LOG (128U)
+
 void
 http_server_netconn_serve_handle_req(
     struct netconn* const        p_conn,
@@ -28,9 +30,10 @@ http_server_netconn_serve_handle_req(
     if (!req_info.is_success)
     {
         LOG_ERR(
-            "Request from %s to %s: failed to parse request: %s",
+            "Request from %s to %s: failed to parse request: %.*s",
             p_remote_ip_str->buf,
             p_local_ip_str->buf,
+            (printf_int_t)HTTP_SERVER_MAX_REQ_BUF_LEN_TO_LOG,
             p_req_buf);
         http_server_netconn_resp_400(p_conn, NULL);
         return;
@@ -42,7 +45,7 @@ http_server_netconn_serve_handle_req(
         "Request from %s to %s (Host: %.*s): %s %s%s%s",
         p_remote_ip_str->buf,
         p_local_ip_str->buf,
-        host_len,
+        (printf_int_t)((NULL != p_host) ? host_len : 0),
         (NULL != p_host) ? p_host : "",
         (NULL != req_info.http_cmd.ptr) ? req_info.http_cmd.ptr : "NULL",
         (NULL != req_info.http_uri.ptr) ? req_info.http_uri.ptr : "NULL",
