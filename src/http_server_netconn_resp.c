@@ -102,22 +102,19 @@ http_server_netconn_write(
             {
                 LOG_ERR_ESP(
                     err,
-                    "netconn_write_partly failed (%s), offset=%u, size=%u",
+                    "netconn_write_partly failed (%s), offset=%zu, size=%zu",
                     conv_lwip_err_to_str(err),
-                    (printf_uint_t)offset,
-                    (printf_uint_t)(buf_len - offset));
+                    offset,
+                    (size_t)(buf_len - offset));
                 return false;
             }
             vTaskDelay(pdMS_TO_TICKS(10));
         }
-        LOG_DBG(
-            "netconn_write_partly: offset=%u, bytes_written=%u",
-            (printf_uint_t)offset,
-            (printf_uint_t)bytes_written);
+        LOG_DBG("netconn_write_partly: offset=%zu, bytes_written=%zu", offset, bytes_written);
         offset += bytes_written;
         if ((0 != send_timeout_ticks) && ((xTaskGetTickCount() - tick_start) > send_timeout_ticks))
         {
-            LOG_ERR("netconn_write_partly failed: send timeout (%d ms)", (printf_int_t)p_conn->send_timeout);
+            LOG_ERR("netconn_write_partly failed: send timeout (%" PRId32 " ms)", (int32_t)p_conn->send_timeout);
             return false;
         }
         http_server_task_wdt_reset();
@@ -144,7 +141,7 @@ http_server_netconn_printf(struct netconn* const p_conn, const bool flag_more, c
     {
         netconn_flags |= (uint8_t)NETCONN_MORE;
     }
-    LOG_DBG("netconn_write: %u bytes", (printf_uint_t)str_buf_get_len(&str_buf));
+    LOG_DBG("netconn_write: %zu bytes", str_buf_get_len(&str_buf));
 
     const bool res = http_server_netconn_write(p_conn, str_buf.buf, str_buf_get_len(&str_buf), netconn_flags);
 
@@ -311,7 +308,7 @@ http_server_gen_header_date_str(const bool flag_gen_date)
 static void
 write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
-    LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
+    LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
         p_conn,
         p_resp->select_location.memory.p_buf,
@@ -326,7 +323,7 @@ write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t
 static void
 write_content_from_heap(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
-    LOG_DBG("netconn_write: %u bytes", p_resp->content_len);
+    LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
         p_conn,
         p_resp->select_location.memory.p_buf,
@@ -358,12 +355,12 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
         const file_read_result_t read_result = read(p_resp->select_location.fatfs.fd, p_tmp_buf, num_bytes);
         if (read_result < 0)
         {
-            LOG_ERR("Failed to read %u bytes", num_bytes);
+            LOG_ERR("Failed to read %" PRIu32 " bytes", num_bytes);
             break;
         }
         if (read_result != num_bytes)
         {
-            LOG_ERR("Read %u bytes, while requested %u bytes", read_result, num_bytes);
+            LOG_ERR("Read %d bytes, while requested %" PRIu32 " bytes", (printf_int_t)read_result, num_bytes);
             break;
         }
         rem_len -= read_result;
@@ -372,7 +369,7 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
         {
             netconn_flags |= (uint8_t)NETCONN_MORE;
         }
-        LOG_DBG("netconn_write: %u bytes", num_bytes);
+        LOG_DBG("netconn_write: %" PRIu32 " bytes", num_bytes);
         const bool res = http_server_netconn_write(p_conn, p_tmp_buf, num_bytes, netconn_flags);
         if (!res)
         {
@@ -381,7 +378,7 @@ write_content_from_fatfs(struct netconn* const p_conn, const http_server_resp_t*
         }
     }
     os_free(p_tmp_buf);
-    LOG_DBG("Close file fd=%d", p_resp->select_location.fatfs.fd);
+    LOG_DBG("Close file fd=%d", (printf_int_t)p_resp->select_location.fatfs.fd);
     close(p_resp->select_location.fatfs.fd);
 }
 
@@ -413,11 +410,11 @@ write_content_from_json_generator(struct netconn* const p_conn, const http_serve
         }
         if (p_resp->content_len < HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FROM_JSON_GENERATOR)
         {
-            LOG_INFO("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+            LOG_INFO("json_stream_gen: send %zu bytes:\n%s", num_bytes, p_chunk);
         }
         else
         {
-            LOG_DBG("json_stream_gen: send %u bytes:\n%s", num_bytes, p_chunk);
+            LOG_DBG("json_stream_gen: send %zu bytes:\n%s", num_bytes, p_chunk);
         }
         const bool res = http_server_netconn_write(p_conn, p_chunk, num_bytes, netconn_flags);
         if (!res)
