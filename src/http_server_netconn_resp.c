@@ -430,6 +430,11 @@ http_server_netconn_resp_with_content(
         snprintf(content_len_buf, sizeof(content_len_buf), "Content-Length: %zu\r\n", p_resp->content_len);
     }
 
+    const char* const p_content_type_str = http_get_content_type_str(p_resp->content_type);
+    const char* const p_charset_str      = http_content_type_is_textual(p_resp->content_type) ? "; charset=utf-8" : "";
+    const char* const p_extra_content_type_separator = use_extra_content_type_param ? "; " : "";
+    const char* const p_extra_content_type_str       = use_extra_content_type_param ? p_resp->p_content_type_param : "";
+    const char* const p_extra_header_fields_str = (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "";
     if (!http_server_netconn_printf(
             p_conn,
             true,
@@ -445,12 +450,12 @@ http_server_netconn_resp_with_content(
             (printf_uint_t)resp_code,
             p_status_msg,
             date_str.buf,
-            http_get_content_type_str(p_resp->content_type),
-            http_content_type_is_textual(p_resp->content_type) ? "; charset=utf-8" : "",
-            use_extra_content_type_param ? "; " : "",
-            use_extra_content_type_param ? p_resp->p_content_type_param : "",
+            p_content_type_str,
+            p_charset_str,
+            p_extra_content_type_separator,
+            p_extra_content_type_str,
             content_len_buf,
-            (NULL != p_extra_header_fields) ? p_extra_header_fields->buf : "",
+            p_extra_header_fields_str,
             http_get_content_encoding_str(p_resp),
             http_get_cache_control_str(p_resp)))
     {
