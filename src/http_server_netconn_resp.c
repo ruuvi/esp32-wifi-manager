@@ -400,7 +400,7 @@ http_server_netconn_resp_free(http_server_resp_t* const p_resp)
 }
 
 static void
-http_server_write_content(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_write_content(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
