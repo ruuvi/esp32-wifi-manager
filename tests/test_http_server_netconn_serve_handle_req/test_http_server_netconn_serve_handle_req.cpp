@@ -699,7 +699,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_hostname_alloc_failure_returns_
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
-    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_FALSE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_500_called);
     ASSERT_FALSE(this->m_resp_called);
     // INFO log for request

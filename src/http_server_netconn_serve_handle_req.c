@@ -53,6 +53,16 @@ http_server_netconn_serve_handle_req(
         (NULL != req_info.http_uri_params.ptr) ? "?" : "",
         (NULL != req_info.http_uri_params.ptr) ? req_info.http_uri_params.ptr : "");
 
+    str_buf_t hostname = ((NULL != p_host) && (0 != host_len))
+                             ? str_buf_printf_with_alloc("%.*s", (printf_int_t)host_len, p_host)
+                             : str_buf_printf_with_alloc("%s", p_local_ip_str->buf);
+    if (NULL == hostname.buf)
+    {
+        LOG_ERR("Failed to allocate memory for hostname string");
+        http_server_netconn_resp_500(p_conn, NULL);
+        return;
+    }
+
     LOG_DBG("p_http_cmd: %s", req_info.http_cmd.ptr ? req_info.http_cmd.ptr : "NULL");
     LOG_DBG("p_http_uri: %s", req_info.http_uri.ptr ? req_info.http_uri.ptr : "NULL");
     LOG_DBG("p_http_uri_params: %s", req_info.http_uri_params.ptr ? req_info.http_uri_params.ptr : "NULL");
@@ -69,6 +79,7 @@ http_server_netconn_serve_handle_req(
         {
             LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
             http_server_netconn_resp_503(p_conn, NULL);
+            str_buf_free_buf(&hostname);
             return;
         }
     }
@@ -80,6 +91,7 @@ http_server_netconn_serve_handle_req(
         if (!is_request_to_ap_ip)
         {
             http_server_netconn_resp_302(p_conn);
+            str_buf_free_buf(&hostname);
             return;
         }
     }
@@ -116,15 +128,6 @@ http_server_netconn_serve_handle_req(
         }
     }
 
-    str_buf_t hostname = ((NULL != p_host) && (0 != host_len))
-                             ? str_buf_printf_with_alloc("%.*s", (printf_int_t)host_len, p_host)
-                             : str_buf_printf_with_alloc("%s", p_local_ip_str->buf);
-    if (NULL == hostname.buf)
-    {
-        LOG_ERR("Failed to allocate memory for hostname string");
-        http_server_netconn_resp_500(p_conn, NULL);
-        return;
-    }
     http_server_netconn_resp(p_conn, &resp, hostname.buf);
     str_buf_free_buf(&hostname);
 }
