@@ -32,37 +32,28 @@ function to process requests, decode URLs, serve files, etc. etc.
 */
 
 #include "http_server.h"
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <assert.h>
 
 #include <esp_attr.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <esp_task_wdt.h>
-#include "lwip/netbuf.h"
 #include "lwip/api.h"
 #include "lwip/err.h"
 #include "lwip/opt.h"
-#include "lwip/raw.h"
-#include "lwip/udp.h"
-#include "lwip/priv/api_msg.h"
 
 #include "wifi_manager_internal.h"
 #include "wifi_manager.h"
-#include "json_access_points.h"
 
-#include "cJSON.h"
 #include "os_task.h"
-#include "os_malloc.h"
-#include "http_req.h"
 #include "esp_type_wrapper.h"
 #include "os_signal.h"
 #include "os_mutex.h"
 #include "os_sema.h"
 #include "os_timer_sig.h"
-#include "wifiman_msg.h"
 #include "http_server_accept_and_handle_conn.h"
+#include "http_server_internal.h"
 #include "time_units.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
@@ -263,7 +254,7 @@ http_server_task_wdt_add_and_start(void)
     os_timer_sig_periodic_start(g_p_http_server_timer_sig_watchdog_feed);
 }
 
-static void
+void
 http_server_task_wdt_reset(void)
 {
     LOG_DBG("Feed watchdog");
