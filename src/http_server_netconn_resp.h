@@ -5,8 +5,8 @@
  * @copyright Ruuvi Innovations Ltd, license BSD-3-Clause.
  */
 
-#ifndef RUUVI_GATEWAY_ESP_HTTP_SERVER_NETCONN_RESP_H
-#define RUUVI_GATEWAY_ESP_HTTP_SERVER_NETCONN_RESP_H
+#ifndef RUUVI_ESP32_WIFI_MANAGER_HTTP_SERVER_NETCONN_RESP_H
+#define RUUVI_ESP32_WIFI_MANAGER_HTTP_SERVER_NETCONN_RESP_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -85,4 +85,4 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
 }
 #endif
 
-#endif // RUUVI_GATEWAY_ESP_HTTP_SERVER_NETCONN_RESP_H
+#endif // RUUVI_ESP32_WIFI_MANAGER_HTTP_SERVER_NETCONN_RESP_H

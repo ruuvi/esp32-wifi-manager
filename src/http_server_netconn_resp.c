@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
 #include <time.h>
 #include <esp_task_wdt.h>
 #include "lwip/api.h"
@@ -271,7 +273,7 @@ write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t
 }
 
 static void
-write_content_from_heap(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+write_content_from_heap(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(

@@ -33,6 +33,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 
 #include "http_server.h"
 #include <string.h>
+#include <assert.h>
 
 #include <esp_attr.h>
 #include "freertos/FreeRTOS.h"
