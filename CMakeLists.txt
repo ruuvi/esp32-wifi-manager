@@ -42,6 +42,7 @@ idf_component_register(
         src/http_server_handle_req_get_auth.h
         src/http_server_handle_req_post_auth.c
         src/http_server_handle_req_post_auth.h
+        src/http_server_internal.h
         src/http_server_mutex.c
         src/http_server_mutex.h
         src/http_server_netconn_resp.c

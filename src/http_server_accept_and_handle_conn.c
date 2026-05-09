@@ -16,9 +16,9 @@
 #include "sta_ip.h"
 #include "http_req.h"
 #include "http_server_mutex.h"
-#include "wifi_manager_internal.h"
 #include "http_server_netconn_resp.h"
 #include "http_server_netconn_serve_handle_req.h"
+#include "http_server_internal.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
@@ -30,6 +30,8 @@
 #define HTTP_SERVER_CONTENT_TIMEOUT_MS (30 * 1000U)
 
 #define HTTP_SERVER_LOG_DUMP_PRINT_MAX_LEN (2U * 1024U)
+
+#define HTTP_SERVER_SLEEP_AFTER_WDT_RESET_MS (5U)
 
 #define BASE_10 (10U)
 

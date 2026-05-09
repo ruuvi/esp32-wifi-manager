@@ -16,9 +16,9 @@
 #include "str_buf.h"
 #include "esp_type_wrapper.h"
 #include "wifi_manager_defs.h"
-#include "wifi_manager_internal.h"
 #include "wifiman_config.h"
 #include "http_server_resp.h"
+#include "http_server_internal.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
 

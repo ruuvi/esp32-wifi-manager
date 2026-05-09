@@ -11,12 +11,12 @@ add_executable(${ProjectId}
         ../../src/http_req.h
         ../../src/http_server_mutex.c
         ../../src/http_server_mutex.h
-        ../ruuvi.esp_wrappers.c/src/os_malloc.c
-        ../ruuvi.esp_wrappers.c/include/os_malloc.h
-        ../ruuvi.esp_wrappers.c/src/str_buf.c
-        ../ruuvi.esp_wrappers.c/include/str_buf.h
-        ../ruuvi.esp_wrappers.c/src/snprintf_with_esp_err_desc.c
-        ../ruuvi.esp_wrappers.c/include/snprintf_with_esp_err_desc.h
+        ${RUUVI_ESP_WRAPPERS}/src/os_malloc.c
+        ${RUUVI_ESP_WRAPPERS}/include/os_malloc.h
+        ${RUUVI_ESP_WRAPPERS}/src/str_buf.c
+        ${RUUVI_ESP_WRAPPERS}/include/str_buf.h
+        ${RUUVI_ESP_WRAPPERS}/src/snprintf_with_esp_err_desc.c
+        ${RUUVI_ESP_WRAPPERS}/include/snprintf_with_esp_err_desc.h
 )
 
 set_target_properties(${ProjectId} PROPERTIES
