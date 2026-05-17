@@ -301,9 +301,15 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
     bool res = true;
     do
     {
-        char* p_buf  = NULL;
-        u16_t buflen = 0;
-        netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
+        char*       p_buf    = NULL;
+        u16_t       buflen   = 0;
+        const err_t data_err = netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
+        if (ERR_OK != data_err)
+        {
+            LOG_ERR("netbuf data: %d", (printf_int_t)data_err);
+            res = false;
+            break;
+        }
         if (buflen < HTTP_SERVER_HANDLE_CONN_MAX_LOG_DUMP_SIZE)
         {
             LOG_DUMP_DBG((const uint8_t*)p_buf, buflen, "Received data (len: %u)", (printf_uint_t)buflen);

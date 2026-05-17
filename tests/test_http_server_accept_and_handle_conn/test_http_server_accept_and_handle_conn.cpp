@@ -134,6 +134,7 @@ protected:
     void
     add_recv_frame_multi_pbuf(const vector<string>& fragments)
     {
+        assert(!fragments.empty());
         this->m_recv_frames.push_back({ ERR_OK, fragments });
     }
 
