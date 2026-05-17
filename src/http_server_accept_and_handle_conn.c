@@ -319,13 +319,15 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
             LOG_DUMP_DBG(
                 (const uint8_t*)p_buf,
                 HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE,
-                "Received data (len: %u): first 16 bytes",
-                (printf_uint_t)buflen);
+                "Received data (len: %u): first %u bytes",
+                (printf_uint_t)buflen,
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE);
             LOG_DUMP_DBG(
                 (const uint8_t*)&p_buf[buflen - HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE],
                 HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE,
-                "Received data (len: %u): last 16 bytes",
-                (printf_uint_t)buflen);
+                "Received data (len: %u): last %u bytes",
+                (printf_uint_t)buflen,
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE);
         }
 
         res = http_server_handle_received_buf(p_buf, buflen, p_ctx);

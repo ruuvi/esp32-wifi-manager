@@ -180,6 +180,10 @@ public:
     int  m_alloc_call_cnt;
     int  m_alloc_fail_on_call_idx;
 
+    // netbuf_data failure injection
+    int m_netbuf_data_call_cnt;
+    int m_netbuf_data_fail_on_call_idx;
+
     TestHttpServerAcceptAndHandleConn();
 
     ~TestHttpServerAcceptAndHandleConn() override;
@@ -204,6 +208,8 @@ TestHttpServerAcceptAndHandleConn::TestHttpServerAcceptAndHandleConn()
     , m_alloc_free_call_count(0)
     , m_alloc_call_cnt(0)
     , m_alloc_fail_on_call_idx(-1)
+    , m_netbuf_data_call_cnt(0)
+    , m_netbuf_data_fail_on_call_idx(-1)
 {
 }
 
@@ -350,6 +356,14 @@ netbuf_data(struct netbuf* buf, void** dataptr, u16_t* len)
     if ((nullptr == buf) || (nullptr == buf->ptr))
     {
         return ERR_BUF;
+    }
+    if (nullptr != g_pTestClass && g_pTestClass->m_netbuf_data_fail_on_call_idx >= 0)
+    {
+        g_pTestClass->m_netbuf_data_call_cnt += 1;
+        if (g_pTestClass->m_netbuf_data_call_cnt == g_pTestClass->m_netbuf_data_fail_on_call_idx)
+        {
+            return ERR_BUF;
+        }
     }
     *dataptr = buf->ptr->payload;
     *len     = buf->ptr->len;
@@ -1663,6 +1677,69 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_get_no_body_multi_pbuf) // 
 
     ASSERT_TRUE(this->m_serve_capture.called);
     ASSERT_EQ(part1 + part2, this->m_serve_capture.req_buf);
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== netbuf_data error handling tests =====
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_netbuf_data_error_on_first_fragment) // NOLINT
+{
+    // netbuf_data returns an error on the first (and only) fragment
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    const string request = "GET / HTTP/1.1\r\nHost: 192.168.1.1\r\n\r\n";
+    add_recv_frame(request);
+
+    // Fail the first netbuf_data call
+    this->m_netbuf_data_fail_on_call_idx = 1;
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+    TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, string("netbuf data: ") + to_string((int)ERR_BUF));
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_netbuf_data_error_on_second_fragment) // NOLINT
+{
+    // netbuf_data succeeds on the first fragment but fails on the second in a multi-pbuf netbuf
+    struct tcp_pcb listen_pcb = {};
+    this->m_p_conn->pcb.tcp   = &listen_pcb;
+    setup_accept_success_with_valid_pcb();
+
+    const string body   = "hello world";
+    const string header = "POST /data HTTP/1.1\r\nContent-Length: " + to_string(body.size()) + "\r\n\r\n";
+
+    // Header and body as separate pbufs in one netbuf
+    add_recv_frame_multi_pbuf({ header, body });
+
+    // Fail the second netbuf_data call (the body fragment)
+    this->m_netbuf_data_fail_on_call_idx = 2;
+
+    http_server_accept_and_handle_conn(this->m_p_conn);
+
+    free(this->m_p_new_conn);
+    this->m_p_new_conn = nullptr;
+
+    ASSERT_FALSE(this->m_serve_capture.called);
+    TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, string("netbuf data: ") + to_string((int)ERR_BUF));
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
 
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
