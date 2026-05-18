@@ -562,7 +562,7 @@ http_server_resp_200_json(const char* p_json_content)
 }
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char* const p_json_content)
+http_server_resp_200_json_in_heap(char* const p_json_content)
 {
     (void)p_json_content;
     return make_resp(HTTP_RESP_CODE_200);
