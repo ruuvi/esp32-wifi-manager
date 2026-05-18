@@ -166,6 +166,9 @@ http_server_fill_auth_json(
 const http_server_resp_auth_json_t*
 http_server_fill_auth_json_bearer(const wifiman_hostinfo_t* const p_hostinfo);
 
+void
+http_server_netconn_resp_free(http_server_resp_t* const p_resp);
+
 #ifdef __cplusplus
 }
 #endif

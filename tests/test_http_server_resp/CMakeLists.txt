@@ -65,3 +65,9 @@ target_link_libraries(${ProjectId}
         -Wl,--wrap=wifiman_sha256_hex_str
         --coverage
 )
+
+target_link_options(${ProjectId} PRIVATE
+        "-Wl,--wrap=malloc"
+        "-Wl,--wrap=calloc"
+        "-Wl,--wrap=free"
+)

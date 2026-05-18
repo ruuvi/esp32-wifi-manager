@@ -376,30 +376,6 @@ write_content_from_json_generator(struct netconn* const p_conn, const http_serve
 }
 
 static void
-http_server_netconn_resp_free(http_server_resp_t* const p_resp)
-{
-    switch (p_resp->content_location)
-    {
-        case HTTP_CONTENT_LOCATION_NO_CONTENT:
-            break;
-        case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            break;
-        case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            break;
-        case HTTP_CONTENT_LOCATION_HEAP:
-            os_free(p_resp->select_location.memory.p_buf);
-            break;
-        case HTTP_CONTENT_LOCATION_FATFS:
-            LOG_DBG("Close file fd=%d", (printf_int_t)p_resp->select_location.fatfs.fd);
-            close(p_resp->select_location.fatfs.fd);
-            break;
-        case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
-            json_stream_gen_delete(&p_resp->select_location.json_generator.p_json_gen);
-            break;
-    }
-}
-
-static void
 http_server_write_content(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
