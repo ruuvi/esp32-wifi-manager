@@ -138,10 +138,6 @@ http_server_resp_err(const http_resp_code_e http_resp_code)
 static http_server_resp_t
 http_server_resp_err_json_in_static_mem(const http_resp_code_e http_resp_code, const char* const p_json_content)
 {
-    if (NULL == p_json_content)
-    {
-        return http_server_resp_err(http_resp_code);
-    }
     const http_server_resp_t resp = {
         .http_resp_code       = http_resp_code,
         .content_location     = HTTP_CONTENT_LOCATION_STATIC_MEM,
