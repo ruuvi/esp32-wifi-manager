@@ -1024,3 +1024,94 @@ TEST_F(TestHttpServerResp, fill_auth_json_bearer) // NOLINT
         string(p_auth_json->buf));
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
+
+TEST_F(TestHttpServerResp, fill_auth_json_without_err_message_lan_true) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        true,
+        NULL);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
+        "\"lan_auth_type\": \"lan_auth_ruuvi\", \"lan\": true}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_without_err_message_lan_false) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_DENY,
+        false,
+        NULL);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
+        "\"lan_auth_type\": \"lan_auth_deny\", \"lan\": false}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_with_err_message) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        true,
+        "wrong password");
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
+        "\"lan_auth_type\": \"lan_auth_ruuvi\", \"lan\": true, \"message\": \"wrong password\"}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_auth_type_allow) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname = { "gw1" }, .fw_ver = { "v2.0.0" }, .nrf52_fw_ver = { "v1.1.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_ALLOW,
+        true,
+        NULL);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"gw1\", \"fw_ver\": \"v2.0.0\", \"nrf52_fw_ver\": \"v1.1.0\", "
+        "\"lan_auth_type\": \"lan_auth_allow\", \"lan\": true}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_auth_type_digest) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname = { "gw1" }, .fw_ver = { "v2.0.0" }, .nrf52_fw_ver = { "v1.1.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_DIGEST,
+        true,
+        NULL);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"gw1\", \"fw_ver\": \"v2.0.0\", \"nrf52_fw_ver\": \"v1.1.0\", "
+        "\"lan_auth_type\": \"lan_auth_digest\", \"lan\": true}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
