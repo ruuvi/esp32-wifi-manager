@@ -49,6 +49,9 @@ http_server_resp_t
 http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen);
 
 http_server_resp_t
+http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, const char* const p_content);
+
+http_server_resp_t
 http_server_resp_302(void);
 
 http_server_resp_t
@@ -56,6 +59,12 @@ http_server_resp_400(void);
 
 http_server_resp_t
 http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json);
+
+http_server_resp_t
+http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json);
+
+http_server_resp_t
+http_server_resp_403(void);
 
 http_server_resp_t
 http_server_resp_404(void);

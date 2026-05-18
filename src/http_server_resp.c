@@ -88,6 +88,29 @@ http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen)
 }
 
 http_server_resp_t
+http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, const char* const p_content)
+{
+    const bool flag_no_cache        = true;
+    const bool flag_add_header_date = true;
+    const http_server_resp_t resp = {
+        .http_resp_code       = http_resp_code,
+        .content_location     = HTTP_CONTENT_LOCATION_HEAP,
+        .flag_no_cache        = flag_no_cache,
+        .flag_add_header_date = flag_add_header_date,
+        .content_type         = HTTP_CONTENT_TYPE_TEXT_PLAIN,
+        .p_content_type_param = NULL,
+        .content_len          = strlen(p_content),
+        .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
+        .select_location      = {
+            .memory = {
+                .p_buf = (const uint8_t*)p_content,
+            },
+        },
+    };
+    return resp;
+}
+
+http_server_resp_t
 http_server_resp_err(const http_resp_code_e http_resp_code)
 {
     const http_server_resp_t resp = {
@@ -180,6 +203,12 @@ http_server_resp_t
 http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
     return http_server_resp_err_json_in_static_mem(HTTP_RESP_CODE_403, p_auth_json->buf);
+}
+
+http_server_resp_t
+http_server_resp_403(void)
+{
+    return http_server_resp_err(HTTP_RESP_CODE_403);
 }
 
 http_server_resp_t

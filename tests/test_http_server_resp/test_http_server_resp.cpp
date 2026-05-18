@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "http_server_resp.h"
 #include "http_server_auth.h"
+#include "json_stream_gen.h"
 #include <string>
 
 using namespace std;
@@ -23,6 +24,7 @@ protected:
     {
         this->m_idx_random_value = 0;
         std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+        http_server_auth_clear_authorized_sessions();
     }
 
     void
@@ -70,6 +72,17 @@ TestHttpServerResp::~TestHttpServerResp()
 extern "C" {
 #endif
 
+static json_stream_gen_callback_result_t
+test_resp_json_generator_cb(json_stream_gen_t* const p_gen, const void* const p_user_ctx)
+{
+    (void)p_user_ctx;
+    JSON_STREAM_GEN_BEGIN_GENERATOR_FUNC(p_gen);
+    JSON_STREAM_GEN_START_OBJECT(p_gen, NULL);
+    JSON_STREAM_GEN_ADD_INT32(p_gen, "a", 1);
+    JSON_STREAM_GEN_END_OBJECT(p_gen);
+    JSON_STREAM_GEN_END_GENERATOR_FUNC();
+}
+
 uint32_t
 esp_random(void)
 {
@@ -97,12 +110,56 @@ TEST_F(TestHttpServerResp, resp_400) // NOLINT
     ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
 }
 
+TEST_F(TestHttpServerResp, resp_403) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_403();
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(0, resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
+}
+
+TEST_F(TestHttpServerResp, resp_403_json) // NOLINT
+{
+    const char*                  p_auth_json_content = "{\"message\":\"forbidden\"}";
+    http_server_resp_auth_json_t auth_json           = { '\0' };
+    strncpy(auth_json.buf, p_auth_json_content, sizeof(auth_json.buf) - 1);
+
+    const http_server_resp_t resp = http_server_resp_403_json(&auth_json);
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(strlen(p_auth_json_content), resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+}
+
 TEST_F(TestHttpServerResp, resp_404) // NOLINT
 {
     const http_server_resp_t resp = http_server_resp_404();
     ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
     ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(0, resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
+}
+
+TEST_F(TestHttpServerResp, resp_302) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_302();
+    ASSERT_EQ(HTTP_RESP_CODE_302, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
@@ -134,6 +191,163 @@ TEST_F(TestHttpServerResp, resp_503) // NOLINT
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
+}
+
+TEST_F(TestHttpServerResp, resp_500) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_500();
+    ASSERT_EQ(HTTP_RESP_CODE_500, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+}
+
+TEST_F(TestHttpServerResp, resp_502) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_502();
+    ASSERT_EQ(HTTP_RESP_CODE_502, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+}
+
+TEST_F(TestHttpServerResp, resp_504) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_504();
+    ASSERT_EQ(HTTP_RESP_CODE_504, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+}
+
+TEST_F(TestHttpServerResp, resp_401_json) // NOLINT
+{
+    const char*                  p_auth_json_content = "{\"auth\":\"required\"}";
+    http_server_resp_auth_json_t auth_json           = { '\0' };
+    strncpy(auth_json.buf, p_auth_json_content, sizeof(auth_json.buf) - 1);
+
+    const http_server_resp_t resp = http_server_resp_401_json(&auth_json);
+    ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(strlen(p_auth_json_content), resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+}
+
+TEST_F(TestHttpServerResp, resp_json_in_heap_and_200_json_in_heap) // NOLINT
+{
+    const char* p_json_content = "{\"ok\":true}";
+
+    const http_server_resp_t resp_504 = http_server_resp_json_in_heap(HTTP_RESP_CODE_504, p_json_content);
+    ASSERT_EQ(HTTP_RESP_CODE_504, resp_504.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp_504.content_location);
+    ASSERT_TRUE(resp_504.flag_no_cache);
+    ASSERT_TRUE(resp_504.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp_504.content_type);
+    ASSERT_EQ(strlen(p_json_content), resp_504.content_len);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_json_content), resp_504.select_location.memory.p_buf);
+
+    const http_server_resp_t resp_200 = http_server_resp_200_json_in_heap(p_json_content);
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp_200.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp_200.content_location);
+    ASSERT_TRUE(resp_200.flag_no_cache);
+    ASSERT_TRUE(resp_200.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp_200.content_type);
+    ASSERT_EQ(strlen(p_json_content), resp_200.content_len);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_json_content), resp_200.select_location.memory.p_buf);
+}
+
+TEST_F(TestHttpServerResp, resp_502_json_in_heap) // NOLINT
+{
+    const char*              p_json_content = "{\"error\":\"bad_gateway\"}";
+    const http_server_resp_t resp           = http_server_resp_502_json_in_heap(p_json_content);
+    ASSERT_EQ(HTTP_RESP_CODE_502, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(strlen(p_json_content), resp.content_len);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_json_content), resp.select_location.memory.p_buf);
+}
+
+TEST_F(TestHttpServerResp, resp_502_json_in_heap_null_fallback_to_err) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_502_json_in_heap(nullptr);
+    ASSERT_EQ(HTTP_RESP_CODE_502, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+}
+
+TEST_F(TestHttpServerResp, resp_json_generator) // NOLINT
+{
+    void*                 p_ctx         = nullptr;
+    json_stream_gen_cfg_t cfg           = {};
+    cfg.max_chunk_size                  = JSON_STREAM_GEN_CFG_DEFAULT_MAX_CHUNK_SIZE;
+    cfg.flag_formatted_json             = false;
+    cfg.indentation_mark                = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION_MARK;
+    cfg.indentation                     = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION;
+    cfg.max_nesting_level               = JSON_STREAM_GEN_CFG_DEFAULT_MAX_NESTING_LEVEL;
+    cfg.p_malloc                        = &malloc;
+    cfg.p_free                          = &free;
+    cfg.p_localeconv                    = &localeconv;
+    json_stream_gen_t* const p_json_gen = json_stream_gen_create(&cfg, test_resp_json_generator_cb, 0, &p_ctx);
+    ASSERT_NE(nullptr, p_json_gen);
+
+    const http_server_resp_t resp = http_server_resp_json_generator(HTTP_RESP_CODE_409, p_json_gen);
+    ASSERT_EQ(HTTP_RESP_CODE_409, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_JSON_GENERATOR, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_GT(resp.content_len, 0);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(
+        string("{{\"a\":1}}"),
+        string(json_stream_gen_get_next_chunk(resp.select_location.json_generator.p_json_gen)));
+
+    json_stream_gen_t* p_json_gen_to_delete = p_json_gen;
+    json_stream_gen_delete(&p_json_gen_to_delete);
+    ASSERT_EQ(nullptr, p_json_gen_to_delete);
+}
+
+TEST_F(TestHttpServerResp, resp_200_json_generator) // NOLINT
+{
+    void*                 p_ctx         = nullptr;
+    json_stream_gen_cfg_t cfg           = {};
+    cfg.max_chunk_size                  = JSON_STREAM_GEN_CFG_DEFAULT_MAX_CHUNK_SIZE;
+    cfg.flag_formatted_json             = false;
+    cfg.indentation_mark                = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION_MARK;
+    cfg.indentation                     = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION;
+    cfg.max_nesting_level               = JSON_STREAM_GEN_CFG_DEFAULT_MAX_NESTING_LEVEL;
+    cfg.p_malloc                        = &malloc;
+    cfg.p_free                          = &free;
+    cfg.p_localeconv                    = &localeconv;
+    json_stream_gen_t* const p_json_gen = json_stream_gen_create(&cfg, test_resp_json_generator_cb, 0, &p_ctx);
+    ASSERT_NE(nullptr, p_json_gen);
+
+    const http_server_resp_t resp = http_server_resp_200_json_generator(p_json_gen);
+    ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_JSON_GENERATOR, resp.content_location);
+    ASSERT_GT(resp.content_len, 0);
+    ASSERT_EQ(
+        string("{{\"a\":1}}"),
+        string(json_stream_gen_get_next_chunk(resp.select_location.json_generator.p_json_gen)));
+
+    json_stream_gen_t* p_json_gen_to_delete = p_json_gen;
+    json_stream_gen_delete(&p_json_gen_to_delete);
+    ASSERT_EQ(nullptr, p_json_gen_to_delete);
 }
 
 TEST_F(TestHttpServerResp, resp_data_in_flash_html) // NOLINT
@@ -275,6 +489,22 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
     ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.memory.p_buf);
 }
 
+TEST_F(TestHttpServerResp, resp_text_in_heap) // NOLINT
+{
+    const char* p_content = "forbidden";
+
+    const http_server_resp_t resp = http_server_resp_text_in_heap(HTTP_RESP_CODE_403, p_content);
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_HEAP, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_PLAIN, resp.content_type);
+    ASSERT_EQ(nullptr, resp.p_content_type_param);
+    ASSERT_EQ(strlen(p_content), resp.content_len);
+    ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.memory.p_buf);
+}
+
 TEST_F(TestHttpServerResp, resp_data_from_file_css_gzipped) // NOLINT
 {
     const char*    p_content = "qwer";
@@ -401,4 +631,119 @@ TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session
     const http_server_auth_ruuvi_authorized_session_t* const p_session = &p_auth->authorized_sessions[0];
     ASSERT_EQ("AAAAAAAAAAAAAAAA", string(p_session->session_id.buf));
     ASSERT_EQ(string(remote_ip.buf), string(p_session->remote_ip.buf));
+}
+
+TEST_F(TestHttpServerResp, resp_401_auth_ruuvi) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "hostname" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_t resp = http_server_resp_401_auth_ruuvi(&hostinfo, HTTP_SERVER_AUTH_TYPE_RUUVI);
+    ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
+        "\"lan_auth_ruuvi\", \"lan\": true}",
+        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+}
+
+TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_with_err_message) // NOLINT
+{
+    const sta_ip_string_t      remote_ip           = { "192.168.1.110" };
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    const char*              p_err_message = "wrong password";
+    const http_server_resp_t resp          = http_server_resp_401_auth_ruuvi_with_new_session_id(
+        &remote_ip,
+        &hostinfo,
+        &extra_header_fields,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        p_err_message);
+    ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_NE(
+        string::npos,
+        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf))
+            .find("\"message\": \"wrong password\""));
+    ASSERT_NE(
+        string::npos,
+        string(extra_header_fields.buf).find("WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\""));
+    ASSERT_NE(string::npos, string(extra_header_fields.buf).find("session_id=\"AAAAAAAAAAAAAAAA\""));
+}
+
+TEST_F(TestHttpServerResp, resp_401_auth_digest) // NOLINT
+{
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    const http_server_resp_t resp = http_server_resp_401_auth_digest(&hostinfo, &extra_header_fields);
+    ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_NE(
+        string::npos,
+        string(extra_header_fields.buf).find("WWW-Authenticate: Digest realm=\"hostname\" qop=\"auth\" nonce=\""));
+    ASSERT_NE(string::npos, string(extra_header_fields.buf).find("\" opaque=\""));
+}
+
+TEST_F(TestHttpServerResp, resp_403_auth_deny) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "hostname" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_t resp = http_server_resp_403_auth_deny(&hostinfo);
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_STATIC_MEM, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
+        "\"lan_auth_deny\", \"lan\": true}",
+        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+}
+
+TEST_F(TestHttpServerResp, resp_403_forbidden) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_403_forbidden();
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_bearer) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "hostname" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json_bearer(&hostinfo);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\"}",
+        string(p_auth_json->buf));
 }
