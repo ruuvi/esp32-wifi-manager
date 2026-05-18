@@ -914,8 +914,8 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_length_exceeds_max_
     this->m_p_conn->pcb.tcp   = &listen_pcb;
     setup_accept_success_with_valid_pcb();
 
-    // Content-Length exceeds HTTP_SERVER_MAX_CONTENT_SIZE (8192)
-    const string request = "POST /data HTTP/1.1\r\nContent-Length: 9000\r\n\r\n";
+    // Content-Length exceeds HTTP_SERVER_MAX_ENCRYPTED_CONTENT_SIZE (8192*4/3+512 = 11434)
+    const string request = "POST /data HTTP/1.1\r\nContent-Length: 12000\r\n\r\n";
     add_recv_frame(request);
 
     http_server_accept_and_handle_conn(this->m_p_conn);
@@ -924,7 +924,7 @@ TEST_F(TestHttpServerAcceptAndHandleConn, test_serve_content_length_exceeds_max_
     this->m_p_new_conn = nullptr;
 
     ASSERT_FALSE(this->m_serve_capture.called);
-    TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "Content-Length 9000 exceeds maximum allowed 8192");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "Content-Length 12000 exceeds maximum allowed 11434");
     TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Connection from 192.168.1.100 to 192.168.1.1: The connection was closed");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 

@@ -15,7 +15,6 @@
 #include "wifi_manager_internal.h"
 #include "wifiman_msg.h"
 #include "wifiman_config.h"
-#include "json_access_points.h"
 #include "json_network_info.h"
 #include "http_server.h"
 #include "http_server_auth.h"
@@ -23,6 +22,7 @@
 #include "http_server_handle_req_post_auth.h"
 #include "http_server_handle_req_delete_auth.h"
 #include "http_server_ecdh.h"
+#include "http_server_internal.h"
 #include "dns_server.h"
 
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
@@ -604,9 +604,37 @@ http_server_handle_req_post_with_ecdh_key(
     {
         if (!http_server_decrypt(p_param->p_req_info->http_body.ptr, &decrypted_str_buf))
         {
+            LOG_ERR("http_server_decrypt failed");
             return http_server_resp_400();
         }
         http_body_decrypted.ptr = decrypted_str_buf.buf;
+        if (NULL == http_body_decrypted.ptr)
+        {
+            LOG_ERR("http_server_decrypt failed (no mem)");
+            return http_server_resp_400();
+        }
+        const size_t content_len = strlen(http_body_decrypted.ptr);
+        if (content_len > HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE)
+        {
+            LOG_ERR(
+                "Decrypted content size %zu exceeds maximum allowed %u",
+                content_len,
+                HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE);
+            str_buf_free_buf(&decrypted_str_buf);
+            return http_server_resp_400();
+        }
+    }
+    else
+    {
+        const size_t content_len = strlen(p_param->p_req_info->http_body.ptr);
+        if (content_len > HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE)
+        {
+            LOG_ERR(
+                "Content size %zu exceeds maximum allowed %u",
+                content_len,
+                HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE);
+            return http_server_resp_400();
+        }
     }
 
     const http_server_resp_t resp = http_server_handle_req_post(

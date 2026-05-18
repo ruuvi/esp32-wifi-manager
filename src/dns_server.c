@@ -290,12 +290,14 @@ dns_server_wdt_add_and_start(void)
 static void
 dns_server_task_wdt_reset(void)
 {
+#if defined(CONFIG_ESP_TASK_WDT)
     LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
     }
+#endif
 }
 
 static bool
