@@ -37,6 +37,7 @@ Contains the freeRTOS task and all necessary support
 #include "lwip/ip4_addr.h"
 #include "esp_netif.h"
 #include "http_server_resp.h"
+#include "str_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -132,7 +133,7 @@ wifi_manager_connect_async_by_wps(void);
 /**
  * @brief scan WiFi APs and return json
  */
-const char*
+str_buf_t
 wifi_manager_scan_sync(void);
 
 /**

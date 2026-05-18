@@ -36,6 +36,7 @@ Contains the freeRTOS task and all necessary support
 #include <stdint.h>
 #include "esp_err.h"
 #include "esp_wifi_types.h"
+#include "str_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,9 +45,9 @@ extern "C" {
 /**
  * @brief Generates the list of access points after a wifi scan.
  * @note This is not thread-safe and should be called only if wifi_manager_lock_json_buffer call is successful.
- * @return Pointer to a newly allocated buffer which contains generated json.
+ * @return A newly allocated buffer which contains generated json.
  */
-const char*
+str_buf_t
 json_access_points_generate(const wifi_ap_record_t* const p_access_points, const uint32_t num_access_points);
 
 #ifdef __cplusplus

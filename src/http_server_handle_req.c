@@ -145,14 +145,14 @@ http_server_handle_req_get(
 
     if (0 == strcmp(p_file_name, "ap.json"))
     {
-        char* const p_buff = (char*)wifi_manager_scan_sync();
-        if (NULL == p_buff)
+        str_buf_t str_buf = wifi_manager_scan_sync();
+        if (NULL == str_buf.buf)
         {
             LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
             return http_server_resp_503();
         }
-        LOG_INFO("ap.json: %s", p_buff);
-        return http_server_resp_200_json_in_heap(p_buff);
+        LOG_INFO("ap.json: %s", str_buf.buf);
+        return http_server_resp_200_json_in_heap(str_buf.buf);
     }
 
     if (0 == strcmp(p_file_name, "status.json"))

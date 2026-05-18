@@ -527,10 +527,10 @@ void
 wifi_manager_disable_wps(void)
 {
 }
-const char*
+str_buf_t
 wifi_manager_scan_sync(void)
 {
-    return NULL;
+    return str_buf_init_null();
 }
 void
 dns_server_stop(void)
