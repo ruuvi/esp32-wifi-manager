@@ -61,5 +61,7 @@ target_link_libraries(${ProjectId}
         gcov
         ruuvi_esp_wrappers
         ruuvi_esp_wrappers-common_test_funcs
+        -Wl,--wrap=wifiman_sha256_calc_hex_str
+        -Wl,--wrap=wifiman_sha256_hex_str
         --coverage
 )

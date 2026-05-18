@@ -15,6 +15,9 @@ using namespace std;
 
 /*** Google-test class implementation *********************************************************************************/
 
+static bool g_flag_force_empty_sha256_calc_hex_str = false;
+static bool g_flag_force_empty_sha256_hex_str      = false;
+
 class TestHttpServerResp : public ::testing::Test
 {
 private:
@@ -25,6 +28,8 @@ protected:
         this->m_idx_random_value = 0;
         std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
         http_server_auth_clear_authorized_sessions();
+        g_flag_force_empty_sha256_calc_hex_str = false;
+        g_flag_force_empty_sha256_hex_str      = false;
     }
 
     void
@@ -71,6 +76,32 @@ TestHttpServerResp::~TestHttpServerResp()
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+wifiman_sha256_digest_hex_str_t
+__real_wifiman_sha256_calc_hex_str(const void* const p_buf, const size_t buf_size);
+
+wifiman_sha256_digest_hex_str_t
+__wrap_wifiman_sha256_calc_hex_str(const void* const p_buf, const size_t buf_size)
+{
+    if (g_flag_force_empty_sha256_calc_hex_str)
+    {
+        return (wifiman_sha256_digest_hex_str_t) { 0 };
+    }
+    return __real_wifiman_sha256_calc_hex_str(p_buf, buf_size);
+}
+
+wifiman_sha256_digest_hex_str_t
+__real_wifiman_sha256_hex_str(const wifiman_sha256_digest_t* const p_digest);
+
+wifiman_sha256_digest_hex_str_t
+__wrap_wifiman_sha256_hex_str(const wifiman_sha256_digest_t* const p_digest)
+{
+    if (g_flag_force_empty_sha256_hex_str)
+    {
+        return (wifiman_sha256_digest_hex_str_t) { 0 };
+    }
+    return __real_wifiman_sha256_hex_str(p_digest);
+}
 
 static json_stream_gen_callback_result_t
 test_resp_json_generator_cb(json_stream_gen_t* const p_gen, const void* const p_user_ctx)
@@ -241,6 +272,18 @@ TEST_F(TestHttpServerResp, resp_401_json) // NOLINT
     ASSERT_EQ(strlen(p_auth_json_content), resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+}
+
+TEST_F(TestHttpServerResp, resp_401_json_null_auth_json_ptr_fallback_to_err) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_401_json(nullptr);
+    ASSERT_EQ(HTTP_RESP_CODE_401, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
 }
 
 TEST_F(TestHttpServerResp, resp_json_in_heap_and_200_json_in_heap) // NOLINT
@@ -633,6 +676,27 @@ TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session
     ASSERT_EQ(string(remote_ip.buf), string(p_session->remote_ip.buf));
 }
 
+TEST_F(TestHttpServerResp, resp_200_auth_allow_with_new_session_id_empty_challenge_returns_503) // NOLINT
+{
+    const sta_ip_string_t      remote_ip           = { "192.168.1.110" };
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    g_flag_force_empty_sha256_hex_str = true;
+
+    const http_server_resp_t resp = http_server_resp_200_auth_allow_with_new_session_id(
+        &remote_ip,
+        &hostinfo,
+        &extra_header_fields);
+    ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+}
+
 TEST_F(TestHttpServerResp, resp_401_auth_ruuvi) // NOLINT
 {
     const wifiman_hostinfo_t hostinfo = { .hostname     = { "hostname" },
@@ -684,6 +748,29 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_with_err_mess
     ASSERT_NE(string::npos, string(extra_header_fields.buf).find("session_id=\"AAAAAAAAAAAAAAAA\""));
 }
 
+TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_empty_challenge_returns_503) // NOLINT
+{
+    const sta_ip_string_t      remote_ip           = { "192.168.1.110" };
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    g_flag_force_empty_sha256_hex_str = true;
+
+    const http_server_resp_t resp = http_server_resp_401_auth_ruuvi_with_new_session_id(
+        &remote_ip,
+        &hostinfo,
+        &extra_header_fields,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        "err");
+    ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+}
+
 TEST_F(TestHttpServerResp, resp_401_auth_digest) // NOLINT
 {
     const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
@@ -704,6 +791,23 @@ TEST_F(TestHttpServerResp, resp_401_auth_digest) // NOLINT
         string::npos,
         string(extra_header_fields.buf).find("WWW-Authenticate: Digest realm=\"hostname\" qop=\"auth\" nonce=\""));
     ASSERT_NE(string::npos, string(extra_header_fields.buf).find("\" opaque=\""));
+}
+
+TEST_F(TestHttpServerResp, resp_401_auth_digest_sha_failure_returns_503) // NOLINT
+{
+    const wifiman_hostinfo_t   hostinfo            = { .hostname     = { "hostname" },
+                                                       .fw_ver       = { "v1.15.0" },
+                                                       .nrf52_fw_ver = { "v1.0.0" } };
+    http_header_extra_fields_t extra_header_fields = { '\0' };
+
+    std::fill(arr_of_random_values.begin(), arr_of_random_values.end(), 0);
+    set_random_values(this->arr_of_random_values.data(), this->arr_of_random_values.size());
+
+    g_flag_force_empty_sha256_calc_hex_str = true;
+
+    const http_server_resp_t resp = http_server_resp_401_auth_digest(&hostinfo, &extra_header_fields);
+    ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
 }
 
 TEST_F(TestHttpServerResp, resp_403_auth_deny) // NOLINT
