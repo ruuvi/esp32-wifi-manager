@@ -32,6 +32,9 @@
 
 #define BASE_10 (10U)
 
+#define HTTP_SERVER_HANDLE_CONN_MAX_LOG_DUMP_SIZE      (256U)
+#define HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE (16U)
+
 typedef struct http_server_recv_ctx_t
 {
     char*  p_req_buf;
@@ -287,12 +290,49 @@ http_server_recv_and_handle(struct netconn* const p_conn, http_server_recv_ctx_t
         return false;
     }
 
-    char* p_buf  = NULL;
-    u16_t buflen = 0;
-    netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
-    LOG_DUMP_DBG((const uint8_t*)p_buf, buflen, "Received data (len: %u)", (printf_uint_t)buflen);
+    LOG_DBG(
+        "Received data (len: %u, time for netconn_recv: %lu ticks)",
+        (printf_uint_t)netbuf_len(p_netbuf_in),
+        (printf_ulong_t)time_for_netconn_recv);
 
-    const bool res = http_server_handle_received_buf(p_buf, buflen, p_ctx);
+    bool res = true;
+    do
+    {
+        char*       p_buf    = NULL;
+        u16_t       buflen   = 0;
+        const err_t data_err = netbuf_data(p_netbuf_in, (void**)&p_buf, &buflen);
+        if (ERR_OK != data_err)
+        {
+            LOG_ERR("netbuf data: %d", (printf_int_t)data_err);
+            res = false;
+            break;
+        }
+        if (buflen < HTTP_SERVER_HANDLE_CONN_MAX_LOG_DUMP_SIZE)
+        {
+            LOG_DUMP_DBG((const uint8_t*)p_buf, buflen, "Received data (len: %u)", (printf_uint_t)buflen);
+        }
+        else
+        {
+            LOG_DUMP_DBG(
+                (const uint8_t*)p_buf,
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE,
+                "Received data (len: %u): first %u bytes",
+                (printf_uint_t)buflen,
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE);
+            LOG_DUMP_DBG(
+                (const uint8_t*)&p_buf[buflen - HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE],
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE,
+                "Received data (len: %u): last %u bytes",
+                (printf_uint_t)buflen,
+                HTTP_SERVER_HANDLE_CONN_ONE_LINE_LOG_DUMP_SIZE);
+        }
+
+        res = http_server_handle_received_buf(p_buf, buflen, p_ctx);
+        if (!res)
+        {
+            break;
+        }
+    } while (netbuf_next(p_netbuf_in) >= 0);
 
     netbuf_delete(p_netbuf_in);
 
