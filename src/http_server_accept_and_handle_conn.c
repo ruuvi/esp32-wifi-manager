@@ -23,9 +23,6 @@
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
 
-#define HTTP_SERVER_MAX_REQUEST_SIZE (4U * 1024U)
-#define HTTP_SERVER_MAX_CONTENT_SIZE (8U * 1024U)
-
 #define HTTP_SERVER_REQUEST_TIMEOUT_MS (5 * 1000U)
 #define HTTP_SERVER_CONTENT_TIMEOUT_MS (30 * 1000U)
 
@@ -125,12 +122,12 @@ http_server_handle_request_content_len(http_server_recv_ctx_t* const p_ctx, cons
 {
     p_ctx->content_len = (size_t)strtoul(p_content_len_str, NULL, BASE_10);
     LOG_DBG("Header Content-Length: %zu", p_ctx->content_len);
-    if (p_ctx->content_len > HTTP_SERVER_MAX_CONTENT_SIZE)
+    if (p_ctx->content_len > HTTP_SERVER_MAX_ENCRYPTED_CONTENT_SIZE)
     {
         LOG_ERR(
             "Content-Length %zu exceeds maximum allowed %u",
             p_ctx->content_len,
-            (printf_uint_t)HTTP_SERVER_MAX_CONTENT_SIZE);
+            (printf_uint_t)HTTP_SERVER_MAX_ENCRYPTED_CONTENT_SIZE);
         return false;
     }
     p_ctx->expected_len = p_ctx->header_len + p_ctx->content_len;

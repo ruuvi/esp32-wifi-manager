@@ -12,6 +12,10 @@
 extern "C" {
 #endif
 
+#define HTTP_SERVER_MAX_REQUEST_SIZE             (4U * 1024U)
+#define HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE (8U * 1024U)
+#define HTTP_SERVER_MAX_ENCRYPTED_CONTENT_SIZE   (HTTP_SERVER_MAX_UNENCRYPTED_CONTENT_SIZE * 4 / 3 + 512)
+
 void
 http_server_task_wdt_reset(void);
 
