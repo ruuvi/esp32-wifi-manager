@@ -631,12 +631,14 @@ wifi_handle_ev_scan_done(void)
 static void
 wifi_manager_wdt_task_reset(void)
 {
+#if defined(CONFIG_ESP_TASK_WDT)
     LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
     }
+#endif
 }
 
 bool

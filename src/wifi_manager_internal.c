@@ -766,11 +766,13 @@ wifi_manager_scan_sync(void)
 
     while (!os_sema_wait_with_timeout(g_p_scan_sync_sema, WIFI_MANAGER_TASK_WATCHDOG_FEEDING_PERIOD_TICKS))
     {
+#if defined(CONFIG_ESP_TASK_WDT)
         const esp_err_t err = esp_task_wdt_reset();
         if (ESP_OK != err)
         {
             LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
         }
+#endif
     }
 
     wifi_manager_lock();
