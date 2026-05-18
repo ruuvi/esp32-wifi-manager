@@ -171,6 +171,18 @@ TEST_F(TestHttpServerResp, resp_403_json) // NOLINT
     ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
 }
 
+TEST_F(TestHttpServerResp, resp_403_json_null_auth_json_ptr_fallback_to_err) // NOLINT
+{
+    const http_server_resp_t resp = http_server_resp_403_json(nullptr);
+    ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
+    ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
+    ASSERT_TRUE(resp.flag_no_cache);
+    ASSERT_TRUE(resp.flag_add_header_date);
+    ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
+    ASSERT_EQ(0, resp.content_len);
+    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
+}
+
 TEST_F(TestHttpServerResp, resp_404) // NOLINT
 {
     const http_server_resp_t resp = http_server_resp_404();

@@ -196,12 +196,20 @@ http_server_resp_400(void)
 http_server_resp_t
 http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
+    if (NULL == p_auth_json)
+    {
+        return http_server_resp_err(HTTP_RESP_CODE_401);
+    }
     return http_server_resp_err_json_in_static_mem(HTTP_RESP_CODE_401, p_auth_json->buf);
 }
 
 http_server_resp_t
 http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json)
 {
+    if (NULL == p_auth_json)
+    {
+        return http_server_resp_err(HTTP_RESP_CODE_403);
+    }
     return http_server_resp_err_json_in_static_mem(HTTP_RESP_CODE_403, p_auth_json->buf);
 }
 
