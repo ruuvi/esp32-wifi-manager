@@ -38,6 +38,8 @@ protected:
         g_flag_force_empty_sha256_hex_str      = false;
         this->m_alloc_free_call_count          = 0;
         this->m_flag_alloc_counting_enabled    = true;
+        this->m_close_call_count               = 0;
+        this->m_close_last_fd                  = -1;
     }
 
     void
@@ -58,6 +60,8 @@ public:
 
     bool m_flag_alloc_counting_enabled;
     int  m_alloc_free_call_count;
+    int  m_close_call_count;
+    int  m_close_last_fd;
 
     TestHttpServerResp();
 
@@ -79,6 +83,8 @@ TestHttpServerResp::TestHttpServerResp()
     , m_idx_random_value(0)
     , m_flag_alloc_counting_enabled(false)
     , m_alloc_free_call_count(0)
+    , m_close_call_count(0)
+    , m_close_last_fd(-1)
 {
 }
 
@@ -120,6 +126,17 @@ __wrap_free(void* ptr)
         g_pTestObj->m_alloc_free_call_count -= 1;
     }
     __real_free(ptr);
+}
+
+int
+__wrap_close(int fd)
+{
+    if (g_pTestObj)
+    {
+        g_pTestObj->m_close_call_count += 1;
+        g_pTestObj->m_close_last_fd = fd;
+    }
+    return 0;
 }
 
 wifiman_sha256_digest_hex_str_t
@@ -689,7 +706,10 @@ TEST_F(TestHttpServerResp, resp_data_from_file_css_gzipped) // NOLINT
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_GZIP, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
-    // Note: http_server_netconn_resp_free would close(fd) for FATFS, skip in unit test
+    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(1, this->m_close_call_count);
+    ASSERT_EQ(sock, this->m_close_last_fd);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerResp, resp_data_from_file_png) // NOLINT
@@ -712,6 +732,10 @@ TEST_F(TestHttpServerResp, resp_data_from_file_png) // NOLINT
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
+    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(1, this->m_close_call_count);
+    ASSERT_EQ(sock, this->m_close_last_fd);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerResp, resp_data_from_file_svg) // NOLINT
@@ -734,6 +758,10 @@ TEST_F(TestHttpServerResp, resp_data_from_file_svg) // NOLINT
     ASSERT_EQ(5, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
+    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(1, this->m_close_call_count);
+    ASSERT_EQ(sock, this->m_close_last_fd);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
@@ -756,6 +784,10 @@ TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
     ASSERT_EQ(5, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
+    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(1, this->m_close_call_count);
+    ASSERT_EQ(sock, this->m_close_last_fd);
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
 TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session_id) // NOLINT

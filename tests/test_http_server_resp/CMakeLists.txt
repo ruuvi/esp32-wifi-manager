@@ -70,4 +70,5 @@ target_link_options(${ProjectId} PRIVATE
         "-Wl,--wrap=malloc"
         "-Wl,--wrap=calloc"
         "-Wl,--wrap=free"
+        "-Wl,--wrap=close"
 )
