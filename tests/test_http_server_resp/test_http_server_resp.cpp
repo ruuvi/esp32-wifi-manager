@@ -625,7 +625,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_with_caching) // NOLINT
         nullptr,
         strlen(p_content_str),
         HTTP_CONTENT_ENCODING_NONE,
-        reinterpret_cast<const uint8_t*>(p_content),
+        reinterpret_cast<uint8_t*>(p_content),
         flag_no_cache,
         flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
@@ -652,7 +652,7 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
         nullptr,
         strlen(p_content_str),
         HTTP_CONTENT_ENCODING_NONE,
-        reinterpret_cast<const uint8_t*>(p_content),
+        reinterpret_cast<uint8_t*>(p_content),
         flag_no_cache,
         flag_add_date);
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);

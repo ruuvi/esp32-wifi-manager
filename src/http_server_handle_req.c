@@ -145,7 +145,7 @@ http_server_handle_req_get(
 
     if (0 == strcmp(p_file_name, "ap.json"))
     {
-        const char* const p_buff = wifi_manager_scan_sync();
+        char* const p_buff = (char*)wifi_manager_scan_sync();
         if (NULL == p_buff)
         {
             LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");

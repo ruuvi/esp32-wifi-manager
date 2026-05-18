@@ -18,7 +18,7 @@
 static http_server_resp_auth_json_t g_auth_json;
 
 http_server_resp_t
-http_server_resp_200_json(const char* p_json_content)
+http_server_resp_200_json(const char* const p_json_content)
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
@@ -33,7 +33,7 @@ http_server_resp_200_json(const char* p_json_content)
 }
 
 http_server_resp_t
-http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char* const p_json_content)
+http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, char* const p_json_content)
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
@@ -56,7 +56,7 @@ http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char*
 }
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char* const p_json_content)
+http_server_resp_200_json_in_heap(char* const p_json_content)
 {
     return http_server_resp_json_in_heap(HTTP_RESP_CODE_200, p_json_content);
 }
@@ -92,7 +92,7 @@ http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen)
 }
 
 http_server_resp_t
-http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, const char* const p_content)
+http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, char* const p_content)
 {
     const bool flag_no_cache        = true;
     const bool flag_add_header_date = true;
@@ -161,7 +161,7 @@ http_server_resp_err_json_in_static_mem(const http_resp_code_e http_resp_code, c
 }
 
 static http_server_resp_t
-http_server_resp_err_json_in_heap(const http_resp_code_e http_resp_code, const char* const p_json_content)
+http_server_resp_err_json_in_heap(const http_resp_code_e http_resp_code, char* const p_json_content)
 {
     if (NULL == p_json_content)
     {
@@ -248,7 +248,7 @@ http_server_resp_502(void)
 }
 
 http_server_resp_t
-http_server_resp_502_json_in_heap(const char* const p_json)
+http_server_resp_502_json_in_heap(char* const p_json)
 {
     return http_server_resp_err_json_in_heap(HTTP_RESP_CODE_502, p_json);
 }
@@ -268,10 +268,10 @@ http_server_resp_504(void)
 http_server_resp_t
 http_server_resp_data_in_flash(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    const uint8_t* const          p_buf,
     const bool                    flag_no_cache)
 {
     const http_server_resp_t resp = {
@@ -295,10 +295,10 @@ http_server_resp_data_in_flash(
 http_server_resp_t
 http_server_resp_data_in_static_mem(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    const uint8_t* const          p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date)
 {
@@ -323,10 +323,10 @@ http_server_resp_data_in_static_mem(
 http_server_resp_t
 http_server_resp_200_data_in_heap(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    uint8_t* const                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date)
 {
@@ -352,7 +352,7 @@ http_server_resp_t
 http_server_resp_data_from_file(
     http_resp_code_e              http_resp_code,
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
     const socket_t                fd,
