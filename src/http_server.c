@@ -257,12 +257,14 @@ http_server_task_wdt_add_and_start(void)
 void
 http_server_task_wdt_reset(void)
 {
+#if defined(CONFIG_ESP_TASK_WDT)
     LOG_DBG("Feed watchdog");
     const esp_err_t err = esp_task_wdt_reset();
     if (ESP_OK != err)
     {
         LOG_ERR_ESP(err, "%s failed", "esp_task_wdt_reset");
     }
+#endif
 }
 
 static void
@@ -328,6 +330,7 @@ http_server_handle_sig_events(os_signal_events_t* const p_sig_events)
 static uint32_t
 http_server_get_task_wdog_feed_period_ms(void)
 {
+#if defined(CONFIG_ESP_TASK_WDT)
     const uint32_t period_ms = (CONFIG_ESP_TASK_WDT_TIMEOUT_S * TIME_UNITS_MS_PER_SECOND)
                                / HTTP_SERVER_TASK_WDOG_MIN_FEED_FREQ;
     if (period_ms > HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS)
@@ -335,6 +338,9 @@ http_server_get_task_wdog_feed_period_ms(void)
         return HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS;
     }
     return period_ms;
+#else
+    return HTTP_SERVER_TASK_WDOG_MAX_FEED_INTERVAL_MS;
+#endif
 }
 
 static bool
