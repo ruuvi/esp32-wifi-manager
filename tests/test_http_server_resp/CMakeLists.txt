@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.13)
 
 project(ruuvi_esp32-wifi-manager-test-http_server_resp)
 set(ProjectId ruuvi_esp32-wifi-manager-test-http_server_resp)
@@ -61,9 +61,6 @@ target_link_libraries(${ProjectId}
         gcov
         ruuvi_esp_wrappers
         ruuvi_esp_wrappers-common_test_funcs
-        -Wl,--wrap=wifiman_sha256_calc_hex_str
-        -Wl,--wrap=wifiman_sha256_hex_str
-        --coverage
 )
 
 target_link_options(${ProjectId} PRIVATE
@@ -71,4 +68,7 @@ target_link_options(${ProjectId} PRIVATE
         "-Wl,--wrap=calloc"
         "-Wl,--wrap=free"
         "-Wl,--wrap=close"
+        "-Wl,--wrap=wifiman_sha256_calc_hex_str"
+        "-Wl,--wrap=wifiman_sha256_hex_str"
+        --coverage
 )
