@@ -314,6 +314,11 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         g_pTestClass->m_resp_called   = true;
         g_pTestClass->m_resp_hostname = (nullptr != p_hostname) ? string(p_hostname) : "";
     }
+    if (HTTP_CONTENT_LOCATION_HEAP == p_resp->content_location)
+    {
+        os_free(p_resp->select_location.heap.p_buf);
+        p_resp->select_location.heap.p_buf = nullptr;
+    }
 }
 
 void
@@ -520,11 +525,11 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_static_mem_short_cont
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char json_content[]                     = "{\"status\":\"ok\"}";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)json_content;
+    static const char json_content[]                         = "{\"status\":\"ok\"}";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)json_content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -550,16 +555,18 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
     // Create a string longer than 256 chars
-    static char long_json[300];
-    memset(long_json, 'x', sizeof(long_json) - 1);
-    long_json[0]                     = '{';
-    long_json[sizeof(long_json) - 2] = '}';
-    long_json[sizeof(long_json) - 1] = '\0';
+    const size_t long_json_size = 300;
+    char*        p_long_json    = static_cast<char*>(os_malloc(long_json_size));
+    assert(nullptr != p_long_json);
+    memset(p_long_json, 'x', long_json_size - 1);
+    p_long_json[0]                  = '{';
+    p_long_json[long_json_size - 2] = '}';
+    p_long_json[long_json_size - 1] = '\0';
 
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)long_json;
+    this->m_handle_req_resp.http_resp_code             = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    this->m_handle_req_resp.select_location.heap.p_buf = (uint8_t*)p_long_json;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -568,7 +575,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     // INFO log for JSON response with length only (content_len = 299 > 256)
-    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content_len=" + to_string(strlen(long_json)));
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content_len=" + to_string(long_json_size - 1));
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
     os_malloc_trace_dump();

@@ -313,7 +313,15 @@ typedef struct http_server_resp_t
         struct
         {
             const uint8_t* p_buf;
-        } memory;
+        } flash;
+        struct
+        {
+            const uint8_t* p_buf;
+        } static_mem;
+        struct
+        {
+            uint8_t* p_buf;
+        } heap;
         struct
         {
             socket_t fd;

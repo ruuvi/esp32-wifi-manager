@@ -15,7 +15,6 @@
 #include "esp_err.h"
 #include "os_task.h"
 #include "wifi_manager_defs.h"
-#include "http_server_auth.h"
 #include "esp_log_wrapper.hpp"
 #include "lwip/tcp.h"
 #include "os_malloc.h"
@@ -208,7 +207,7 @@ os_task_get_name(void)
 }
 
 void
-http_server_netconn_resp_free(http_server_resp_t* const p_resp)
+http_server_resp_free(http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
@@ -219,7 +218,7 @@ http_server_netconn_resp_free(http_server_resp_t* const p_resp)
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
-            os_free(p_resp->select_location.memory.p_buf);
+            os_free(p_resp->select_location.heap.p_buf);
             break;
         case HTTP_CONTENT_LOCATION_FATFS:
             close(p_resp->select_location.fatfs.fd);
@@ -552,17 +551,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_static_mem) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{\"status\":\"ok\"}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"status\":\"ok\"}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     // Need tick values for each netconn_write_partly call: header write + body write
     for (int i = 0; i < 10; i++)
@@ -598,16 +597,16 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_heap) // NOLINT
     assert(nullptr != p_heap_body);
     memcpy(p_heap_body, src_body, body_len + 1);
 
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = body_len;
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(p_heap_body);
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_200;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -702,17 +701,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_gzip_no_cache_content_type_param
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "boundary=something";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_GZIP;
-    resp.flag_no_cache                = true;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "boundary=something";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_GZIP;
+    resp.flag_no_cache                    = true;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -744,17 +743,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_with_extra_header_fields) // NOL
         sizeof(g_http_server_extra_header_fields.buf),
         "X-Custom: value\r\n");
 
-    static const char  body[]         = "ok";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "ok";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -779,17 +778,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_206_fallback_to_200) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "partial";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_206;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "partial";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_206;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -903,17 +902,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_400_with_content) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{\"error\":\"bad\"}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_400;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"error\":\"bad\"}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_400;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -944,17 +943,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_401_403) // NOLINT
         sizeof(g_http_server_extra_header_fields.buf),
         "WWW-Authenticate: Basic\r\n");
 
-    static const char  body[]         = "{\"auth\":false}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_401;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"auth\":false}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_401;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1062,17 +1061,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_299_treated_as_200) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "ok";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_299;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "ok";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_299;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1452,17 +1451,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_netconn_write_failure_during_con
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "body data here";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "body data here";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     // First write (header) succeeds, second write (body) fails
     this->m_netconn_write_errors.push_back(ERR_OK);   // header
@@ -1536,17 +1535,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_header_write_failure) // NOLINT
     // Fail the alloc for header printf
     this->m_alloc_fail_on_call_idx = 1;
 
-    static const char  body[]         = "data";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "data";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1577,16 +1576,16 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_heap_write_failure) // NOLINT
     assert(nullptr != p_heap_body);
     memcpy(p_heap_body, src_body, body_len + 1);
 
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = body_len;
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(p_heap_body);
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_200;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
 
     // Header write succeeds, body write fails
     this->m_netconn_write_errors.push_back(ERR_OK);   // header
@@ -1827,16 +1826,16 @@ TEST_F(TestHttpServerNetconnResp, test_content_type_css_js_png_svg) // NOLINT
         this->m_tick_values.clear();
         esp_log_wrapper_clear();
 
-        http_server_resp_t resp           = {};
-        resp.http_resp_code               = HTTP_RESP_CODE_200;
-        resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-        resp.content_type                 = tc.type;
-        resp.p_content_type_param         = "";
-        resp.content_len                  = strlen(body);
-        resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-        resp.flag_no_cache                = false;
-        resp.flag_add_header_date         = true;
-        resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+        http_server_resp_t resp               = {};
+        resp.http_resp_code                   = HTTP_RESP_CODE_200;
+        resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+        resp.content_type                     = tc.type;
+        resp.p_content_type_param             = "";
+        resp.content_len                      = strlen(body);
+        resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+        resp.flag_no_cache                    = false;
+        resp.flag_add_header_date             = true;
+        resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
         for (int i = 0; i < 10; i++)
         {

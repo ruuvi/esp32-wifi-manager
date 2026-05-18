@@ -258,12 +258,27 @@ http_server_gen_header_date_str(const bool flag_gen_date)
 }
 
 static void
-write_content_from_memory(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
+write_content_from_flash(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
         p_conn,
-        p_resp->select_location.memory.p_buf,
+        p_resp->select_location.flash.p_buf,
+        p_resp->content_len,
+        NETCONN_NOCOPY);
+    if (!res)
+    {
+        LOG_ERR("%s failed", "http_server_netconn_write");
+    }
+}
+
+static void
+write_content_from_static_mem(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
+{
+    LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
+    const bool res = http_server_netconn_write(
+        p_conn,
+        p_resp->select_location.static_mem.p_buf,
         p_resp->content_len,
         NETCONN_NOCOPY);
     if (!res)
@@ -278,7 +293,7 @@ write_content_from_heap(struct netconn* const p_conn, const http_server_resp_t* 
     LOG_DBG("netconn_write: %zu bytes", p_resp->content_len);
     const bool res = http_server_netconn_write(
         p_conn,
-        p_resp->select_location.memory.p_buf,
+        p_resp->select_location.heap.p_buf,
         p_resp->content_len,
         NETCONN_COPY);
     if (!res)
@@ -383,9 +398,10 @@ http_server_write_content(struct netconn* const p_conn, const http_server_resp_t
         case HTTP_CONTENT_LOCATION_NO_CONTENT:
             break;
         case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            ATTR_FALLTHROUGH;
+            write_content_from_flash(p_conn, p_resp);
+            break;
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            write_content_from_memory(p_conn, p_resp);
+            write_content_from_static_mem(p_conn, p_resp);
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
             write_content_from_heap(p_conn, p_resp);
@@ -461,7 +477,7 @@ http_server_netconn_resp_with_content(
     }
 
     http_server_write_content(p_conn, p_resp);
-    http_server_netconn_resp_free(p_resp);
+    http_server_resp_free(p_resp);
 }
 
 static void

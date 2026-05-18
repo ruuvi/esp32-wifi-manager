@@ -239,7 +239,7 @@ os_task_get_name(void)
 }
 
 void
-http_server_netconn_resp_free(http_server_resp_t* const p_resp)
+http_server_resp_free(http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
@@ -250,7 +250,7 @@ http_server_netconn_resp_free(http_server_resp_t* const p_resp)
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
-            os_free(p_resp->select_location.memory.p_buf);
+            os_free(p_resp->select_location.heap.p_buf);
             break;
         case HTTP_CONTENT_LOCATION_FATFS:
             close(p_resp->select_location.fatfs.fd);
@@ -452,8 +452,7 @@ http_server_handle_req(
                 assert(p_heap_content);
             }
             memcpy(p_heap_content, g_pTestClass->m_content_in_heap.c_str(), g_pTestClass->m_content_in_heap.length());
-            g_pTestClass->m_handle_req_resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(
-                p_heap_content);
+            g_pTestClass->m_handle_req_resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_content);
         }
         else if (HTTP_CONTENT_LOCATION_FATFS == g_pTestClass->m_handle_req_resp.content_location)
         {
@@ -680,12 +679,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_json_resp_static_mem_sh
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char json_content[]                     = "{\"status\":\"ok\"}";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(json_content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)json_content;
+    static const char json_content[]                         = "{\"status\":\"ok\"}";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.content_len                      = strlen(json_content);
+    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)json_content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -713,7 +712,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_json_resp_heap_long_con
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    // Create a string longer than 256 chars on the heap (so http_server_netconn_resp_free frees it)
+    // Create a string longer than 256 chars on the heap (so http_server_resp_free frees it)
     this->m_content_in_heap      = string(299, 'x');
     this->m_content_in_heap[0]   = '{';
     this->m_content_in_heap[298] = '}';
@@ -722,7 +721,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_json_resp_heap_long_con
     this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
     this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_HEAP;
     this->m_handle_req_resp.content_len      = this->m_content_in_heap.length();
-    this->m_handle_req_resp.select_location.memory.p_buf
+    this->m_handle_req_resp.select_location.heap.p_buf
         = nullptr; // heap content will be allocated in http_server_handle_req
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
@@ -750,12 +749,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_non_json_resp_no_json_l
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char content[]                          = "<html>Hello</html>";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_HTML;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_FLASH_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)content;
+    static const char content[]                         = "<html>Hello</html>";
+    this->m_handle_req_resp.http_resp_code              = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    this->m_handle_req_resp.content_len                 = strlen(content);
+    this->m_handle_req_resp.select_location.flash.p_buf = (const uint8_t*)content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -903,7 +902,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_hostname_alloc_failure_
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
-// ===== Hostname alloc failure with resource leak scenarios (tests http_server_netconn_resp_free) =====
+// ===== Hostname alloc failure with resource leak scenarios (tests http_server_resp_free) =====
 
 TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_hostname_alloc_failure_frees_heap_content) // NOLINT
 {
@@ -918,7 +917,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_hostname_alloc_failure_
     this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
     this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_HEAP;
     this->m_handle_req_resp.content_len      = this->m_content_in_heap.length();
-    this->m_handle_req_resp.select_location.memory.p_buf
+    this->m_handle_req_resp.select_location.heap.p_buf
         = nullptr; // heap content will be allocated in http_server_handle_req
 
     // Fail the hostname alloc (first calloc after handle_req)
@@ -1051,11 +1050,11 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_200_with_static_me
 
     char content[] = "static_mem data here";
 
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.select_location.memory.p_buf = reinterpret_cast<uint8_t*>(content);
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.content_len                      = strlen(content);
+    this->m_handle_req_resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(content);
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -1086,7 +1085,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_200_with_heap_cont
     this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
     this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_HEAP;
     this->m_handle_req_resp.content_len      = this->m_content_in_heap.length();
-    this->m_handle_req_resp.select_location.memory.p_buf
+    this->m_handle_req_resp.select_location.heap.p_buf
         = nullptr; // heap content will be allocated in http_server_handle_req
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
@@ -1184,12 +1183,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_200_with_flash_mem
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char content[]                          = "<html>flash</html>";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_HTML;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_FLASH_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)content;
+    static const char content[]                         = "<html>flash</html>";
+    this->m_handle_req_resp.http_resp_code              = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    this->m_handle_req_resp.content_len                 = strlen(content);
+    this->m_handle_req_resp.select_location.flash.p_buf = (const uint8_t*)content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -1215,12 +1214,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_400_with_content) 
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char err_content[]                      = "Bad request details";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_400;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(err_content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)err_content;
+    static const char err_content[]                          = "Bad request details";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_400;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.content_len                      = strlen(err_content);
+    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)err_content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -1389,12 +1388,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_206_falls_back_to_
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char content[]                          = "partial";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_206;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)content;
+    static const char content[]                              = "partial";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_206;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.content_len                      = strlen(content);
+    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -1419,14 +1418,14 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_200_with_gzip_no_c
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char content[]                          = "compressed data";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_HTML;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_FLASH_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.content_encoding             = HTTP_CONTENT_ENCODING_GZIP;
-    this->m_handle_req_resp.flag_no_cache                = true;
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)content;
+    static const char content[]                         = "compressed data";
+    this->m_handle_req_resp.http_resp_code              = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    this->m_handle_req_resp.content_len                 = strlen(content);
+    this->m_handle_req_resp.content_encoding            = HTTP_CONTENT_ENCODING_GZIP;
+    this->m_handle_req_resp.flag_no_cache               = true;
+    this->m_handle_req_resp.select_location.flash.p_buf = (const uint8_t*)content;
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -1452,12 +1451,12 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_hostname_alloc_failure_
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char content[]                          = "static content";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.content_len                  = strlen(content);
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)content;
+    static const char content[]                              = "static content";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.content_len                      = strlen(content);
+    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)content;
 
     this->m_alloc_fail_on_call_idx = 1;
 

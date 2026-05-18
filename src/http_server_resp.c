@@ -47,8 +47,8 @@ http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, char* const
         .content_len          = strlen(p_json_content),
         .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
-            .memory = {
-                .p_buf = (const uint8_t*)p_json_content,
+            .heap = {
+                .p_buf = (uint8_t*)p_json_content,
             },
         },
     };
@@ -106,8 +106,8 @@ http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, char* const
         .content_len          = strlen(p_content),
         .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
-            .memory = {
-                .p_buf = (const uint8_t*)p_content,
+            .heap = {
+                .p_buf = (uint8_t*)p_content,
             },
         },
     };
@@ -126,11 +126,6 @@ http_server_resp_err(const http_resp_code_e http_resp_code)
         .p_content_type_param = NULL,
         .content_len          = 0,
         .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
-        .select_location = {
-            .memory = {
-                .p_buf = NULL,
-            },
-        },
     };
     return resp;
 }
@@ -148,7 +143,7 @@ http_server_resp_err_json_in_static_mem(const http_resp_code_e http_resp_code, c
         .content_len          = strlen(p_json_content),
         .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
-            .memory = {
+            .static_mem = {
                 .p_buf = (const uint8_t*)p_json_content,
             },
         },
@@ -173,8 +168,8 @@ http_server_resp_err_json_in_heap(const http_resp_code_e http_resp_code, char* c
         .content_len          = strlen(p_json_content),
         .content_encoding     = HTTP_CONTENT_ENCODING_NONE,
         .select_location      = {
-            .memory = {
-                .p_buf = (const uint8_t*)p_json_content,
+            .heap = {
+                .p_buf = (uint8_t*)p_json_content,
             },
         },
     };
@@ -280,7 +275,7 @@ http_server_resp_data_in_flash(
         .content_len          = content_len,
         .content_encoding     = content_encoding,
         .select_location      = {
-            .memory = {
+            .flash = {
                 .p_buf = p_buf,
             },
         },
@@ -308,7 +303,7 @@ http_server_resp_data_in_static_mem(
         .content_len          = content_len,
         .content_encoding     = content_encoding,
         .select_location      = {
-            .memory = {
+            .static_mem = {
                 .p_buf = p_buf,
             },
         },
@@ -336,7 +331,7 @@ http_server_resp_200_data_in_heap(
         .content_len          = content_len,
         .content_encoding     = content_encoding,
         .select_location      = {
-            .memory = {
+            .heap = {
                 .p_buf = p_buf,
             },
         },
@@ -610,7 +605,7 @@ http_server_resp_403_forbidden(void)
 }
 
 void
-http_server_netconn_resp_free(http_server_resp_t* const p_resp)
+http_server_resp_free(http_server_resp_t* const p_resp)
 {
     switch (p_resp->content_location)
     {
@@ -621,7 +616,7 @@ http_server_netconn_resp_free(http_server_resp_t* const p_resp)
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
-            os_free(p_resp->select_location.memory.p_buf);
+            os_free(p_resp->select_location.heap.p_buf);
             break;
         case HTTP_CONTENT_LOCATION_FATFS:
             LOG_DBG("Close file fd=%d", (printf_int_t)p_resp->select_location.fatfs.fd);

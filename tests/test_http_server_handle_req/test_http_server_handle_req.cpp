@@ -634,6 +634,29 @@ http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t* const p_enc_req
     return false;
 }
 
+void
+http_server_resp_free(http_server_resp_t* const p_resp)
+{
+    switch (p_resp->content_location)
+    {
+        case HTTP_CONTENT_LOCATION_NO_CONTENT:
+            break;
+        case HTTP_CONTENT_LOCATION_FLASH_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_STATIC_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_HEAP:
+            os_free(p_resp->select_location.heap.p_buf);
+            break;
+        case HTTP_CONTENT_LOCATION_FATFS:
+            close(p_resp->select_location.fatfs.fd);
+            break;
+        case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
+            json_stream_gen_delete(&p_resp->select_location.json_generator.p_json_gen);
+            break;
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif

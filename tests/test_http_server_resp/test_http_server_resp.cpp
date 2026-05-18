@@ -212,8 +212,7 @@ TEST_F(TestHttpServerResp, resp_400) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -227,8 +226,7 @@ TEST_F(TestHttpServerResp, resp_403) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -246,8 +244,10 @@ TEST_F(TestHttpServerResp, resp_403_json) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(strlen(p_auth_json_content), resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(
+        string(p_auth_json_content),
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -260,8 +260,7 @@ TEST_F(TestHttpServerResp, resp_403_json_null_auth_json_ptr_fallback_to_err) // 
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -275,8 +274,7 @@ TEST_F(TestHttpServerResp, resp_404) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -291,8 +289,7 @@ TEST_F(TestHttpServerResp, resp_302) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -306,8 +303,7 @@ TEST_F(TestHttpServerResp, resp_409) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -321,8 +317,7 @@ TEST_F(TestHttpServerResp, resp_503) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(0, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -335,7 +330,7 @@ TEST_F(TestHttpServerResp, resp_500) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -348,7 +343,7 @@ TEST_F(TestHttpServerResp, resp_502) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -361,7 +356,7 @@ TEST_F(TestHttpServerResp, resp_504) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -379,8 +374,10 @@ TEST_F(TestHttpServerResp, resp_401_json) // NOLINT
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(strlen(p_auth_json_content), resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(string(p_auth_json_content), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(
+        string(p_auth_json_content),
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -393,8 +390,7 @@ TEST_F(TestHttpServerResp, resp_401_json_null_auth_json_ptr_fallback_to_err) // 
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    ASSERT_EQ(nullptr, resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -410,8 +406,8 @@ TEST_F(TestHttpServerResp, resp_json_in_heap_and_200_json_in_heap) // NOLINT
     ASSERT_TRUE(resp_504.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp_504.content_type);
     ASSERT_EQ(strlen(p_json_str), resp_504.content_len);
-    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<const char*>(resp_504.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp_504);
+    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<char*>(resp_504.select_location.heap.p_buf)));
+    http_server_resp_free(&resp_504);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 
     char*              p_json_content_2 = heap_strdup(p_json_str);
@@ -422,8 +418,8 @@ TEST_F(TestHttpServerResp, resp_json_in_heap_and_200_json_in_heap) // NOLINT
     ASSERT_TRUE(resp_200.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp_200.content_type);
     ASSERT_EQ(strlen(p_json_str), resp_200.content_len);
-    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<const char*>(resp_200.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp_200);
+    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<char*>(resp_200.select_location.heap.p_buf)));
+    http_server_resp_free(&resp_200);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -438,8 +434,8 @@ TEST_F(TestHttpServerResp, resp_502_json_in_heap) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(strlen(p_json_str), resp.content_len);
-    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(string(p_json_str), string(reinterpret_cast<char*>(resp.select_location.heap.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -452,7 +448,7 @@ TEST_F(TestHttpServerResp, resp_502_json_in_heap_null_fallback_to_err) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -483,7 +479,7 @@ TEST_F(TestHttpServerResp, resp_json_generator) // NOLINT
         string("{{\"a\":1}}"),
         string(json_stream_gen_get_next_chunk(resp.select_location.json_generator.p_json_gen)));
 
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(nullptr, resp.select_location.json_generator.p_json_gen);
 }
 
@@ -510,7 +506,7 @@ TEST_F(TestHttpServerResp, resp_200_json_generator) // NOLINT
         string("{{\"a\":1}}"),
         string(json_stream_gen_get_next_chunk(resp.select_location.json_generator.p_json_gen)));
 
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(nullptr, resp.select_location.json_generator.p_json_gen);
 }
 
@@ -532,8 +528,8 @@ TEST_F(TestHttpServerResp, resp_data_in_flash_html) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(3, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(reinterpret_cast<const uint8_t*>(html_content), resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(html_content), resp.select_location.flash.p_buf);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -556,8 +552,8 @@ TEST_F(TestHttpServerResp, resp_data_in_flash_js_gzipped_with_param) // NOLINT
     ASSERT_EQ(param_str, resp.p_content_type_param);
     ASSERT_EQ(3, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_GZIP, resp.content_encoding);
-    ASSERT_EQ(reinterpret_cast<const uint8_t*>(js_content), resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(js_content), resp.select_location.flash.p_buf);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -582,8 +578,8 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_with_caching) // N
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.static_mem.p_buf);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -608,8 +604,8 @@ TEST_F(TestHttpServerResp, resp_data_in_static_mem_plain_text_without_caching) /
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.memory.p_buf);
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(reinterpret_cast<const uint8_t*>(p_content), resp.select_location.static_mem.p_buf);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -635,8 +631,8 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_with_caching) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<char*>(resp.select_location.heap.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -662,8 +658,8 @@ TEST_F(TestHttpServerResp, resp_data_in_heap_json_without_caching) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<char*>(resp.select_location.heap.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -681,8 +677,8 @@ TEST_F(TestHttpServerResp, resp_text_in_heap) // NOLINT
     ASSERT_EQ(nullptr, resp.p_content_type_param);
     ASSERT_EQ(strlen(p_content_str), resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
-    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+    ASSERT_EQ(string(p_content_str), string(reinterpret_cast<char*>(resp.select_location.heap.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -706,7 +702,7 @@ TEST_F(TestHttpServerResp, resp_data_from_file_css_gzipped) // NOLINT
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_GZIP, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(1, this->m_close_call_count);
     ASSERT_EQ(sock, this->m_close_last_fd);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -732,7 +728,7 @@ TEST_F(TestHttpServerResp, resp_data_from_file_png) // NOLINT
     ASSERT_EQ(4, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(1, this->m_close_call_count);
     ASSERT_EQ(sock, this->m_close_last_fd);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -758,7 +754,7 @@ TEST_F(TestHttpServerResp, resp_data_from_file_svg) // NOLINT
     ASSERT_EQ(5, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(1, this->m_close_call_count);
     ASSERT_EQ(sock, this->m_close_last_fd);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -784,7 +780,7 @@ TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
     ASSERT_EQ(5, resp.content_len);
     ASSERT_EQ(HTTP_CONTENT_ENCODING_NONE, resp.content_encoding);
     ASSERT_EQ(sock, resp.select_location.fatfs.fd);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(1, this->m_close_call_count);
     ASSERT_EQ(sock, this->m_close_last_fd);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -816,7 +812,7 @@ TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session
     ASSERT_EQ(
         "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
         "\"lan_auth_allow\", \"lan\": true}",
-        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
     ASSERT_EQ(
         "WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\" "
         "challenge=\"66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925\" "
@@ -828,7 +824,7 @@ TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session
     const http_server_auth_ruuvi_authorized_session_t* const p_session = &p_auth->authorized_sessions[0];
     ASSERT_EQ("AAAAAAAAAAAAAAAA", string(p_session->session_id.buf));
     ASSERT_EQ(string(remote_ip.buf), string(p_session->remote_ip.buf));
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -851,7 +847,7 @@ TEST_F(TestHttpServerResp, resp_200_auth_allow_with_new_session_id_empty_challen
         &extra_header_fields);
     ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -870,8 +866,8 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi) // NOLINT
     ASSERT_EQ(
         "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
         "\"lan_auth_ruuvi\", \"lan\": true}",
-        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -900,13 +896,13 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_with_err_mess
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_NE(
         string::npos,
-        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf))
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf))
             .find("\"message\": \"wrong password\""));
     ASSERT_NE(
         string::npos,
         string(extra_header_fields.buf).find("WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\""));
     ASSERT_NE(string::npos, string(extra_header_fields.buf).find("session_id=\"AAAAAAAAAAAAAAAA\""));
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -931,7 +927,7 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_empty_challen
         "err");
     ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -955,7 +951,7 @@ TEST_F(TestHttpServerResp, resp_401_auth_digest) // NOLINT
         string::npos,
         string(extra_header_fields.buf).find("WWW-Authenticate: Digest realm=\"hostname\" qop=\"auth\" nonce=\""));
     ASSERT_NE(string::npos, string(extra_header_fields.buf).find("\" opaque=\""));
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -974,7 +970,7 @@ TEST_F(TestHttpServerResp, resp_401_auth_digest_sha_failure_returns_503) // NOLI
     http_server_resp_t resp = http_server_resp_401_auth_digest(&hostinfo, &extra_header_fields);
     ASSERT_EQ(HTTP_RESP_CODE_503, resp.http_resp_code);
     ASSERT_EQ(HTTP_CONTENT_LOCATION_NO_CONTENT, resp.content_location);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -993,8 +989,8 @@ TEST_F(TestHttpServerResp, resp_403_auth_deny) // NOLINT
     ASSERT_EQ(
         "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
         "\"lan_auth_deny\", \"lan\": true}",
-        string(reinterpret_cast<const char*>(resp.select_location.memory.p_buf)));
-    http_server_netconn_resp_free(&resp);
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
@@ -1007,7 +1003,7 @@ TEST_F(TestHttpServerResp, resp_403_forbidden) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_TEXT_HTML, resp.content_type);
     ASSERT_EQ(0, resp.content_len);
-    http_server_netconn_resp_free(&resp);
+    http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
