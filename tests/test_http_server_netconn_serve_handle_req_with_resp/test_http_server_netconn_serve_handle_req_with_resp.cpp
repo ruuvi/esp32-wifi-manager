@@ -1166,7 +1166,7 @@ TEST_F(TestHttpServerNetconnServeHandleReqWithResp, test_resp_200_with_json_cont
     ASSERT_NE(string::npos, written.find("{\"key111\":\"value222\"}"));
 
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
-    TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "Unexpected content location: 5");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content (len 0): Json generator");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: OK");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "json_stream_gen: send 21 bytes:\n{\"key111\":\"value222\"}");
     ASSERT_TRUE(esp_log_wrapper_is_empty());

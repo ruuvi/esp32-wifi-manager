@@ -54,6 +54,7 @@ http_server_netconn_log_req_and_extract_hostname(
 static void
 http_server_netconn_log_req_info(const http_req_info_t* const p_req_info)
 {
+    (void)p_req_info;
     LOG_DBG("p_http_cmd: %s", p_req_info->http_cmd.ptr ? p_req_info->http_cmd.ptr : "NULL");
     LOG_DBG("p_http_uri: %s", p_req_info->http_uri.ptr ? p_req_info->http_uri.ptr : "NULL");
     LOG_DBG("p_http_uri_params: %s", p_req_info->http_uri_params.ptr ? p_req_info->http_uri_params.ptr : "NULL");
@@ -70,6 +71,12 @@ http_server_netconn_log_json_resp(const http_server_resp_t* const p_resp)
         const char* p_content_buf = NULL;
         switch (p_resp->content_location)
         {
+            case HTTP_CONTENT_LOCATION_NO_CONTENT:
+                LOG_WARN(
+                    "Json resp: code=%u, content (len %zu): NO_CONTENT",
+                    p_resp->http_resp_code,
+                    p_resp->content_len);
+                break;
             case HTTP_CONTENT_LOCATION_FLASH_MEM:
                 p_content_buf = (const char*)p_resp->select_location.flash.p_buf;
                 break;
@@ -79,8 +86,14 @@ http_server_netconn_log_json_resp(const http_server_resp_t* const p_resp)
             case HTTP_CONTENT_LOCATION_HEAP:
                 p_content_buf = (const char*)p_resp->select_location.heap.p_buf;
                 break;
-            default:
-                LOG_ERR("Unexpected content location: %u", p_resp->content_location);
+            case HTTP_CONTENT_LOCATION_FATFS:
+                LOG_INFO("Json resp: code=%u, content (len %zu): FATFS", p_resp->http_resp_code, p_resp->content_len);
+                break;
+            case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
+                LOG_INFO(
+                    "Json resp: code=%u, content (len %zu): Json generator",
+                    p_resp->http_resp_code,
+                    p_resp->content_len);
                 break;
         }
         if (NULL != p_content_buf)
