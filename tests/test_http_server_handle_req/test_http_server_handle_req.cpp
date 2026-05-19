@@ -527,10 +527,10 @@ void
 wifi_manager_disable_wps(void)
 {
 }
-const char*
+str_buf_t
 wifi_manager_scan_sync(void)
 {
-    return NULL;
+    return str_buf_init_null();
 }
 void
 dns_server_stop(void)
@@ -562,7 +562,7 @@ http_server_resp_200_json(const char* p_json_content)
 }
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char* const p_json_content)
+http_server_resp_200_json_in_heap(char* const p_json_content)
 {
     (void)p_json_content;
     return make_resp(HTTP_RESP_CODE_200);
@@ -632,6 +632,29 @@ http_server_ecdh_decrypt(const http_server_ecdh_encrypted_req_t* const p_enc_req
         }
     }
     return false;
+}
+
+void
+http_server_resp_free(http_server_resp_t* const p_resp)
+{
+    switch (p_resp->content_location)
+    {
+        case HTTP_CONTENT_LOCATION_NO_CONTENT:
+            break;
+        case HTTP_CONTENT_LOCATION_FLASH_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_STATIC_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_HEAP:
+            os_free(p_resp->select_location.heap.p_buf);
+            break;
+        case HTTP_CONTENT_LOCATION_FATFS:
+            close(p_resp->select_location.fatfs.fd);
+            break;
+        case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
+            json_stream_gen_delete(&p_resp->select_location.json_generator.p_json_gen);
+            break;
+    }
 }
 
 #ifdef __cplusplus

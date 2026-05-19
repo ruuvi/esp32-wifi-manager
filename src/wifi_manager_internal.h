@@ -14,9 +14,9 @@
 #include "freertos/event_groups.h"
 #include "os_wrapper_types.h"
 #include "os_sema.h"
-#include "os_timer.h"
 #include "http_req.h"
 #include "esp_wps.h"
+#include "str_buf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -159,7 +159,7 @@ wifi_manager_cb_on_http_delete(
 bool
 wifi_manager_recv_and_handle_msg(void);
 
-const char*
+str_buf_t
 wifi_manager_generate_access_points_json(void);
 
 bool

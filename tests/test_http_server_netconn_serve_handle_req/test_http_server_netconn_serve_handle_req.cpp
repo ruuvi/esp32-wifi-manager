@@ -19,6 +19,7 @@
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "wifi_manager_defs.h"
+#include "http_server_netconn_resp.h"
 
 using namespace std;
 
@@ -314,6 +315,11 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
         g_pTestClass->m_resp_called   = true;
         g_pTestClass->m_resp_hostname = (nullptr != p_hostname) ? string(p_hostname) : "";
     }
+    if (HTTP_CONTENT_LOCATION_HEAP == p_resp->content_location)
+    {
+        os_free(p_resp->select_location.heap.p_buf);
+        p_resp->select_location.heap.p_buf = nullptr;
+    }
 }
 
 void
@@ -326,7 +332,7 @@ http_server_netconn_resp_302(struct netconn* const p_conn)
 }
 
 void
-http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_400(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {
@@ -335,7 +341,7 @@ http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 void
-http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_500(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {
@@ -344,7 +350,7 @@ http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 void
-http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_503(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {
@@ -520,11 +526,12 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_static_mem_short_cont
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char json_content[]                     = "{\"status\":\"ok\"}";
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)json_content;
+    static char json_content[]                               = "{\"status\":\"ok\"}";
+    this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    this->m_handle_req_resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(json_content);
+    this->m_handle_req_resp.content_len                      = strlen(json_content);
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -550,16 +557,19 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
     // Create a string longer than 256 chars
-    static char long_json[300];
-    memset(long_json, 'x', sizeof(long_json) - 1);
-    long_json[0]                     = '{';
-    long_json[sizeof(long_json) - 2] = '}';
-    long_json[sizeof(long_json) - 1] = '\0';
+    constexpr size_t long_json_size = 300;
+    char*            p_long_json    = static_cast<char*>(os_malloc(long_json_size));
+    assert(nullptr != p_long_json);
+    memset(p_long_json, 'x', long_json_size - 1);
+    p_long_json[0]                  = '{';
+    p_long_json[long_json_size - 2] = '}';
+    p_long_json[long_json_size - 1] = '\0';
 
-    this->m_handle_req_resp.http_resp_code               = HTTP_RESP_CODE_200;
-    this->m_handle_req_resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    this->m_handle_req_resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    this->m_handle_req_resp.select_location.memory.p_buf = (const uint8_t*)long_json;
+    this->m_handle_req_resp.http_resp_code             = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    this->m_handle_req_resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_long_json);
+    this->m_handle_req_resp.content_len                = strlen(p_long_json);
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -568,7 +578,89 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     // INFO log for JSON response with length only (content_len = 299 > 256)
-    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content_len=" + to_string(strlen(long_json)));
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content_len=" + to_string(long_json_size - 1));
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_flash_mem_short_content) // NOLINT
+{
+    // JSON response from flash memory, content_len <= 256 → log with content
+    char            req_buf[]     = "GET /api HTTP/1.1\r\nHost: 192.168.1.114\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    static const char json_content[]                    = "{\"version\":\"1.0\"}";
+    this->m_handle_req_resp.http_resp_code              = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    this->m_handle_req_resp.select_location.flash.p_buf = reinterpret_cast<const uint8_t*>(json_content);
+    this->m_handle_req_resp.content_len                 = strlen(json_content);
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    // INFO log for the request
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
+    // INFO log for JSON response with content (flash mem)
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, string("Json resp: code=200, content:\n") + json_content);
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_no_content) // NOLINT
+{
+    // JSON response with NO_CONTENT location → log warning
+    char            req_buf[]     = "GET /api HTTP/1.1\r\nHost: 192.168.1.114\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+    this->m_handle_req_resp.content_len      = 0;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Json resp: code=200, content (len 0): NO_CONTENT");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_fatfs) // NOLINT
+{
+    // JSON response with FATFS location → log info with FATFS
+    char            req_buf[]     = "GET /api HTTP/1.1\r\nHost: 192.168.1.114\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_FATFS;
+    this->m_handle_req_resp.content_len      = 1024;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content (len 1024): FATFS");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
     os_malloc_trace_dump();

@@ -63,16 +63,16 @@ json_access_points_generate_str_buf(
     str_buf_printf(p_str_buf, "]\n");
 }
 
-const char*
+str_buf_t
 json_access_points_generate(const wifi_ap_record_t* const p_access_points, const uint32_t num_access_points)
 {
     str_buf_t str_buf = STR_BUF_INIT_NULL();
     json_access_points_generate_str_buf(&str_buf, p_access_points, num_access_points);
     if (!str_buf_init_with_alloc(&str_buf))
     {
-        return NULL;
+        return str_buf_init_null();
     }
     json_access_points_generate_str_buf(&str_buf, p_access_points, num_access_points);
 
-    return str_buf.buf;
+    return str_buf;
 }

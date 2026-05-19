@@ -16,13 +16,13 @@
 #include "os_malloc.h"
 #include "os_mutex_recursive.h"
 #include "os_sema.h"
+#include "os_timer.h"
 #include "wifi_manager.h"
 #include "wifiman_msg.h"
 #include "http_server_resp.h"
 #include "json_network_info.h"
 #include "sta_ip_safe.h"
 #include "dns_server.h"
-#include "json_access_points.h"
 #include "wifiman_config.h"
 #include "time_units.h"
 
@@ -733,19 +733,19 @@ wifi_manager_scan_timer_stop(void)
     os_timer_one_shot_without_arg_stop(g_p_wifi_scan_timer);
 }
 
-static const char*
+static str_buf_t
 wifi_manager_generate_json_access_points(void)
 {
     if (wifi_manager_lock_with_timeout(pdMS_TO_TICKS(100)))
     {
-        const char* const p_buf = wifi_manager_generate_access_points_json();
+        str_buf_t str_buf = wifi_manager_generate_access_points_json();
         wifi_manager_unlock();
-        return p_buf;
+        return str_buf;
     }
-    return NULL;
+    return str_buf_init_null();
 }
 
-const char*
+str_buf_t
 wifi_manager_scan_sync(void)
 {
     wifi_manager_lock();
@@ -753,14 +753,14 @@ wifi_manager_scan_sync(void)
     {
         LOG_ERR("Another thread tries to perform the same operation");
         wifi_manager_unlock();
-        return NULL;
+        return str_buf_init_null();
     }
     g_p_scan_sync_sema = os_sema_create_static(&g_scan_sync_sema_mem);
     LOG_INFO("wifi_manager_scan_sync: wifiman_msg_send_cmd_start_wifi_scan");
     if (!wifiman_msg_send_cmd_start_wifi_scan())
     {
         wifi_manager_unlock();
-        return NULL;
+        return str_buf_init_null();
     }
     wifi_manager_unlock();
 
@@ -777,11 +777,11 @@ wifi_manager_scan_sync(void)
 
     wifi_manager_lock();
     os_sema_delete(&g_p_scan_sync_sema);
-    const char* const p_buf = wifi_manager_generate_json_access_points();
-    LOG_DBG("wifi_manager_scan_sync: p_buf: %s", p_buf ? p_buf : "NULL");
+    str_buf_t str_buf = wifi_manager_generate_json_access_points();
+    LOG_DBG("wifi_manager_scan_sync: p_buf: %s", str_buf.buf ? str_buf.buf : "NULL");
     wifi_manager_unlock();
 
-    return p_buf;
+    return str_buf;
 }
 
 void

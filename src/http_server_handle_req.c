@@ -145,14 +145,14 @@ http_server_handle_req_get(
 
     if (0 == strcmp(p_file_name, "ap.json"))
     {
-        const char* const p_buff = wifi_manager_scan_sync();
-        if (NULL == p_buff)
+        str_buf_t str_buf = wifi_manager_scan_sync();
+        if (NULL == str_buf.buf)
         {
             LOG_ERR("GET /ap.json: failed to get json, return HTTP error 503");
             return http_server_resp_503();
         }
-        LOG_INFO("ap.json: %s", p_buff);
-        return http_server_resp_200_json_in_heap(p_buff);
+        LOG_INFO("ap.json: %s", str_buf.buf);
+        return http_server_resp_200_json_in_heap(str_buf.buf);
     }
 
     if (0 == strcmp(p_file_name, "status.json"))
@@ -563,10 +563,7 @@ http_server_handle_req_get_with_ecdh_key(
         if (!http_server_handle_ruuvi_ecdh_pub_key(p_ruuvi_ecdh_pub_key, len_ruuvi_ecdh_pub_key, &pub_key_b64_srv))
         {
             LOG_ERR("http_server_handle_ruuvi_ecdh_pub_key failed");
-            if ((HTTP_CONTENT_LOCATION_HEAP == resp.content_location) && (NULL != resp.select_location.memory.p_buf))
-            {
-                os_free(resp.select_location.memory.p_buf);
-            }
+            http_server_resp_free(&resp);
             return http_server_resp_500();
         }
         const size_t offset = strlen(p_extra_header_fields->buf);

@@ -15,7 +15,6 @@
 #include "esp_err.h"
 #include "os_task.h"
 #include "wifi_manager_defs.h"
-#include "http_server_auth.h"
 #include "esp_log_wrapper.hpp"
 #include "lwip/tcp.h"
 #include "os_malloc.h"
@@ -205,6 +204,29 @@ os_task_get_name(void)
 {
     static const char g_task_name[] = "main";
     return const_cast<char*>(g_task_name);
+}
+
+void
+http_server_resp_free(http_server_resp_t* const p_resp)
+{
+    switch (p_resp->content_location)
+    {
+        case HTTP_CONTENT_LOCATION_NO_CONTENT:
+            break;
+        case HTTP_CONTENT_LOCATION_FLASH_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_STATIC_MEM:
+            break;
+        case HTTP_CONTENT_LOCATION_HEAP:
+            os_free(p_resp->select_location.heap.p_buf);
+            break;
+        case HTTP_CONTENT_LOCATION_FATFS:
+            close(p_resp->select_location.fatfs.fd);
+            break;
+        case HTTP_CONTENT_LOCATION_JSON_GENERATOR:
+            json_stream_gen_delete(&p_resp->select_location.json_generator.p_json_gen);
+            break;
+    }
 }
 
 os_task_priority_t
@@ -529,17 +551,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_static_mem) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{\"status\":\"ok\"}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"status\":\"ok\"}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     // Need tick values for each netconn_write_partly call: header write + body write
     for (int i = 0; i < 10; i++)
@@ -565,6 +587,45 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_static_mem) // NOLINT
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
+TEST_F(TestHttpServerNetconnResp, test_resp_200_flash_mem) // NOLINT
+{
+    this->m_p_conn->send_timeout = 0;
+
+    static const char  body[]        = "{\"firmware\":\"v1.0\"}";
+    http_server_resp_t resp          = {};
+    resp.http_resp_code              = HTTP_RESP_CODE_200;
+    resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    resp.content_type                = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param        = "";
+    resp.content_len                 = strlen(body);
+    resp.content_encoding            = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache               = false;
+    resp.flag_add_header_date        = true;
+    resp.select_location.flash.p_buf = reinterpret_cast<const uint8_t*>(body);
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "myhost.local");
+
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 200 OK\r\n"));
+    ASSERT_NE(string::npos, written.find("Content-type: application/json; charset=utf-8\r\n"));
+    ASSERT_NE(string::npos, written.find("Content-Length: 19\r\n"));
+    ASSERT_NE(string::npos, written.find("Date:"));
+    ASSERT_NE(string::npos, written.find(body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: OK");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerNetconnResp, test_resp_200_heap) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
@@ -575,16 +636,16 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_heap) // NOLINT
     assert(nullptr != p_heap_body);
     memcpy(p_heap_body, src_body, body_len + 1);
 
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = body_len;
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(p_heap_body);
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_200;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -679,17 +740,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_gzip_no_cache_content_type_param
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "boundary=something";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_GZIP;
-    resp.flag_no_cache                = true;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "boundary=something";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_GZIP;
+    resp.flag_no_cache                    = true;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -721,17 +782,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_with_extra_header_fields) // NOL
         sizeof(g_http_server_extra_header_fields.buf),
         "X-Custom: value\r\n");
 
-    static const char  body[]         = "ok";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "ok";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -756,17 +817,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_206_fallback_to_200) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "partial";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_206;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "partial";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_206;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_OCTET_STREAM;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -844,6 +905,100 @@ TEST_F(TestHttpServerNetconnResp, test_resp_302_auth_redirect) // NOLINT
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 }
 
+TEST_F(TestHttpServerNetconnResp, test_resp_301_with_heap_content_frees_buffer) // NOLINT
+{
+    // Verify that a 301 redirect with heap-allocated content properly frees the buffer
+    this->m_p_conn->send_timeout = 0;
+
+    const char   src_body[]  = "{\"redirect\":true}";
+    const size_t body_len    = strlen(src_body);
+    char*        p_heap_body = static_cast<char*>(os_malloc(body_len + 1));
+    assert(nullptr != p_heap_body);
+    memcpy(p_heap_body, src_body, body_len + 1);
+
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_301;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
+
+    snprintf(g_http_server_extra_header_fields.buf, sizeof(g_http_server_extra_header_fields.buf), "X-Auth: token\r\n");
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "gw.local");
+
+    // 301 sends redirect, body content is NOT sent
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 301 Moved Permanently\r\n"));
+    ASSERT_NE(string::npos, written.find("Location: http://gw.local/#auth\r\n"));
+    // Body should NOT appear in the response (redirect ignores it)
+    ASSERT_EQ(string::npos, written.find(src_body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: status 301 (Moved Permanently), URL=http://gw.local/#auth");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    // Heap buffer must have been freed by http_server_resp_free
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnResp, test_resp_302_with_heap_content_frees_buffer) // NOLINT
+{
+    // Verify that a 302 redirect with heap-allocated content properly frees the buffer
+    this->m_p_conn->send_timeout = 0;
+
+    const char   src_body[]  = "{\"found\":true}";
+    const size_t body_len    = strlen(src_body);
+    char*        p_heap_body = static_cast<char*>(os_malloc(body_len + 1));
+    assert(nullptr != p_heap_body);
+    memcpy(p_heap_body, src_body, body_len + 1);
+
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_302;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "gw.local");
+
+    // 302 sends redirect, body content is NOT sent
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 302 Found\r\n"));
+    ASSERT_NE(string::npos, written.find("Location: http://gw.local/#auth\r\n"));
+    // Body should NOT appear in the response (redirect ignores it)
+    ASSERT_EQ(string::npos, written.find(src_body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: status 302 (Found), URL=http://gw.local/#auth");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    // Heap buffer must have been freed by http_server_resp_free
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerNetconnResp, test_resp_400_without_content) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
@@ -880,17 +1035,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_400_with_content) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "{\"error\":\"bad\"}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_400;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"error\":\"bad\"}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_400;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -921,17 +1076,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_401_403) // NOLINT
         sizeof(g_http_server_extra_header_fields.buf),
         "WWW-Authenticate: Basic\r\n");
 
-    static const char  body[]         = "{\"auth\":false}";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_401;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "{\"auth\":false}";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_401;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1039,17 +1194,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_299_treated_as_200) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "ok";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_299;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "ok";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_299;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1429,17 +1584,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_netconn_write_failure_during_con
 {
     this->m_p_conn->send_timeout = 0;
 
-    static const char  body[]         = "body data here";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "body data here";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     // First write (header) succeeds, second write (body) fails
     this->m_netconn_write_errors.push_back(ERR_OK);   // header
@@ -1513,17 +1668,17 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_header_write_failure) // NOLINT
     // Fail the alloc for header printf
     this->m_alloc_fail_on_call_idx = 1;
 
-    static const char  body[]         = "data";
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    resp.content_type                 = HTTP_CONTENT_TYPE_TEXT_PLAIN;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = strlen(body);
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+    static const char  body[]             = "data";
+    http_server_resp_t resp               = {};
+    resp.http_resp_code                   = HTTP_RESP_CODE_200;
+    resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+    resp.content_type                     = HTTP_CONTENT_TYPE_TEXT_PLAIN;
+    resp.p_content_type_param             = "";
+    resp.content_len                      = strlen(body);
+    resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache                    = false;
+    resp.flag_add_header_date             = true;
+    resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
     for (int i = 0; i < 10; i++)
     {
@@ -1554,16 +1709,16 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_heap_write_failure) // NOLINT
     assert(nullptr != p_heap_body);
     memcpy(p_heap_body, src_body, body_len + 1);
 
-    http_server_resp_t resp           = {};
-    resp.http_resp_code               = HTTP_RESP_CODE_200;
-    resp.content_location             = HTTP_CONTENT_LOCATION_HEAP;
-    resp.content_type                 = HTTP_CONTENT_TYPE_APPLICATION_JSON;
-    resp.p_content_type_param         = "";
-    resp.content_len                  = body_len;
-    resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-    resp.flag_no_cache                = false;
-    resp.flag_add_header_date         = true;
-    resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(p_heap_body);
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_200;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
 
     // Header write succeeds, body write fails
     this->m_netconn_write_errors.push_back(ERR_OK);   // header
@@ -1804,16 +1959,16 @@ TEST_F(TestHttpServerNetconnResp, test_content_type_css_js_png_svg) // NOLINT
         this->m_tick_values.clear();
         esp_log_wrapper_clear();
 
-        http_server_resp_t resp           = {};
-        resp.http_resp_code               = HTTP_RESP_CODE_200;
-        resp.content_location             = HTTP_CONTENT_LOCATION_STATIC_MEM;
-        resp.content_type                 = tc.type;
-        resp.p_content_type_param         = "";
-        resp.content_len                  = strlen(body);
-        resp.content_encoding             = HTTP_CONTENT_ENCODING_NONE;
-        resp.flag_no_cache                = false;
-        resp.flag_add_header_date         = true;
-        resp.select_location.memory.p_buf = reinterpret_cast<const uint8_t*>(body);
+        http_server_resp_t resp               = {};
+        resp.http_resp_code                   = HTTP_RESP_CODE_200;
+        resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
+        resp.content_type                     = tc.type;
+        resp.p_content_type_param             = "";
+        resp.content_len                      = strlen(body);
+        resp.content_encoding                 = HTTP_CONTENT_ENCODING_NONE;
+        resp.flag_no_cache                    = false;
+        resp.flag_add_header_date             = true;
+        resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(body);
 
         for (int i = 0; i < 10; i++)
         {

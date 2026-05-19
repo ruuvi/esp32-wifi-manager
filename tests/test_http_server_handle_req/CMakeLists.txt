@@ -11,6 +11,8 @@ add_executable(${ProjectId}
         ${RUUVI_ESP_WRAPPERS}/include/os_malloc.h
         ${RUUVI_ESP_WRAPPERS}/src/str_buf.c
         ${RUUVI_ESP_WRAPPERS}/include/str_buf.h
+        ${RUUVI_JSON_STREAM_GEN_SRC}/json_stream_gen.c
+        ${RUUVI_JSON_STREAM_GEN_INC}/json_stream_gen.h
         $ENV{IDF_PATH}/components/json/cJSON/cJSON.c
 )
 

@@ -73,7 +73,9 @@ TEST_F(TestJsonAccessPoints, test_generate_1) // NOLINT
         p_ap->country.max_tx_power = 15;
         p_ap->country.policy       = WIFI_COUNTRY_POLICY_AUTO;
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ(
         string("["
                "{\"ssid\":\"my_ssid123\",\"chan\":9,\"rssi\":-99,\"auth\":4}\n"
@@ -139,7 +141,9 @@ TEST_F(TestJsonAccessPoints, test_generate_2) // NOLINT
         p_ap->country.max_tx_power = 15;
         p_ap->country.policy       = WIFI_COUNTRY_POLICY_AUTO;
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ(
         string("["
                "{\"ssid\":\"my_ssid123\",\"chan\":9,\"rssi\":-99,\"auth\":4},\n"
@@ -182,7 +186,9 @@ TEST_F(TestJsonAccessPoints, test_generate_max_access_point_len_1) // NOLINT
         p_ap->country.max_tx_power = 15;
         p_ap->country.policy       = WIFI_COUNTRY_POLICY_AUTO;
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ(75 + 3, json_str.length());
     ASSERT_EQ(
         string("["
@@ -227,7 +233,9 @@ TEST_F(TestJsonAccessPoints, test_generate_max_access_point_len_1_escaped) // NO
         p_ap->country.max_tx_power = 15;
         p_ap->country.policy       = WIFI_COUNTRY_POLICY_AUTO;
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ(75 + 32 + 3, json_str.length());
     ASSERT_EQ(
         string("["
@@ -277,7 +285,9 @@ TEST_F(TestJsonAccessPoints, test_generate_max_access_point_len_2) // NOLINT
     {
         access_points[i] = access_points[0];
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ((75 + 32) * num_access_points + 1 * (num_access_points - 1) + 3, json_str.length());
     ASSERT_EQ(
         string("["
@@ -339,7 +349,9 @@ TEST_F(TestJsonAccessPoints, test_generate_max_num_access_points) // NOLINT
             "my_ssid_%02d",
             i + 1);
     }
-    const string json_str(json_access_points_generate(access_points, num_access_points));
+    str_buf_t    str_buf = json_access_points_generate(access_points, num_access_points);
+    const string json_str(str_buf.buf);
+    str_buf_free_buf(&str_buf);
     ASSERT_EQ(
         string("["
                "{\"ssid\":\"my_ssid_01\",\"chan\":19,\"rssi\":-100,\"auth\":4},\n"

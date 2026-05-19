@@ -32,51 +32,32 @@ extern http_header_extra_fields_t g_http_server_extra_header_fields;
 const char*
 conv_lwip_err_to_str(const err_enum_t err);
 
+#if defined(RUUVI_TESTS_HTTP_SERVER_NETCONN_RESP) && RUUVI_TESTS_HTTP_SERVER_NETCONN_RESP
 bool
 http_server_netconn_write(
     struct netconn* const p_conn,
     const void* const     p_buf,
     const size_t          buf_len,
     const uint8_t         netconn_flags);
+#endif
 
 void
 http_server_netconn_resp_302(struct netconn* const p_conn);
 
 void
-http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp);
+http_server_netconn_resp_400(struct netconn* const p_conn);
 
 void
-http_server_netconn_resp_401(
-    struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
-    const http_header_extra_fields_t* const p_extra_header_fields);
+http_server_netconn_resp_500(struct netconn* const p_conn);
 
 void
-http_server_netconn_resp_403(
-    struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
-    const http_header_extra_fields_t* const p_extra_header_fields);
+http_server_netconn_resp_502(struct netconn* const p_conn);
 
 void
-http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* const p_resp);
+http_server_netconn_resp_503(struct netconn* const p_conn);
 
 void
-http_server_netconn_resp_409(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
-http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
-http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
-http_server_netconn_resp_502(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
-http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp);
-
-void
-http_server_netconn_resp_504(struct netconn* const p_conn, http_server_resp_t* const p_resp);
+http_server_netconn_resp_504(struct netconn* const p_conn);
 
 void
 http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const p_resp, const char* const p_hostname);

@@ -760,7 +760,7 @@ wifi_manager_set_callback(const message_code_e message_code, wifi_manager_cb_ptr
     }
 }
 
-const char*
+str_buf_t
 wifi_manager_generate_access_points_json(void)
 {
     return json_access_points_generate(g_wifi_ap_records, g_wifi_ap_num);

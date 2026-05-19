@@ -31,22 +31,25 @@ typedef struct http_server_resp_auth_json_t
 } http_server_resp_auth_json_t;
 
 http_server_resp_t
-http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, const char* const p_json_content);
+http_server_resp_json_in_heap(const http_resp_code_e http_resp_code, char* const p_json_content);
 
 http_server_resp_t
 http_server_resp_err(const http_resp_code_e http_resp_code);
 
 http_server_resp_t
-http_server_resp_200_json(const char* p_json_content);
+http_server_resp_200_json(const char* const p_json_content);
 
 http_server_resp_t
-http_server_resp_200_json_in_heap(const char* const p_json_content);
+http_server_resp_200_json_in_heap(char* const p_json_content);
 
 http_server_resp_t
 http_server_resp_json_generator(const http_resp_code_e http_resp_code, json_stream_gen_t* const p_json_gen);
 
 http_server_resp_t
 http_server_resp_200_json_generator(json_stream_gen_t* const p_json_gen);
+
+http_server_resp_t
+http_server_resp_text_in_heap(const http_resp_code_e http_resp_code, char* const p_content);
 
 http_server_resp_t
 http_server_resp_302(void);
@@ -56,6 +59,12 @@ http_server_resp_400(void);
 
 http_server_resp_t
 http_server_resp_401_json(const http_server_resp_auth_json_t* const p_auth_json);
+
+http_server_resp_t
+http_server_resp_403_json(const http_server_resp_auth_json_t* const p_auth_json);
+
+http_server_resp_t
+http_server_resp_403(void);
 
 http_server_resp_t
 http_server_resp_404(void);
@@ -70,7 +79,7 @@ http_server_resp_t
 http_server_resp_502(void);
 
 http_server_resp_t
-http_server_resp_502_json_in_heap(const char* const p_json);
+http_server_resp_502_json_in_heap(char* const p_json);
 
 http_server_resp_t
 http_server_resp_503(void);
@@ -81,29 +90,29 @@ http_server_resp_504(void);
 http_server_resp_t
 http_server_resp_data_in_flash(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    const uint8_t* const          p_buf,
     const bool                    flag_no_cache);
 
 http_server_resp_t
 http_server_resp_data_in_static_mem(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    const uint8_t* const          p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date);
 
 http_server_resp_t
 http_server_resp_200_data_in_heap(
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
-    const uint8_t*                p_buf,
+    uint8_t* const                p_buf,
     const bool                    flag_no_cache,
     const bool                    flag_add_header_date);
 
@@ -111,7 +120,7 @@ http_server_resp_t
 http_server_resp_data_from_file(
     http_resp_code_e              http_resp_code,
     const http_content_type_e     content_type,
-    const char*                   p_content_type_param,
+    const char* const             p_content_type_param,
     const size_t                  content_len,
     const http_content_encoding_e content_encoding,
     const socket_t                fd,
@@ -156,6 +165,9 @@ http_server_fill_auth_json(
 
 const http_server_resp_auth_json_t*
 http_server_fill_auth_json_bearer(const wifiman_hostinfo_t* const p_hostinfo);
+
+void
+http_server_resp_free(http_server_resp_t* const p_resp);
 
 #ifdef __cplusplus
 }
