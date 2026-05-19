@@ -418,7 +418,7 @@ http_server_write_content(struct netconn* const p_conn, const http_server_resp_t
 static void
 http_server_netconn_resp_with_content(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields,
     const http_resp_code_e                  resp_code,
     const char* const                       p_status_msg)
