@@ -113,7 +113,6 @@ http_server_netconn_serve_handle_req(
     if (HTTP_CONTENT_TYPE_APPLICATION_JSON == resp.content_type)
     {
         const char* p_content_buf = NULL;
-        ;
         switch (resp.content_location)
         {
             case HTTP_CONTENT_LOCATION_FLASH_MEM:
@@ -126,18 +125,22 @@ http_server_netconn_serve_handle_req(
                 p_content_buf = (const char*)resp.select_location.heap.p_buf;
                 break;
             default:
+                LOG_ERR("Unexpected content location: %u", resp.content_location);
                 break;
         }
         if (NULL != p_content_buf)
         {
-            const size_t content_len = strlen(p_content_buf);
-            if (content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP)
+            if (resp.content_len <= HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FOR_JSON_RESP)
             {
-                LOG_INFO("Json resp: code=%u, content:\n%s", resp.http_resp_code, p_content_buf);
+                LOG_INFO(
+                    "Json resp: code=%u, content:\n%.*s",
+                    resp.http_resp_code,
+                    (printf_int_t)resp.content_len,
+                    p_content_buf);
             }
             else
             {
-                LOG_INFO("Json resp: code=%u, content_len=%lu", resp.http_resp_code, (printf_ulong_t)content_len);
+                LOG_INFO("Json resp: code=%u, content_len=%zu", resp.http_resp_code, resp.content_len);
             }
         }
     }

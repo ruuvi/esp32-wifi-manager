@@ -525,11 +525,12 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_static_mem_short_cont
     sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
-    static const char json_content[]                         = "{\"status\":\"ok\"}";
+    static char json_content[]                               = "{\"status\":\"ok\"}";
     this->m_handle_req_resp.http_resp_code                   = HTTP_RESP_CODE_200;
     this->m_handle_req_resp.content_type                     = HTTP_CONTENT_TYPE_APPLICATION_JSON;
     this->m_handle_req_resp.content_location                 = HTTP_CONTENT_LOCATION_STATIC_MEM;
-    this->m_handle_req_resp.select_location.static_mem.p_buf = (const uint8_t*)json_content;
+    this->m_handle_req_resp.select_location.static_mem.p_buf = reinterpret_cast<const uint8_t*>(json_content);
+    this->m_handle_req_resp.content_len                      = strlen(json_content);
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 
@@ -555,8 +556,8 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
 
     // Create a string longer than 256 chars
-    const size_t long_json_size = 300;
-    char*        p_long_json    = static_cast<char*>(os_malloc(long_json_size));
+    constexpr size_t long_json_size = 300;
+    char*            p_long_json    = static_cast<char*>(os_malloc(long_json_size));
     assert(nullptr != p_long_json);
     memset(p_long_json, 'x', long_json_size - 1);
     p_long_json[0]                  = '{';
@@ -566,7 +567,8 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     this->m_handle_req_resp.http_resp_code             = HTTP_RESP_CODE_200;
     this->m_handle_req_resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
     this->m_handle_req_resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
-    this->m_handle_req_resp.select_location.heap.p_buf = (uint8_t*)p_long_json;
+    this->m_handle_req_resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_long_json);
+    this->m_handle_req_resp.content_len                = strlen(p_long_json);
 
     http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
 

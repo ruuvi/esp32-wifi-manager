@@ -563,10 +563,7 @@ http_server_handle_req_get_with_ecdh_key(
         if (!http_server_handle_ruuvi_ecdh_pub_key(p_ruuvi_ecdh_pub_key, len_ruuvi_ecdh_pub_key, &pub_key_b64_srv))
         {
             LOG_ERR("http_server_handle_ruuvi_ecdh_pub_key failed");
-            if (HTTP_CONTENT_LOCATION_HEAP == resp.content_location)
-            {
-                http_server_resp_free(&resp);
-            }
+            http_server_resp_free(&resp);
             return http_server_resp_500();
         }
         const size_t offset = strlen(p_extra_header_fields->buf);
