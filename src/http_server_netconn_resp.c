@@ -477,7 +477,6 @@ http_server_netconn_resp_with_content(
     }
 
     http_server_write_content(p_conn, p_resp);
-    http_server_resp_free(p_resp);
 }
 
 static void
@@ -664,9 +663,13 @@ http_server_netconn_resp_504(struct netconn* const p_conn, http_server_resp_t* c
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_504, "Gateway timeout");
 }
 
-void
-http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const p_resp, const char* const p_hostname)
+static void
+http_server_netconn_resp_without_free_resp(
+    struct netconn* const     p_conn,
+    http_server_resp_t* const p_resp,
+    const char* const         p_hostname)
 {
+    // Check that all enum values are handled at compile time
     switch (p_resp->http_resp_code)
     {
         case HTTP_RESP_CODE_206: // Server supports only HTTP/1.0, so fall back to HTTP status 200 for partial content
@@ -716,6 +719,14 @@ http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const
             return;
     }
     LOG_ERR("Unsupported HTTP response code: %u", (printf_uint_t)p_resp->http_resp_code);
+    // Return HTTP status 503 in release build mode
     assert(0);
     http_server_netconn_resp_503(p_conn, p_resp);
+}
+
+void
+http_server_netconn_resp(struct netconn* const p_conn, http_server_resp_t* const p_resp, const char* const p_hostname)
+{
+    http_server_netconn_resp_without_free_resp(p_conn, p_resp, p_hostname);
+    http_server_resp_free(p_resp);
 }

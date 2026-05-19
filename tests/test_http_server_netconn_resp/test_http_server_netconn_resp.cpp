@@ -905,6 +905,100 @@ TEST_F(TestHttpServerNetconnResp, test_resp_302_auth_redirect) // NOLINT
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 }
 
+TEST_F(TestHttpServerNetconnResp, test_resp_301_with_heap_content_frees_buffer) // NOLINT
+{
+    // Verify that a 301 redirect with heap-allocated content properly frees the buffer
+    this->m_p_conn->send_timeout = 0;
+
+    const char   src_body[]  = "{\"redirect\":true}";
+    const size_t body_len    = strlen(src_body);
+    char*        p_heap_body = static_cast<char*>(os_malloc(body_len + 1));
+    assert(nullptr != p_heap_body);
+    memcpy(p_heap_body, src_body, body_len + 1);
+
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_301;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
+
+    snprintf(g_http_server_extra_header_fields.buf, sizeof(g_http_server_extra_header_fields.buf), "X-Auth: token\r\n");
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "gw.local");
+
+    // 301 sends redirect, body content is NOT sent
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 301 Moved Permanently\r\n"));
+    ASSERT_NE(string::npos, written.find("Location: http://gw.local/#auth\r\n"));
+    // Body should NOT appear in the response (redirect ignores it)
+    ASSERT_EQ(string::npos, written.find(src_body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: status 301 (Moved Permanently), URL=http://gw.local/#auth");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    // Heap buffer must have been freed by http_server_resp_free
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnResp, test_resp_302_with_heap_content_frees_buffer) // NOLINT
+{
+    // Verify that a 302 redirect with heap-allocated content properly frees the buffer
+    this->m_p_conn->send_timeout = 0;
+
+    const char   src_body[]  = "{\"found\":true}";
+    const size_t body_len    = strlen(src_body);
+    char*        p_heap_body = static_cast<char*>(os_malloc(body_len + 1));
+    assert(nullptr != p_heap_body);
+    memcpy(p_heap_body, src_body, body_len + 1);
+
+    http_server_resp_t resp         = {};
+    resp.http_resp_code             = HTTP_RESP_CODE_302;
+    resp.content_location           = HTTP_CONTENT_LOCATION_HEAP;
+    resp.content_type               = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param       = "";
+    resp.content_len                = body_len;
+    resp.content_encoding           = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache              = false;
+    resp.flag_add_header_date       = true;
+    resp.select_location.heap.p_buf = reinterpret_cast<uint8_t*>(p_heap_body);
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "gw.local");
+
+    // 302 sends redirect, body content is NOT sent
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 302 Found\r\n"));
+    ASSERT_NE(string::npos, written.find("Location: http://gw.local/#auth\r\n"));
+    // Body should NOT appear in the response (redirect ignores it)
+    ASSERT_EQ(string::npos, written.find(src_body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: status 302 (Found), URL=http://gw.local/#auth");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    // Heap buffer must have been freed by http_server_resp_free
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerNetconnResp, test_resp_400_without_content) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
