@@ -19,6 +19,7 @@
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "wifi_manager_defs.h"
+#include "http_server_netconn_resp.h"
 
 using namespace std;
 
@@ -331,7 +332,7 @@ http_server_netconn_resp_302(struct netconn* const p_conn)
 }
 
 void
-http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_400(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {
@@ -340,7 +341,7 @@ http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 void
-http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_500(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {
@@ -349,7 +350,7 @@ http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* c
 }
 
 void
-http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_503(struct netconn* const p_conn)
 {
     if (nullptr != g_pTestClass)
     {

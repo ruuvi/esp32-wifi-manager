@@ -604,7 +604,7 @@ http_server_netconn_resp_with_code(
 }
 
 static void
-http_server_netconn_resp_400_with_param(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_400_with_param(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_400, "Bad Request");
 }
