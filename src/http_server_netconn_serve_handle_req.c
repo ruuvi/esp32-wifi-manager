@@ -130,7 +130,7 @@ http_server_netconn_serve_handle_req(
             p_local_ip_str->buf,
             (printf_int_t)HTTP_SERVER_MAX_REQ_BUF_LEN_TO_LOG,
             p_req_buf);
-        http_server_netconn_resp_400(p_conn, NULL);
+        http_server_netconn_resp_400(p_conn);
         return;
     }
 
@@ -148,7 +148,7 @@ http_server_netconn_serve_handle_req(
     if (NULL == hostname.buf)
     {
         LOG_ERR("Failed to allocate memory for hostname string");
-        http_server_netconn_resp_500(p_conn, NULL);
+        http_server_netconn_resp_500(p_conn);
         return;
     }
 
@@ -159,7 +159,7 @@ http_server_netconn_serve_handle_req(
         if (wifi_manager_is_req_from_lan_blocked_while_ap_is_active())
         {
             LOG_WARN("Request from LAN while WiFi hotspot is active - return HTTP error 503");
-            http_server_netconn_resp_503(p_conn, NULL);
+            http_server_netconn_resp_503(p_conn);
             str_buf_free_buf(&hostname);
             return;
         }

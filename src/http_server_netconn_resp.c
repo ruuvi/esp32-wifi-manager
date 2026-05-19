@@ -26,6 +26,12 @@
 
 static const char TAG[] = "http_server";
 
+#if defined(RUUVI_TESTS_HTTP_SERVER_NETCONN_RESP) && RUUVI_TESTS_HTTP_SERVER_NETCONN_RESP
+#define STATIC_RELEASE
+#else
+#define STATIC_RELEASE static
+#endif
+
 #define HTTP_SERVER_TX_CHUNK_SIZE (1536U)
 
 #define HTTP_SERVER_MAX_CONTENT_LEN_TO_PRINT_LOG_FROM_JSON_GENERATOR (4U * 1024U)
@@ -77,7 +83,7 @@ conv_lwip_err_to_str(const err_enum_t err)
     return "Unknown error";
 }
 
-bool
+STATIC_RELEASE bool
 http_server_netconn_write(
     struct netconn* const p_conn,
     const void* const     p_buf,
@@ -509,7 +515,7 @@ http_server_netconn_resp_without_content(
 static void
 http_server_netconn_resp_200(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_200, "OK");
@@ -582,10 +588,10 @@ http_server_netconn_resp_302_auth_html(
 
 static void
 http_server_netconn_resp_with_code(
-    struct netconn* const     p_conn,
-    http_server_resp_t* const p_resp,
-    const http_resp_code_e    resp_code,
-    const char* const         p_status_msg)
+    struct netconn* const           p_conn,
+    const http_server_resp_t* const p_resp,
+    const http_resp_code_e          resp_code,
+    const char* const               p_status_msg)
 {
     if ((NULL == p_resp) || (0 == p_resp->content_len))
     {
@@ -597,70 +603,100 @@ http_server_netconn_resp_with_code(
     }
 }
 
-void
-http_server_netconn_resp_400(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+static void
+http_server_netconn_resp_400_with_param(struct netconn* const p_conn, http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_400, "Bad Request");
 }
 
 void
+http_server_netconn_resp_400(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_400_with_param(p_conn, NULL);
+}
+
+static void
 http_server_netconn_resp_401(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_401, "Unauthorized");
 }
 
-void
+static void
 http_server_netconn_resp_403(
     struct netconn* const                   p_conn,
-    http_server_resp_t* const               p_resp,
+    const http_server_resp_t* const         p_resp,
     const http_header_extra_fields_t* const p_extra_header_fields)
 {
     http_server_netconn_resp_with_content(p_conn, p_resp, p_extra_header_fields, HTTP_RESP_CODE_403, "Forbidden");
 }
 
-void
-http_server_netconn_resp_404(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+static void
+http_server_netconn_resp_404(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_404, "Not Found");
 }
 
-void
-http_server_netconn_resp_409(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+static void
+http_server_netconn_resp_409(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_409, "Conflict");
 }
 
-void
-http_server_netconn_resp_429(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+static void
+http_server_netconn_resp_429(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_429, "Too Many Requests");
 }
 
-void
-http_server_netconn_resp_500(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+static void
+http_server_netconn_resp_500_with_param(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_500, "Internal Server Error");
 }
 
 void
-http_server_netconn_resp_502(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_500(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_500_with_param(p_conn, NULL);
+}
+
+static void
+http_server_netconn_resp_502_with_param(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_502, "Bad Gateway");
 }
 
 void
-http_server_netconn_resp_503(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_502(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_502_with_param(p_conn, NULL);
+}
+
+static void
+http_server_netconn_resp_503_with_param(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_503, "Service Unavailable");
 }
 
 void
-http_server_netconn_resp_504(struct netconn* const p_conn, http_server_resp_t* const p_resp)
+http_server_netconn_resp_503(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_503_with_param(p_conn, NULL);
+}
+
+static void
+http_server_netconn_resp_504_with_param(struct netconn* const p_conn, const http_server_resp_t* const p_resp)
 {
     http_server_netconn_resp_with_code(p_conn, p_resp, HTTP_RESP_CODE_504, "Gateway timeout");
+}
+
+void
+http_server_netconn_resp_504(struct netconn* const p_conn)
+{
+    http_server_netconn_resp_504_with_param(p_conn, NULL);
 }
 
 static void
@@ -688,7 +724,7 @@ http_server_netconn_resp_without_free_resp(
             http_server_netconn_resp_302_auth_html(p_conn, p_hostname, &g_http_server_extra_header_fields);
             return;
         case HTTP_RESP_CODE_400:
-            http_server_netconn_resp_400(p_conn, p_resp);
+            http_server_netconn_resp_400_with_param(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_401:
             http_server_netconn_resp_401(p_conn, p_resp, &g_http_server_extra_header_fields);
@@ -706,22 +742,22 @@ http_server_netconn_resp_without_free_resp(
             http_server_netconn_resp_429(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_500:
-            http_server_netconn_resp_500(p_conn, p_resp);
+            http_server_netconn_resp_500_with_param(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_502:
-            http_server_netconn_resp_502(p_conn, p_resp);
+            http_server_netconn_resp_502_with_param(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_503:
-            http_server_netconn_resp_503(p_conn, p_resp);
+            http_server_netconn_resp_503_with_param(p_conn, p_resp);
             return;
         case HTTP_RESP_CODE_504:
-            http_server_netconn_resp_504(p_conn, p_resp);
+            http_server_netconn_resp_504_with_param(p_conn, p_resp);
             return;
     }
     LOG_ERR("Unsupported HTTP response code: %u", (printf_uint_t)p_resp->http_resp_code);
     // Return HTTP status 503 in release build mode
     assert(0);
-    http_server_netconn_resp_503(p_conn, p_resp);
+    http_server_netconn_resp_503_with_param(p_conn, p_resp);
 }
 
 void
