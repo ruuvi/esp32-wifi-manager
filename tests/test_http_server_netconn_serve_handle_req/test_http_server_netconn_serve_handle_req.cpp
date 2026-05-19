@@ -586,6 +586,36 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
+TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_flash_mem_short_content) // NOLINT
+{
+    // JSON response from flash memory, content_len <= 256 → log with content
+    char            req_buf[]     = "GET /api HTTP/1.1\r\nHost: 192.168.1.114\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    static const char json_content[]                    = "{\"version\":\"1.0\"}";
+    this->m_handle_req_resp.http_resp_code              = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type                = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    this->m_handle_req_resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    this->m_handle_req_resp.select_location.flash.p_buf = reinterpret_cast<const uint8_t*>(json_content);
+    this->m_handle_req_resp.content_len                 = strlen(json_content);
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    // INFO log for the request
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
+    // INFO log for JSON response with content (flash mem)
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, string("Json resp: code=200, content:\n") + json_content);
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerNetconnServeHandleReq, test_non_json_resp_no_json_log) // NOLINT
 {
     // Non-JSON response → no JSON log line

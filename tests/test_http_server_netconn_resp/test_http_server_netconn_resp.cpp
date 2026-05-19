@@ -587,6 +587,45 @@ TEST_F(TestHttpServerNetconnResp, test_resp_200_static_mem) // NOLINT
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
+TEST_F(TestHttpServerNetconnResp, test_resp_200_flash_mem) // NOLINT
+{
+    this->m_p_conn->send_timeout = 0;
+
+    static const char  body[]        = "{\"firmware\":\"v1.0\"}";
+    http_server_resp_t resp          = {};
+    resp.http_resp_code              = HTTP_RESP_CODE_200;
+    resp.content_location            = HTTP_CONTENT_LOCATION_FLASH_MEM;
+    resp.content_type                = HTTP_CONTENT_TYPE_APPLICATION_JSON;
+    resp.p_content_type_param        = "";
+    resp.content_len                 = strlen(body);
+    resp.content_encoding            = HTTP_CONTENT_ENCODING_NONE;
+    resp.flag_no_cache               = false;
+    resp.flag_add_header_date        = true;
+    resp.select_location.flash.p_buf = reinterpret_cast<const uint8_t*>(body);
+
+    for (int i = 0; i < 10; i++)
+    {
+        this->m_tick_values.push_back(0);
+    }
+
+    http_server_netconn_resp(this->m_p_conn, &resp, "myhost.local");
+
+    const string written = this->get_all_written_data();
+    ASSERT_NE(string::npos, written.find("HTTP/1.0 200 OK\r\n"));
+    ASSERT_NE(string::npos, written.find("Content-type: application/json; charset=utf-8\r\n"));
+    ASSERT_NE(string::npos, written.find("Content-Length: 19\r\n"));
+    ASSERT_NE(string::npos, written.find("Date:"));
+    ASSERT_NE(string::npos, written.find(body));
+
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Response: OK");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerNetconnResp, test_resp_200_heap) // NOLINT
 {
     this->m_p_conn->send_timeout = 0;
