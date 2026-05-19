@@ -131,7 +131,11 @@ void
 wifi_manager_connect_async_by_wps(void);
 
 /**
- * @brief scan WiFi APs and return json
+ * @brief Scan WiFi APs and return the result as JSON.
+ *
+ * The returned `str_buf_t` owns its buffer. The caller is responsible for
+ * releasing it when no longer needed, unless ownership is transferred to an
+ * HTTP response/helper that frees the buffer on the caller's behalf.
  */
 str_buf_t
 wifi_manager_scan_sync(void);
