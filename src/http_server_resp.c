@@ -628,23 +628,27 @@ http_server_resp_free(http_server_resp_t* const p_resp)
     }
 }
 
-const char*
-http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp)
+const uint8_t*
+http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp, size_t* const p_len)
 {
-    const char* p_json = NULL;
+    const uint8_t* p_buf = NULL;
+    *p_len               = 0;
     switch (p_resp->content_location)
     {
         case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            p_json = (const char*)p_resp->select_location.flash.p_buf;
+            p_buf  = (const uint8_t*)p_resp->select_location.flash.p_buf;
+            *p_len = p_resp->content_len;
             break;
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            p_json = (const char*)p_resp->select_location.static_mem.p_buf;
+            p_buf  = (const uint8_t*)p_resp->select_location.static_mem.p_buf;
+            *p_len = p_resp->content_len;
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
-            p_json = (const char*)p_resp->select_location.heap.p_buf;
+            p_buf  = (const uint8_t*)p_resp->select_location.heap.p_buf;
+            *p_len = p_resp->content_len;
             break;
         default:
             break;
     }
-    return p_json;
+    return p_buf;
 }
