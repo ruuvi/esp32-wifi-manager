@@ -8,6 +8,7 @@
 #include "http_server_resp.h"
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <esp_system.h>
 #include "http_server_auth.h"
 #include "json_stream_gen.h"
@@ -631,6 +632,8 @@ http_server_resp_free(http_server_resp_t* const p_resp)
 const uint8_t*
 http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp, size_t* const p_len)
 {
+    assert(NULL != p_resp);
+    assert(NULL != p_len);
     const uint8_t* p_buf = NULL;
     *p_len               = 0;
     switch (p_resp->content_location)
