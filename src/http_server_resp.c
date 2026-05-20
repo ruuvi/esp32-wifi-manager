@@ -8,6 +8,7 @@
 #include "http_server_resp.h"
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <esp_system.h>
 #include "http_server_auth.h"
 #include "json_stream_gen.h"
@@ -626,4 +627,31 @@ http_server_resp_free(http_server_resp_t* const p_resp)
             json_stream_gen_delete(&p_resp->select_location.json_generator.p_json_gen);
             break;
     }
+}
+
+const uint8_t*
+http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp, size_t* const p_len)
+{
+    assert(NULL != p_resp);
+    assert(NULL != p_len);
+    const uint8_t* p_buf = NULL;
+    *p_len               = 0;
+    switch (p_resp->content_location)
+    {
+        case HTTP_CONTENT_LOCATION_FLASH_MEM:
+            p_buf  = p_resp->select_location.flash.p_buf;
+            *p_len = p_resp->content_len;
+            break;
+        case HTTP_CONTENT_LOCATION_STATIC_MEM:
+            p_buf  = p_resp->select_location.static_mem.p_buf;
+            *p_len = p_resp->content_len;
+            break;
+        case HTTP_CONTENT_LOCATION_HEAP:
+            p_buf  = (const uint8_t*)p_resp->select_location.heap.p_buf;
+            *p_len = p_resp->content_len;
+            break;
+        default:
+            break;
+    }
+    return p_buf;
 }

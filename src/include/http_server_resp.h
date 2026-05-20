@@ -169,6 +169,17 @@ http_server_fill_auth_json_bearer(const wifiman_hostinfo_t* const p_hostinfo);
 void
 http_server_resp_free(http_server_resp_t* const p_resp);
 
+/**
+ * @brief Get a pointer to response content when that content is stored in memory.
+ *
+ * @param[IN] p_resp Pointer to the response object. Must not be NULL.
+ * @param[OUT] p_len Pointer to a variable to store the length of the content. Must not be NULL.
+ *
+ * @return A pointer to the response content if it is stored in memory, NULL otherwise.
+ */
+const uint8_t*
+http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp, size_t* const p_len);
+
 #ifdef __cplusplus
 }
 #endif

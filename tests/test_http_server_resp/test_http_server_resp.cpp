@@ -786,6 +786,125 @@ TEST_F(TestHttpServerResp, resp_data_from_file_octet_stream) // NOLINT
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
+TEST_F(TestHttpServerResp, get_content_ptr_if_in_memory_returns_ptr_for_flash_static_heap) // NOLINT
+{
+    const char* p_flash_content  = "flash_data";
+    const char* p_static_content = "static_data";
+    const char* p_heap_content   = "heap_data";
+
+    http_server_resp_t resp_flash = http_server_resp_data_in_flash(
+        HTTP_CONTENT_TYPE_TEXT_PLAIN,
+        nullptr,
+        strlen(p_flash_content),
+        HTTP_CONTENT_ENCODING_NONE,
+        reinterpret_cast<const uint8_t*>(p_flash_content),
+        true);
+    size_t len = 0;
+    ASSERT_EQ(
+        reinterpret_cast<const uint8_t*>(p_flash_content),
+        http_server_resp_get_content_ptr_if_in_memory(&resp_flash, &len));
+    ASSERT_EQ(strlen(p_flash_content), len);
+    http_server_resp_free(&resp_flash);
+
+    http_server_resp_t resp_static = http_server_resp_data_in_static_mem(
+        HTTP_CONTENT_TYPE_TEXT_PLAIN,
+        nullptr,
+        strlen(p_static_content),
+        HTTP_CONTENT_ENCODING_NONE,
+        reinterpret_cast<const uint8_t*>(p_static_content),
+        true,
+        false);
+    ASSERT_EQ(
+        reinterpret_cast<const uint8_t*>(p_static_content),
+        http_server_resp_get_content_ptr_if_in_memory(&resp_static, &len));
+    ASSERT_EQ(strlen(p_static_content), len);
+    http_server_resp_free(&resp_static);
+
+    char*              p_heap_buf = heap_strdup(p_heap_content);
+    http_server_resp_t resp_heap  = http_server_resp_200_data_in_heap(
+        HTTP_CONTENT_TYPE_TEXT_PLAIN,
+        nullptr,
+        strlen(p_heap_content),
+        HTTP_CONTENT_ENCODING_NONE,
+        reinterpret_cast<uint8_t*>(p_heap_buf),
+        true,
+        false);
+    ASSERT_EQ(
+        reinterpret_cast<const uint8_t*>(p_heap_buf),
+        http_server_resp_get_content_ptr_if_in_memory(&resp_heap, &len));
+    ASSERT_EQ(strlen(p_heap_buf), len);
+    http_server_resp_free(&resp_heap);
+
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, get_content_ptr_if_in_memory_returns_null_for_non_memory_locations) // NOLINT
+{
+    http_server_resp_t resp_no_content = http_server_resp_404();
+    size_t             len             = 0;
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp_no_content, &len));
+    ASSERT_EQ(0, len);
+    http_server_resp_free(&resp_no_content);
+
+    const socket_t     sock      = 11;
+    http_server_resp_t resp_file = http_server_resp_data_from_file(
+        HTTP_RESP_CODE_200,
+        HTTP_CONTENT_TYPE_TEXT_CSS,
+        nullptr,
+        3,
+        HTTP_CONTENT_ENCODING_NONE,
+        sock,
+        true);
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp_file, &len));
+    ASSERT_EQ(0, len);
+    http_server_resp_free(&resp_file);
+    ASSERT_EQ(1, this->m_close_call_count);
+    ASSERT_EQ(sock, this->m_close_last_fd);
+
+    void*                 p_ctx         = nullptr;
+    json_stream_gen_cfg_t cfg           = {};
+    cfg.max_chunk_size                  = JSON_STREAM_GEN_CFG_DEFAULT_MAX_CHUNK_SIZE;
+    cfg.flag_formatted_json             = false;
+    cfg.indentation_mark                = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION_MARK;
+    cfg.indentation                     = JSON_STREAM_GEN_CFG_DEFAULT_INDENTATION;
+    cfg.max_nesting_level               = JSON_STREAM_GEN_CFG_DEFAULT_MAX_NESTING_LEVEL;
+    cfg.p_malloc                        = &malloc;
+    cfg.p_free                          = &free;
+    cfg.p_localeconv                    = &localeconv;
+    json_stream_gen_t* const p_json_gen = json_stream_gen_create(&cfg, test_resp_json_generator_cb, 0, &p_ctx);
+    ASSERT_NE(nullptr, p_json_gen);
+
+    http_server_resp_t resp_gen = http_server_resp_200_json_generator(p_json_gen);
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp_gen, &len));
+    ASSERT_EQ(0, len);
+    http_server_resp_free(&resp_gen);
+
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, get_content_ptr_if_in_memory_returns_null_for_explicit_non_memory_enums) // NOLINT
+{
+    http_server_resp_t resp            = {};
+    const char*        p_flash_content = "flash_data";
+    resp.select_location.flash.p_buf   = reinterpret_cast<const uint8_t*>(p_flash_content);
+    resp.content_len                   = strlen(p_flash_content);
+
+    resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+    size_t len            = 0;
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp, &len));
+    ASSERT_EQ(0, len);
+
+    resp.content_location = HTTP_CONTENT_LOCATION_FATFS;
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp, &len));
+    ASSERT_EQ(0, len);
+
+    resp.content_location = HTTP_CONTENT_LOCATION_JSON_GENERATOR;
+    ASSERT_EQ(nullptr, http_server_resp_get_content_ptr_if_in_memory(&resp, &len));
+    ASSERT_EQ(0, len);
+
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
 TEST_F(TestHttpServerResp, test_http_server_resp_200_auth_allow_with_new_session_id) // NOLINT
 {
     const bool                 flag_no_cache       = true;
