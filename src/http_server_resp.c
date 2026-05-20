@@ -639,11 +639,11 @@ http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_
     switch (p_resp->content_location)
     {
         case HTTP_CONTENT_LOCATION_FLASH_MEM:
-            p_buf  = (const uint8_t*)p_resp->select_location.flash.p_buf;
+            p_buf  = p_resp->select_location.flash.p_buf;
             *p_len = p_resp->content_len;
             break;
         case HTTP_CONTENT_LOCATION_STATIC_MEM:
-            p_buf  = (const uint8_t*)p_resp->select_location.static_mem.p_buf;
+            p_buf  = p_resp->select_location.static_mem.p_buf;
             *p_len = p_resp->content_len;
             break;
         case HTTP_CONTENT_LOCATION_HEAP:
