@@ -88,6 +88,6 @@ Three workflows run on push/PR to `master`:
 Key CI details for reproducing locally:
 - CI uses `ubuntu-22.04`, `gcc/g++`, `cmake`, `ninja-build`.
 - ESP-IDF is cloned to `~/esp/esp-idf` in CI (vs `~/esp-idf-v4.2.5` locally).
-- SonarCloud coverage uses `gcovr -r .. --sonarqube` (not `lcov`).
+- SonarCloud coverage uses `gcovr -r . --sonarqube` (not `lcov`) from the repository root.
 - The `de_DE.UTF-8` locale is required by certain tests — install locally with `sudo locale-gen de_DE.UTF-8` if missing.
 
