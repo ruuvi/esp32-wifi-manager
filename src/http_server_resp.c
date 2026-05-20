@@ -627,3 +627,24 @@ http_server_resp_free(http_server_resp_t* const p_resp)
             break;
     }
 }
+
+const char*
+http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp)
+{
+    const char* p_json = NULL;
+    switch (p_resp->content_location)
+    {
+        case HTTP_CONTENT_LOCATION_FLASH_MEM:
+            p_json = (const char*)p_resp->select_location.flash.p_buf;
+            break;
+        case HTTP_CONTENT_LOCATION_STATIC_MEM:
+            p_json = (const char*)p_resp->select_location.static_mem.p_buf;
+            break;
+        case HTTP_CONTENT_LOCATION_HEAP:
+            p_json = (const char*)p_resp->select_location.heap.p_buf;
+            break;
+        default:
+            break;
+    }
+    return p_json;
+}

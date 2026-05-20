@@ -169,6 +169,9 @@ http_server_fill_auth_json_bearer(const wifiman_hostinfo_t* const p_hostinfo);
 void
 http_server_resp_free(http_server_resp_t* const p_resp);
 
+const char*
+http_server_resp_get_content_ptr_if_in_memory(const http_server_resp_t* const p_resp);
+
 #ifdef __cplusplus
 }
 #endif
