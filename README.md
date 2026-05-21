@@ -15,7 +15,8 @@ For real time constrained applications, *esp32-wifi-manager* can live entirely o
 
 *esp32-wifi-manager* will automatically attempt to re-connect to a previously saved network on boot, and it will start its own wifi access point through which you can manage wifi networks if a saved network cannot be found and/or if the connection is lost.
 
-*esp32-wifi-manager* is an esp-idf project that compiles successfully with the esp-idf 3.2 release. You can simply copy the project and start adding your own code to it.
+*esp32-wifi-manager* is an esp-idf project that compiles successfully with the esp-idf v4.2.5 
+release. You can simply copy the project and start adding your own code to it.
 
 # License
 *esp32-wifi-manager* is MIT licensed. As such, it can be included in any project, commercial or not, as long as you retain original copyright. Please make sure to read the license file.
@@ -78,9 +79,13 @@ source ~/esp-idf-env.sh
 ### Prerequisites (Ubuntu 22.04)
 
 ```shell
+sudo apt-get update
 sudo apt-get install -y gcc g++ cmake make ninja-build mtools
 sudo apt-get install -y git wget libncurses-dev flex bison gperf ccache libffi-dev libssl-dev
-sudo apt-get install -y locales python3.8 python3.8-venv python3.8-dev
+sudo apt-get install -y locales software-properties-common
+sudo add-apt-repository -y ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install -y python3.8 python3.8-venv python3.8-dev
 sudo locale-gen de_DE.UTF-8   # Required by some unit tests
 ```
 
