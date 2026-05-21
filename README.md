@@ -15,23 +15,23 @@ For real time constrained applications, *esp32-wifi-manager* can live entirely o
 
 *esp32-wifi-manager* will automatically attempt to re-connect to a previously saved network on boot, and it will start its own wifi access point through which you can manage wifi networks if a saved network cannot be found and/or if the connection is lost.
 
-*esp32-wifi-manager* is an esp-idf project that compiles successfully with the esp-idf v4.2.5 
+*esp32-wifi-manager* is an esp-idf project that compiles successfully with the esp-idf v4.2.5
 release. You can simply copy the project and start adding your own code to it.
 
 # License
 *esp32-wifi-manager* is MIT licensed. As such, it can be included in any project, commercial or not, as long as you retain original copyright. Please make sure to read the license file.
 
-## Build Environment Setup
+# Build Environment Setup
 
 This component is built as part of the [Ruuvi Gateway firmware](https://github.com/ruuvi/ruuvi.gateway_esp.c) using **ESP-IDF v4.2.5**.
 
-### Python 3.8 requirement
+## Python 3.8 requirement
 
 ESP-IDF v4.2.5 **requires Python 3.8**. The build will fail with newer Python versions (3.9+).
 If your system default Python is newer, you need to ensure that `python` resolves to `python3.8`
 before sourcing ESP-IDF's `export.sh`. The environment setup script below handles this automatically.
 
-### Environment setup script (`esp-idf-env.sh`)
+## Environment setup script (`esp-idf-env.sh`)
 
 Before compiling or running unit tests, you must set up the ESP-IDF environment.
 The minimal approach is:
@@ -83,7 +83,7 @@ Usage:
 source ~/esp-idf-env.sh
 ```
 
-### Prerequisites (Ubuntu 22.04)
+## Prerequisites (Ubuntu 22.04)
 
 ```shell
 sudo apt-get update
@@ -96,7 +96,7 @@ sudo apt-get install -y python3.8 python3.8-venv python3.8-dev
 sudo locale-gen de_DE.UTF-8   # Required by some unit tests
 ```
 
-## Building and Running Unit Tests
+# Building and Running Unit Tests
 
 Host-side unit tests use **Google Test (C++)** and a **POSIX FreeRTOS simulator**. They live in
 `tests/` and form an independent CMake project.
@@ -114,7 +114,7 @@ ctest --test-dir tests/cmake-build-unit-tests --output-on-failure
 ctest --test-dir tests/cmake-build-unit-tests -R test_http_server_netconn_serve_handle_req --output-on-failure
 ```
 
-### Code coverage
+## Code coverage
 
 Coverage flags (`--coverage`, `-ftest-coverage`) are already set per-target in each test
 subdirectory's `CMakeLists.txt`. After running tests, generate a local coverage report:

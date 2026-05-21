@@ -32,10 +32,10 @@
 
 ## Build and test workflow
 - Unit tests are a CMake project rooted at `CMakeLists.txt` in this directory; they build in both `build/` (Makefiles) and `cmake-build-unit-tests/` (Ninja).
-- **Environment setup (required before compiling):** ESP-IDF v4.2.5 strictly requires Python 3.8. 
-  Set `IDF_PATH`, ensure `python` resolves to `python3.8`, and source ESP-IDF's `export.sh`. 
-  The recommended way is to use a convenience script — see 
-  [README.md § Build Environment Setup](../README.md#build-environment-setup) for the full script 
+- **Environment setup (required before compiling):** ESP-IDF v4.2.5 strictly requires Python 3.8.
+  Set `IDF_PATH`, ensure `python` resolves to `python3.8`, and source ESP-IDF's `export.sh`.
+  The recommended way is to use a convenience script — see
+  [README.md § Build Environment Setup](../README.md#build-environment-setup) for the full script
   and setup instructions.
 ```bash
 source ~/esp-idf-env.sh
