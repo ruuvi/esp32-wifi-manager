@@ -54,13 +54,20 @@ export IDF_PATH="$HOME/esp-idf-v4.2.5"
 # Keep the venv path fixed for this IDF version
 export IDF_PYTHON_ENV_PATH="$HOME/.espressif/python_env/idf4.2_py3.8_env"
 
+# Locate Python 3.8 and fail fast if not found
+PYTHON38="$(command -v python3.8 2>/dev/null)" || true
+if [ -z "$PYTHON38" ]; then
+    echo "ERROR: python3.8 not found in PATH. Install it first (see README)." >&2
+    return 1 2>/dev/null || exit 1
+fi
+
 # Make Python 3.8 appear first — create a shim so that "python" resolves to python3.8
 PY38_SHIM_DIR="$HOME/.local/esp-idf-py38-shim"
 mkdir -p "$PY38_SHIM_DIR"
-cat > "$PY38_SHIM_DIR/python" <<'EOF'
+cat > "$PY38_SHIM_DIR/python" <<PYEOF
 #!/usr/bin/env bash
-exec /usr/bin/python3.8 "$@"
-EOF
+exec "$PYTHON38" "\$@"
+PYEOF
 chmod +x "$PY38_SHIM_DIR/python"
 export PATH="$PY38_SHIM_DIR:$PATH"
 
@@ -69,7 +76,7 @@ export PATH="$PY38_SHIM_DIR:$PATH"
 ```
 
 **Note:** This script is not part of the repository because it depends on host-specific paths.
-Adjust `IDF_PATH` and the Python 3.8 binary path to match your system.
+Adjust `IDF_PATH` to match your ESP-IDF installation location.
 
 Usage:
 ```shell
