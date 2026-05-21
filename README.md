@@ -69,7 +69,10 @@ cat > "$PY38_SHIM_DIR/python" <<PYEOF
 exec "$PYTHON38" "\$@"
 PYEOF
 chmod +x "$PY38_SHIM_DIR/python"
-export PATH="$PY38_SHIM_DIR:$PATH"
+case ":$PATH:" in
+    *":$PY38_SHIM_DIR:"*) ;;
+    *) export PATH="$PY38_SHIM_DIR:$PATH" ;;
+esac
 
 # Load ESP-IDF environment (adds toolchain to PATH, sets up idf.py, etc.)
 . "$IDF_PATH/export.sh"
