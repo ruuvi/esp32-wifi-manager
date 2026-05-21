@@ -90,7 +90,7 @@ source ~/esp-idf-env.sh
 
 ```shell
 sudo apt-get update
-sudo apt-get install -y gcc g++ cmake make ninja-build mtools
+sudo apt-get install -y gcc g++ cmake make ninja-build mtools lcov
 sudo apt-get install -y git wget libncurses-dev flex bison gperf ccache libffi-dev libssl-dev
 sudo apt-get install -y locales software-properties-common
 sudo add-apt-repository -y ppa:deadsnakes/ppa
