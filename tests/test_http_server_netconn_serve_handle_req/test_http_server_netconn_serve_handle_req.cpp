@@ -63,6 +63,7 @@ protected:
         this->m_handle_req_called        = false;
         this->m_handle_req_flag_from_lan = false;
         this->m_extra_header_to_set      = "";
+        this->m_handle_req_http_header.clear();
 
         this->m_resp_called     = false;
         this->m_resp_hostname   = "";
@@ -105,6 +106,7 @@ public:
     bool               m_handle_req_called;
     bool               m_handle_req_flag_from_lan;
     string             m_extra_header_to_set;
+    string             m_handle_req_http_header;
 
     // Response tracking
     bool   m_resp_called;
@@ -293,6 +295,9 @@ http_server_handle_req(
     {
         g_pTestClass->m_handle_req_called        = true;
         g_pTestClass->m_handle_req_flag_from_lan = p_param->flag_access_from_lan;
+        g_pTestClass->m_handle_req_http_header   = (nullptr != p_param->p_req_info->http_header.ptr)
+                                                       ? p_param->p_req_info->http_header.ptr
+                                                       : "";
         if (!g_pTestClass->m_extra_header_to_set.empty())
         {
             snprintf(
@@ -798,6 +803,76 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_hostname_alloc_failure_returns_
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
     // ERROR log for allocation failure
     TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "Failed to allocate memory for hostname string");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== X-Request-Timestamp header passthrough =====
+//
+// NOTE: http_server_handle_req is mocked here, so these tests only verify
+// that the netconn-serve layer forwards the request (including the
+// X-Request-Timestamp header) intact to the request-handler. The actual
+// parsing of the timestamp is exercised in
+// test_http_server_handle_req/test_http_server_handle_req.cpp.
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_x_request_timestamp_header_passed_through_to_handler) // NOLINT
+{
+    char req_buf[]
+        = "GET /status HTTP/1.1\r\n"
+          "Host: 192.168.1.114\r\n"
+          "X-Request-Timestamp: 1700000000\r\n"
+          "\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    // The request handler must receive the X-Request-Timestamp header in the parsed http_header.
+    ASSERT_NE(string::npos, this->m_handle_req_http_header.find("X-Request-Timestamp: 1700000000"));
+    // INFO log for the request itself. The "X-Request-Timestamp: ..." line is emitted by the real
+    // http_server_handle_req_get and not by the mock used here.
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_INFO,
+        "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /status");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_x_request_timestamp_header_absent_does_not_break_flow) // NOLINT
+{
+    char req_buf[]
+        = "GET /status HTTP/1.1\r\n"
+          "Host: 192.168.1.114\r\n"
+          "\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_200;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(string::npos, this->m_handle_req_http_header.find("X-Request-Timestamp"));
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_INFO,
+        "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /status");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
     os_malloc_trace_dump();

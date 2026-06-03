@@ -10,6 +10,7 @@
 
 #include "wifi_manager_defs.h"
 #include "esp_type_wrapper.h"
+#include "http_server_auth_type.h"
 #include "sta_ip.h"
 
 #ifdef __cplusplus

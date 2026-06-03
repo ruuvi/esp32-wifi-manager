@@ -7,6 +7,7 @@
 
 #include "gtest/gtest.h"
 #include "http_server_handle_req.h"
+#include "http_server.h"
 #include <string>
 #include <vector>
 #include <cstring>
@@ -995,6 +996,136 @@ TEST_F(TestHttpServerHandleReq, unknown_method_returns_400) // NOLINT
     ASSERT_EQ(HTTP_RESP_CODE_400, resp.http_resp_code);
     ASSERT_FALSE(this->m_vTaskDelay_called);
     ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== GET: X-Request-Timestamp header parsing =====
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_parsed_from_header) // NOLINT
+{
+    const string             headers = "Host: 192.168.1.114\r\nX-Request-Timestamp: 1700000000\r\n";
+    const http_server_resp_t resp    = this->call_get("/unknown_file.html", headers);
+
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(1700000000), http_server_get_request_timestamp());
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "X-Request-Timestamp: 1700000000");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_header_with_extra_whitespace) // NOLINT
+{
+    // http_req_header_get_field skips leading spaces after the colon.
+    const string             headers = "X-Request-Timestamp:     1234567890\r\n";
+    const http_server_resp_t resp    = this->call_get("/unknown_file.html", headers);
+
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(1234567890), http_server_get_request_timestamp());
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "X-Request-Timestamp: 1234567890");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_absent_resets_global_to_zero) // NOLINT
+{
+    // 1) First GET seeds the global to a non-zero value.
+    (void)this->call_get("/unknown_file.html", "X-Request-Timestamp: 42\r\n");
+    ASSERT_EQ(static_cast<time_t>(42), http_server_get_request_timestamp());
+    esp_log_wrapper_clear();
+
+    // 2) Second GET without the header must reset the global back to 0.
+    const http_server_resp_t resp = this->call_get("/unknown_file.html", "Host: 192.168.1.114\r\n");
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(0), http_server_get_request_timestamp());
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_non_numeric_value_parses_as_zero) // NOLINT
+{
+    // strtoul of a non-digit string returns 0.
+    const string             headers = "X-Request-Timestamp: not-a-number\r\n";
+    const http_server_resp_t resp    = this->call_get("/unknown_file.html", headers);
+
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(0), http_server_get_request_timestamp());
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "X-Request-Timestamp: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_trailing_garbage_parses_digits_only) // NOLINT
+{
+    // strtoul consumes leading digits and stops at the first non-digit.
+    const string             headers = "X-Request-Timestamp: 12345abc\r\n";
+    const http_server_resp_t resp    = this->call_get("/unknown_file.html", headers);
+
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(12345), http_server_get_request_timestamp());
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "X-Request-Timestamp: 12345");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_zero_value_logged) // NOLINT
+{
+    // An explicit "0" value must still be recognised and logged.
+    const string             headers = "X-Request-Timestamp: 0\r\n";
+    const http_server_resp_t resp    = this->call_get("/unknown_file.html", headers);
+
+    ASSERT_EQ(HTTP_RESP_CODE_404, resp.http_resp_code);
+    ASSERT_EQ(static_cast<time_t>(0), http_server_get_request_timestamp());
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "X-Request-Timestamp: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerHandleReq, get_x_request_timestamp_not_parsed_for_post_or_delete) // NOLINT
+{
+    // 1) Seed the global timestamp via a GET.
+    (void)this->call_get("/unknown_file.html", "X-Request-Timestamp: 555\r\n");
+    ASSERT_EQ(static_cast<time_t>(555), http_server_get_request_timestamp());
+    esp_log_wrapper_clear();
+
+    // 2) A POST carrying the same header must NOT update the global
+    //    (parsing is intentionally limited to the GET path).
+    this->m_post_resp = make_resp(HTTP_RESP_CODE_200);
+    (void)this->call_post("/custom.json", "X-Request-Timestamp: 999\r\n", "{}");
+    ASSERT_EQ(static_cast<time_t>(555), http_server_get_request_timestamp());
+    esp_log_wrapper_clear();
+
+    // 3) A DELETE carrying the header must also leave the global untouched.
+    (void)this->call_delete("/connect.json", "X-Request-Timestamp: 777\r\n");
+    ASSERT_EQ(static_cast<time_t>(555), http_server_get_request_timestamp());
+    esp_log_wrapper_clear();
 
     os_malloc_trace_dump();
     ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");

@@ -7,7 +7,10 @@
 
 #include "http_server_handle_req.h"
 #include <assert.h>
+#include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "str_buf.h"
 #include "os_malloc.h"
 #include "cJSON.h"
@@ -34,6 +37,8 @@
 
 static const char TAG[] = "http_server";
 
+#define BASE_10 10
+
 typedef struct http_server_gen_resp_status_json_param_t
 {
     http_server_resp_t* const p_http_resp;
@@ -49,6 +54,13 @@ typedef struct wifi_ssid_password_t
 } wifi_ssid_password_t;
 
 static http_server_resp_status_json_t g_resp_status_json;
+static time_t                         g_http_server_request_timestamp;
+
+time_t
+http_server_get_request_timestamp(void)
+{
+    return g_http_server_request_timestamp;
+}
 
 static void
 http_server_gen_resp_status_json(const json_network_info_t* const p_info, void* const p_param)
@@ -76,6 +88,23 @@ http_server_handle_req_get(
 {
     const char* const       p_uri_params = p_param->p_req_info->http_uri_params.ptr;
     const http_req_header_t http_header  = p_param->p_req_info->http_header;
+
+    time_t timestamp = 0;
+    if (NULL != http_header.ptr)
+    {
+        uint32_t          len_timestamp = 0;
+        const char* const p_timestamp = http_req_header_get_field(http_header, "X-Request-Timestamp:", &len_timestamp);
+        if (NULL != p_timestamp)
+        {
+            // The header value is not NUL-terminated, but http_req_header_get_field
+            // guarantees it is followed by '\r' (end of header line), so strtol
+            // stops there. The endptr is not needed.
+            (void)len_timestamp;
+            timestamp = (time_t)strtol(p_timestamp, NULL, BASE_10);
+            LOG_INFO("X-Request-Timestamp: %" PRId64, (int64_t)timestamp);
+        }
+    }
+    g_http_server_request_timestamp = timestamp;
 
     LOG_DBG("http_server_handle_req_get /%s", p_file_name_unchecked);
 

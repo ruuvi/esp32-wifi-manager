@@ -36,7 +36,7 @@ function to process requests, decode URLs, serve files, etc. etc.
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "http_server_auth_type.h"
+#include <time.h>
 #include "attribs.h"
 #include "str_buf.h"
 #include "os_mutex.h"
@@ -92,6 +92,9 @@ http_server_decrypt_by_params(
     const char* const p_iv,
     const char* const p_hash,
     str_buf_t* const  p_str_buf);
+
+time_t
+http_server_get_request_timestamp(void);
 
 #ifdef __cplusplus
 }
