@@ -7,6 +7,8 @@
 
 #include "http_server_handle_req.h"
 #include <assert.h>
+#include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include "str_buf.h"
@@ -94,8 +96,8 @@ http_server_handle_req_get(
         const char* const p_timestamp = http_req_header_get_field(http_header, "X-Request-Timestamp:", &len_timestamp);
         if (NULL != p_timestamp)
         {
-            char* p_end = (char*)&p_timestamp[len_timestamp];
-            timestamp   = strtoul(p_timestamp, &p_end, BASE_10);
+            const char* p_end = &p_timestamp[len_timestamp];
+            timestamp         = strtoul(p_timestamp, (char**)&p_end, BASE_10);
             LOG_INFO("X-Request-Timestamp: %" PRIu32, timestamp);
         }
     }
