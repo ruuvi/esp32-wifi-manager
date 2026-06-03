@@ -104,7 +104,7 @@ http_server_handle_req_get(
             LOG_INFO("X-Request-Timestamp: %" PRId64, (int64_t)timestamp);
         }
     }
-    g_http_server_request_timestamp = (time_t)timestamp;
+    g_http_server_request_timestamp = timestamp;
 
     LOG_DBG("http_server_handle_req_get /%s", p_file_name_unchecked);
 
