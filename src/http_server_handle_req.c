@@ -96,8 +96,11 @@ http_server_handle_req_get(
         const char* const p_timestamp = http_req_header_get_field(http_header, "X-Request-Timestamp:", &len_timestamp);
         if (NULL != p_timestamp)
         {
-            const char* p_end = &p_timestamp[len_timestamp];
-            timestamp         = strtoul(p_timestamp, (char**)&p_end, BASE_10);
+            // The header value is not NUL-terminated, but http_req_header_get_field
+            // guarantees it is followed by '\r' (end of header line), so strtoul
+            // stops there. The endptr is not needed.
+            (void)len_timestamp;
+            timestamp = (uint32_t)strtoul(p_timestamp, NULL, BASE_10);
             LOG_INFO("X-Request-Timestamp: %" PRIu32, timestamp);
         }
     }
