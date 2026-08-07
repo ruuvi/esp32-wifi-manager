@@ -1,25 +1,20 @@
 name: Clang-Format
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    types: [opened, synchronize, reopened]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "clang-format"
   clang-format:
-    # The type of runner that the job will run on
     runs-on: ubuntu-22.04
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Check out code
-        uses: actions/checkout@v6    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
 
       - name: Install Clang-Format 14
         run: |
