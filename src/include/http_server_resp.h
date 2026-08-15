@@ -166,7 +166,7 @@ http_server_resp_403_forbidden(void);
  * authentication type, and LAN access status.
  *
  * @note The firmware version information should not be exposed to unauthenticated users.
- *       Therefore, the `flag_add_ver_info` parameter should be set to `false`.
+ *       Therefore, the `flag_expose_ver_info` parameter should be set to `false`.
  *
  * @param[in] p_hostinfo Pointer to the host information structure. Must not be NULL.
  * @param[in] lan_auth_type The LAN authentication type as an enumerated value of type http_server_auth_type_e.
