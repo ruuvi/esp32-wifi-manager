@@ -20,7 +20,8 @@ http_server_handle_req_get_auth_allow(const wifiman_hostinfo_t* const p_hostinfo
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_ALLOW,
         flag_access_from_lan,
-        NULL);
+        NULL,
+        true);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -35,7 +36,8 @@ http_server_resp_401_auth_basic(
         p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_BASIC,
         flag_access_from_lan,
-        NULL);
+        NULL,
+        false);
     (void)snprintf(
         p_extra_header_fields->buf,
         sizeof(p_extra_header_fields->buf),
@@ -115,7 +117,8 @@ http_server_handle_req_get_auth_basic(
         p_param->p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_BASIC,
         p_param->flag_access_from_lan,
-        NULL);
+        NULL,
+        true);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -175,7 +178,8 @@ http_server_handle_req_get_auth_digest(
         p_param->p_hostinfo,
         HTTP_SERVER_AUTH_TYPE_DIGEST,
         p_param->flag_access_from_lan,
-        NULL);
+        NULL,
+        true);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -239,7 +243,8 @@ http_server_handle_req_get_auth_ruuvi(
         p_param->p_hostinfo,
         auth_type,
         p_param->flag_access_from_lan,
-        NULL);
+        NULL,
+        true);
     return http_server_resp_200_json(p_auth_json->buf);
 }
 
@@ -273,7 +278,8 @@ http_server_handle_req_get_or_check_auth(
                                                      p_param->p_hostinfo,
                                                      HTTP_SERVER_AUTH_TYPE_BEARER,
                                                      p_param->flag_access_from_lan,
-                                                     NULL)
+                                                     NULL,
+                                                     true)
                                                      ->buf);
             case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
                 *p_flag_access_by_bearer_token = true;
@@ -281,7 +287,8 @@ http_server_handle_req_get_or_check_auth(
                     p_param->p_hostinfo,
                     HTTP_SERVER_AUTH_TYPE_BEARER,
                     p_param->flag_access_from_lan,
-                    NULL));
+                    NULL,
+                    false));
         }
     }
     switch (p_param->p_auth_info->auth_type)

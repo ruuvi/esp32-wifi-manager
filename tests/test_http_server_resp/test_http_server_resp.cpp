@@ -983,8 +983,7 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(
-        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
-        "\"lan_auth_ruuvi\", \"lan\": true}",
+        "{\"gateway_name\": \"hostname\", \"lan_auth_type\": \"lan_auth_ruuvi\", \"lan\": true}",
         string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
     http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -1013,10 +1012,10 @@ TEST_F(TestHttpServerResp, resp_401_auth_ruuvi_with_new_session_id_with_err_mess
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
-    ASSERT_NE(
-        string::npos,
-        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf))
-            .find("\"message\": \"wrong password\""));
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"lan_auth_type\": \"lan_auth_ruuvi\", \"lan\": true, "
+        "\"message\": \"wrong password\"}",
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
     ASSERT_NE(
         string::npos,
         string(extra_header_fields.buf).find("WWW-Authenticate: x-ruuvi-interactive realm=\"hostname\""));
@@ -1066,6 +1065,9 @@ TEST_F(TestHttpServerResp, resp_401_auth_digest) // NOLINT
     ASSERT_TRUE(resp.flag_no_cache);
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"hostname\", \"lan_auth_type\": \"lan_auth_digest\", \"lan\": true}",
+        string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
     ASSERT_NE(
         string::npos,
         string(extra_header_fields.buf).find("WWW-Authenticate: Digest realm=\"hostname\" qop=\"auth\" nonce=\""));
@@ -1106,8 +1108,7 @@ TEST_F(TestHttpServerResp, resp_403_auth_deny) // NOLINT
     ASSERT_TRUE(resp.flag_add_header_date);
     ASSERT_EQ(HTTP_CONTENT_TYPE_APPLICATION_JSON, resp.content_type);
     ASSERT_EQ(
-        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", \"lan_auth_type\": "
-        "\"lan_auth_deny\", \"lan\": true}",
+        "{\"gateway_name\": \"hostname\", \"lan_auth_type\": \"lan_auth_deny\", \"lan\": true}",
         string(reinterpret_cast<const char*>(resp.select_location.static_mem.p_buf)));
     http_server_resp_free(&resp);
     ASSERT_EQ(0, this->m_alloc_free_call_count);
@@ -1126,20 +1127,6 @@ TEST_F(TestHttpServerResp, resp_403_forbidden) // NOLINT
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
 
-TEST_F(TestHttpServerResp, fill_auth_json_bearer) // NOLINT
-{
-    const wifiman_hostinfo_t hostinfo = { .hostname     = { "hostname" },
-                                          .fw_ver       = { "v1.15.0" },
-                                          .nrf52_fw_ver = { "v1.0.0" } };
-
-    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json_bearer(&hostinfo);
-    ASSERT_NE(nullptr, p_auth_json);
-    ASSERT_EQ(
-        "{\"gateway_name\": \"hostname\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\"}",
-        string(p_auth_json->buf));
-    ASSERT_EQ(0, this->m_alloc_free_call_count);
-}
-
 TEST_F(TestHttpServerResp, fill_auth_json_without_err_message_lan_true) // NOLINT
 {
     const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
@@ -1150,7 +1137,8 @@ TEST_F(TestHttpServerResp, fill_auth_json_without_err_message_lan_true) // NOLIN
         &hostinfo,
         HTTP_SERVER_AUTH_TYPE_RUUVI,
         true,
-        NULL);
+        NULL,
+        true);
     ASSERT_NE(nullptr, p_auth_json);
     ASSERT_EQ(
         "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
@@ -1169,7 +1157,8 @@ TEST_F(TestHttpServerResp, fill_auth_json_without_err_message_lan_false) // NOLI
         &hostinfo,
         HTTP_SERVER_AUTH_TYPE_DENY,
         false,
-        NULL);
+        NULL,
+        true);
     ASSERT_NE(nullptr, p_auth_json);
     ASSERT_EQ(
         "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
@@ -1188,7 +1177,8 @@ TEST_F(TestHttpServerResp, fill_auth_json_with_err_message) // NOLINT
         &hostinfo,
         HTTP_SERVER_AUTH_TYPE_RUUVI,
         true,
-        "wrong password");
+        "wrong password",
+        true);
     ASSERT_NE(nullptr, p_auth_json);
     ASSERT_EQ(
         "{\"gateway_name\": \"mygw\", \"fw_ver\": \"v1.15.0\", \"nrf52_fw_ver\": \"v1.0.0\", "
@@ -1205,7 +1195,8 @@ TEST_F(TestHttpServerResp, fill_auth_json_auth_type_allow) // NOLINT
         &hostinfo,
         HTTP_SERVER_AUTH_TYPE_ALLOW,
         true,
-        NULL);
+        NULL,
+        true);
     ASSERT_NE(nullptr, p_auth_json);
     ASSERT_EQ(
         "{\"gateway_name\": \"gw1\", \"fw_ver\": \"v2.0.0\", \"nrf52_fw_ver\": \"v1.1.0\", "
@@ -1222,11 +1213,32 @@ TEST_F(TestHttpServerResp, fill_auth_json_auth_type_digest) // NOLINT
         &hostinfo,
         HTTP_SERVER_AUTH_TYPE_DIGEST,
         true,
-        NULL);
+        NULL,
+        true);
     ASSERT_NE(nullptr, p_auth_json);
     ASSERT_EQ(
         "{\"gateway_name\": \"gw1\", \"fw_ver\": \"v2.0.0\", \"nrf52_fw_ver\": \"v1.1.0\", "
         "\"lan_auth_type\": \"lan_auth_digest\", \"lan\": true}",
+        string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerResp, fill_auth_json_without_version_info) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        true,
+        "wrong password",
+        false);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ(
+        "{\"gateway_name\": \"mygw\", \"lan_auth_type\": \"lan_auth_ruuvi\", \"lan\": true, "
+        "\"message\": \"wrong password\"}",
         string(p_auth_json->buf));
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
