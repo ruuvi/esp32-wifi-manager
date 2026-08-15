@@ -1242,3 +1242,21 @@ TEST_F(TestHttpServerResp, fill_auth_json_without_version_info) // NOLINT
         string(p_auth_json->buf));
     ASSERT_EQ(0, this->m_alloc_free_call_count);
 }
+
+TEST_F(TestHttpServerResp, fill_auth_json_overflow_returns_valid_minimal_json) // NOLINT
+{
+    const wifiman_hostinfo_t hostinfo = { .hostname     = { "mygw" },
+                                          .fw_ver       = { "v1.15.0" },
+                                          .nrf52_fw_ver = { "v1.0.0" } };
+    const string             err_message(HTTP_SERVER_RESP_JSON_AUTH_BUF_SIZE, 'x');
+
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        &hostinfo,
+        HTTP_SERVER_AUTH_TYPE_RUUVI,
+        true,
+        err_message.c_str(),
+        true);
+    ASSERT_NE(nullptr, p_auth_json);
+    ASSERT_EQ("{}", string(p_auth_json->buf));
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}

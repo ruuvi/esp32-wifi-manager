@@ -405,28 +405,38 @@ http_server_fill_auth_json(
     const char* const               p_err_message,
     const bool                      flag_expose_ver_info)
 {
-    str_buf_t str_buf = STR_BUF_INIT(g_auth_json.buf, sizeof(g_auth_json.buf));
-    str_buf_printf(&str_buf, "{\"gateway_name\": \"%s\"", p_hostinfo->hostname.buf);
-    if (flag_expose_ver_info)
+    str_buf_t str_buf      = STR_BUF_INIT(g_auth_json.buf, sizeof(g_auth_json.buf));
+    bool      flag_success = str_buf_printf(&str_buf, "{\"gateway_name\": \"%s\"", p_hostinfo->hostname.buf);
+    if (flag_success && flag_expose_ver_info)
     {
-        str_buf_printf(
+        flag_success = str_buf_printf(
             &str_buf,
             ", \"fw_ver\": \"%s\""
             ", \"nrf52_fw_ver\": \"%s\"",
             p_hostinfo->fw_ver.buf,
             p_hostinfo->nrf52_fw_ver.buf);
     }
-    str_buf_printf(
-        &str_buf,
-        ", \"lan_auth_type\": \"%s\""
-        ", \"lan\": %s",
-        http_server_auth_type_to_str(lan_auth_type),
-        flag_access_from_lan ? "true" : "false");
-    if (NULL != p_err_message)
+    if (flag_success)
     {
-        str_buf_printf(&str_buf, ", \"message\": \"%s\"", p_err_message);
+        flag_success = str_buf_printf(
+            &str_buf,
+            ", \"lan_auth_type\": \"%s\""
+            ", \"lan\": %s",
+            http_server_auth_type_to_str(lan_auth_type),
+            flag_access_from_lan ? "true" : "false");
     }
-    str_buf_printf(&str_buf, "}");
+    if (flag_success && (NULL != p_err_message))
+    {
+        flag_success = str_buf_printf(&str_buf, ", \"message\": \"%s\"", p_err_message);
+    }
+    if (flag_success)
+    {
+        flag_success = str_buf_printf(&str_buf, "}");
+    }
+    if (!flag_success)
+    {
+        memcpy(g_auth_json.buf, "{}", sizeof("{}"));
+    }
     return &g_auth_json;
 }
 
