@@ -255,6 +255,18 @@ http_server_handle_req_get_auth_deny(const wifiman_hostinfo_t* const p_hostinfo)
 }
 
 static http_server_resp_t
+http_server_handle_req_auth_bearer(const http_server_handle_req_auth_param_t* const p_param, const bool flag_allowed)
+{
+    const http_server_resp_auth_json_t* const p_auth_json = http_server_fill_auth_json(
+        p_param->p_hostinfo,
+        HTTP_SERVER_AUTH_TYPE_BEARER,
+        p_param->flag_access_from_lan,
+        NULL,
+        flag_allowed);
+    return flag_allowed ? http_server_resp_200_json(p_auth_json->buf) : http_server_resp_401_json(p_auth_json);
+}
+
+static http_server_resp_t
 http_server_handle_req_get_or_check_auth(
     const http_server_handle_req_auth_param_t* const p_param,
     const bool                                       flag_check,
@@ -274,21 +286,10 @@ http_server_handle_req_get_or_check_auth(
                 break;
             case HTTP_SERVER_AUTH_API_KEY_ALLOWED:
                 *p_flag_access_by_bearer_token = true;
-                return http_server_resp_200_json(http_server_fill_auth_json(
-                                                     p_param->p_hostinfo,
-                                                     HTTP_SERVER_AUTH_TYPE_BEARER,
-                                                     p_param->flag_access_from_lan,
-                                                     NULL,
-                                                     true)
-                                                     ->buf);
+                return http_server_handle_req_auth_bearer(p_param, true);
             case HTTP_SERVER_AUTH_API_KEY_PROHIBITED:
                 *p_flag_access_by_bearer_token = true;
-                return http_server_resp_401_json(http_server_fill_auth_json(
-                    p_param->p_hostinfo,
-                    HTTP_SERVER_AUTH_TYPE_BEARER,
-                    p_param->flag_access_from_lan,
-                    NULL,
-                    false));
+                return http_server_handle_req_auth_bearer(p_param, false);
         }
     }
     switch (p_param->p_auth_info->auth_type)
