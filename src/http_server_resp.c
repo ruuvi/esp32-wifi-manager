@@ -13,6 +13,7 @@
 #include "http_server_auth.h"
 #include "json_stream_gen.h"
 #include "os_malloc.h"
+#include "str_buf.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
 #include "log.h"
 
