@@ -261,7 +261,8 @@ http_server_handle_req_post_auth(
             p_hostinfo,
             p_auth_info->auth_type,
             flag_access_from_lan,
-            NULL);
+            NULL,
+            true);
         return http_server_resp_200_json(p_auth_json->buf);
     }
     if ((HTTP_SERVER_AUTH_TYPE_RUUVI != p_auth_info->auth_type)
@@ -335,6 +336,7 @@ http_server_handle_req_post_auth(
         p_hostinfo,
         p_auth_info->auth_type,
         flag_access_from_lan,
-        NULL);
+        NULL,
+        true);
     return http_server_resp_200_json(p_auth_json->buf);
 }

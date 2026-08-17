@@ -157,15 +157,37 @@ http_server_resp_403_auth_deny(const wifiman_hostinfo_t* const p_hostinfo);
 http_server_resp_t
 http_server_resp_403_forbidden(void);
 
+/**
+ * @brief Generate an authentication JSON object for HTTP server responses.
+ *
+ * This function populates a JSON object containing authentication-related details
+ * for the HTTP server response based on the provided parameters. The JSON format
+ * can include various fields such as the gateway name, firmware versions, LAN
+ * authentication type, and LAN access status.
+ *
+ * @note The firmware version information should not be exposed to unauthenticated users.
+ *       Therefore, the `flag_expose_ver_info` parameter should be set to `false`.
+ *
+ * @param[in] p_hostinfo Pointer to the host information structure. Must not be NULL.
+ * @param[in] lan_auth_type The LAN authentication type as an enumerated value of type http_server_auth_type_e.
+ * @param[in] flag_access_from_lan Boolean flag indicating if access is from LAN.
+ * @param[in] p_err_message Optional error message string. Can be NULL if no error message is needed.
+ * @param[in] flag_expose_ver_info Boolean flag indicating whether to include version
+ *                                 information in the JSON output.
+ *                                 It should be set to false for unauthenticated users to avoid exposing
+ *                                 firmware version details.
+ *
+ * @return A pointer to the generated authentication JSON object.
+ *         The JSON object is stored in a statically allocated buffer, so the pointer
+ *         remains valid until the next call to this function.
+ */
 const http_server_resp_auth_json_t*
 http_server_fill_auth_json(
     const wifiman_hostinfo_t* const p_hostinfo,
     const http_server_auth_type_e   lan_auth_type,
     const bool                      flag_access_from_lan,
-    const char* const               p_err_message);
-
-const http_server_resp_auth_json_t*
-http_server_fill_auth_json_bearer(const wifiman_hostinfo_t* const p_hostinfo);
+    const char* const               p_err_message,
+    const bool                      flag_expose_ver_info);
 
 void
 http_server_resp_free(http_server_resp_t* const p_resp);
