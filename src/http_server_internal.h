@@ -21,6 +21,9 @@ extern "C" {
 void
 http_server_task_wdt_reset(void);
 
+uint32_t
+http_server_get_task_wdog_feed_period_ms(void);
+
 #ifdef __cplusplus
 }
 #endif

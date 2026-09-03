@@ -341,6 +341,12 @@ http_server_task_wdt_reset(void)
     }
 }
 
+uint32_t
+http_server_get_task_wdog_feed_period_ms(void)
+{
+    return 500U;
+}
+
 const char*
 wrap_esp_err_to_name_r(const esp_err_t code, char* const p_buf, const size_t buf_len)
 {

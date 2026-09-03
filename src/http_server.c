@@ -327,7 +327,7 @@ http_server_handle_sig_events(os_signal_events_t* const p_sig_events)
     return flag_stop;
 }
 
-static uint32_t
+uint32_t
 http_server_get_task_wdog_feed_period_ms(void)
 {
 #if defined(CONFIG_ESP_TASK_WDT)
