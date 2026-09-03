@@ -10,6 +10,7 @@
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "http_server_netconn_resp.h"
+#include "http_server_internal.h"
 #include "wifiman_config.h"
 #include "wifi_manager.h"
 #define LOG_LOCAL_LEVEL LOG_LEVEL_INFO
@@ -191,6 +192,10 @@ http_server_netconn_serve_handle_req(
     }
 
     http_server_netconn_log_json_resp(&resp);
+    if ((HTTP_RESP_CODE_401 == resp.http_resp_code) || (HTTP_RESP_CODE_403 == resp.http_resp_code))
+    {
+        vTaskDelay(pdMS_TO_TICKS(HTTP_SERVER_BRUTE_FORCE_PROTECTION_TIMEOUT_MS));
+    }
 
     http_server_netconn_resp(p_conn, &resp, hostname.buf);
     str_buf_free_buf(&hostname);
