@@ -7,6 +7,8 @@
 
 #include "http_server_netconn_serve_handle_req.h"
 #include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "http_server_auth.h"
 #include "http_server_handle_req.h"
 #include "http_server_netconn_resp.h"

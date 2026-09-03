@@ -8,6 +8,8 @@
 #ifndef RUUVI_ESP32_WIFI_MANAGER_HTTP_SERVER_INTERNAL_H
 #define RUUVI_ESP32_WIFI_MANAGER_HTTP_SERVER_INTERNAL_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
