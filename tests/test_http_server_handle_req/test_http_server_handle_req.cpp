@@ -696,8 +696,7 @@ TEST_F(TestHttpServerHandleReq, post_unencrypted_at_limit_routes_to_callback) //
     ASSERT_TRUE(this->m_post_called);
     ASSERT_EQ("custom.json", this->m_post_path);
     ASSERT_EQ(body.size(), this->m_post_body_len);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
-    ASSERT_EQ(pdMS_TO_TICKS(1000), this->m_vTaskDelay_ticks);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /custom.json, params=");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
@@ -783,7 +782,7 @@ TEST_F(TestHttpServerHandleReq, post_encrypted_decrypts_ok_routes_to_callback) /
     ASSERT_TRUE(this->m_post_called);
     ASSERT_EQ("custom.json", this->m_post_path);
     ASSERT_EQ(32U, this->m_post_body_len);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /custom.json, params=");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
@@ -802,7 +801,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_json_with_ssid_and_password_calls_c
     const http_server_resp_t resp = this->call_post("/connect.json", "", body);
 
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "http_server_netconn_serve: POST /connect.json");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json: SSID:mySSID, PWD: ******** - connect to WiFi");
@@ -821,7 +820,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_json_with_null_ssid_and_null_passwo
     const http_server_resp_t resp = this->call_post("/connect.json", "", body);
 
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "http_server_netconn_serve: POST /connect.json");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json: SSID:NULL, PWD: NULL - connect to Ethernet");
@@ -840,7 +839,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_json_with_null_ssid_only_returns_40
     const http_server_resp_t resp = this->call_post("/connect.json", "", body);
 
     ASSERT_EQ(HTTP_RESP_CODE_400, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "http_server_netconn_serve: POST /connect.json");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -858,7 +857,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_json_with_invalid_json_returns_400)
     const http_server_resp_t resp = this->call_post("/connect.json", "", body);
 
     ASSERT_EQ(HTTP_RESP_CODE_400, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "http_server_netconn_serve: POST /connect.json");
     TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "connect.json: Failed to parse decrypted content or no memory");
@@ -877,7 +876,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_json_from_lan_returns_403) // NOLIN
     const http_server_resp_t resp = this->call_post("/connect.json", "", body, true);
 
     ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect.json, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "POST /connect.json - access from LAN is not allowed");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -895,7 +894,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_wps_returns_200) // NOLINT
     const http_server_resp_t resp = this->call_post("/connect_wps", "", "");
 
     ASSERT_EQ(HTTP_RESP_CODE_200, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect_wps, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "http_server_netconn_serve: POST /connect_wps");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -911,7 +910,7 @@ TEST_F(TestHttpServerHandleReq, post_connect_wps_from_lan_returns_403) // NOLINT
     const http_server_resp_t resp = this->call_post("/connect_wps", "", "", true);
 
     ASSERT_EQ(HTTP_RESP_CODE_403, resp.http_resp_code);
-    ASSERT_TRUE(this->m_vTaskDelay_called);
+    ASSERT_FALSE(this->m_vTaskDelay_called);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "POST /connect_wps, params=");
     TEST_CHECK_LOG_RECORD(ESP_LOG_ERROR, "POST /connect_wps - access from LAN is not allowed");
     ASSERT_TRUE(esp_log_wrapper_is_empty());

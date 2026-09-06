@@ -72,6 +72,8 @@ protected:
         this->m_resp_500_called = false;
         this->m_resp_503_called = false;
 
+        this->m_vTaskDelay_called_cnt = 0;
+
         esp_log_wrapper_clear();
 
         this->m_alloc_free_call_count       = 0;
@@ -116,6 +118,8 @@ public:
     bool   m_resp_500_called;
     bool   m_resp_503_called;
 
+    int m_vTaskDelay_called_cnt;
+
     bool m_flag_alloc_counting_enabled;
     int  m_alloc_free_call_count;
     int  m_alloc_call_cnt;
@@ -140,6 +144,7 @@ TestHttpServerNetconnServeHandleReq::TestHttpServerNetconnServeHandleReq()
     , m_resp_400_called(false)
     , m_resp_500_called(false)
     , m_resp_503_called(false)
+    , m_vTaskDelay_called_cnt(0)
     , m_flag_alloc_counting_enabled(false)
     , m_alloc_free_call_count(0)
     , m_alloc_call_cnt(0)
@@ -280,6 +285,27 @@ wifi_manager_is_req_from_lan_blocked_while_ap_is_active(void)
     return false;
 }
 
+void
+http_server_task_wdt_reset(void)
+{
+}
+
+void
+vTaskDelay(const TickType_t xTicksToDelay)
+{
+    (void)xTicksToDelay;
+    if (nullptr != g_pTestClass)
+    {
+        g_pTestClass->m_vTaskDelay_called_cnt += 1;
+    }
+}
+
+uint32_t
+http_server_get_task_wdog_feed_period_ms(void)
+{
+    return 500U;
+}
+
 http_server_auth_info_t*
 http_server_get_auth(void)
 {
@@ -384,6 +410,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_parse_failure_returns_400) // N
 
     ASSERT_TRUE(this->m_resp_400_called);
     ASSERT_FALSE(this->m_handle_req_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     TEST_CHECK_LOG_RECORD(
         ESP_LOG_ERROR,
         "Request from 10.0.0.2 to 10.0.0.1: failed to parse request: malformed request");
@@ -410,6 +437,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_lan_access_blocked_returns_503)
 
     ASSERT_TRUE(this->m_resp_503_called);
     ASSERT_FALSE(this->m_handle_req_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 10.0.0.2 to 10.0.0.1 (Host: 10.0.0.1): GET /");
     // WARN log about blocked LAN
@@ -440,6 +468,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_lan_access_not_blocked_normal_h
     ASSERT_TRUE(this->m_handle_req_flag_from_lan);
     ASSERT_TRUE(this->m_resp_called);
     ASSERT_EQ("10.0.0.1", this->m_resp_hostname);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 10.0.0.2 to 10.0.0.1 (Host: 10.0.0.1): GET /status");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -463,6 +492,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_ap_access_captive_portal_redire
 
     ASSERT_TRUE(this->m_resp_302_called);
     ASSERT_FALSE(this->m_handle_req_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: some.host.com): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -484,6 +514,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_ap_access_no_host_header_redire
 
     ASSERT_TRUE(this->m_resp_302_called);
     ASSERT_FALSE(this->m_handle_req_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log: Host is empty since no Host header
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: ): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -512,6 +543,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_ap_access_host_matches_ap_ip_no
     ASSERT_TRUE(this->m_resp_called);
     ASSERT_EQ("192.168.1.114", this->m_resp_hostname);
     ASSERT_FALSE(this->m_resp_302_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -542,6 +574,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_static_mem_short_cont
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     // INFO log for JSON response with content
@@ -580,6 +613,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_heap_long_content) //
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     // INFO log for JSON response with length only (content_len = 299 > 256)
@@ -610,6 +644,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_flash_mem_short_conte
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     // INFO log for JSON response with content (flash mem)
@@ -638,6 +673,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_no_content) // NOLINT
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     TEST_CHECK_LOG_RECORD(ESP_LOG_WARN, "Json resp: code=200, content (len 0): NO_CONTENT");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -664,6 +700,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_json_resp_fatfs) // NOLINT
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /api");
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Json resp: code=200, content (len 1024): FATFS");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -689,6 +726,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_non_json_resp_no_json_log) // N
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // Only the request INFO log, no JSON log
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -716,6 +754,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_extra_header_fields_logged) // 
 
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
     // INFO log for extra header fields
@@ -745,6 +784,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_hostname_from_host_header) // N
 
     ASSERT_TRUE(this->m_resp_called);
     ASSERT_EQ("myhost.example.com", this->m_resp_hostname);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 10.0.0.2 to 10.0.0.1 (Host: myhost.example.com): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -770,6 +810,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_hostname_from_local_ip_when_no_
 
     ASSERT_TRUE(this->m_resp_called);
     ASSERT_EQ("10.0.0.1", this->m_resp_hostname);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log with empty Host
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 10.0.0.2 to 10.0.0.1 (Host: ): GET /");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
@@ -799,6 +840,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_hostname_alloc_failure_returns_
     ASSERT_FALSE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_500_called);
     ASSERT_FALSE(this->m_resp_called);
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for request
     TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /");
     // ERROR log for allocation failure
@@ -839,6 +881,7 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_x_request_timestamp_header_pass
     ASSERT_TRUE(this->m_resp_called);
     // The request handler must receive the X-Request-Timestamp header in the parsed http_header.
     ASSERT_NE(string::npos, this->m_handle_req_http_header.find("X-Request-Timestamp: 1700000000"));
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     // INFO log for the request itself. The "X-Request-Timestamp: ..." line is emitted by the real
     // http_server_handle_req_get and not by the mock used here.
     TEST_CHECK_LOG_RECORD(
@@ -870,9 +913,68 @@ TEST_F(TestHttpServerNetconnServeHandleReq, test_x_request_timestamp_header_abse
     ASSERT_TRUE(this->m_handle_req_called);
     ASSERT_TRUE(this->m_resp_called);
     ASSERT_EQ(string::npos, this->m_handle_req_http_header.find("X-Request-Timestamp"));
+    ASSERT_EQ(0, this->m_vTaskDelay_called_cnt);
     TEST_CHECK_LOG_RECORD(
         ESP_LOG_INFO,
         "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /status");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+// ===== Brute-force protection delay =====
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_resp_401_delayed_by_brute_force_protection) // NOLINT
+{
+    char            req_buf[]     = "GET /status HTTP/1.1\r\nHost: 192.168.1.114\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "192.168.1.114" };
+    sta_ip_string_t remote_ip_str = { .buf = "192.168.1.100" };
+
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_401;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_resp_called);
+    // The 1000 ms delay is split into 500 ms steps to feed the task watchdog between them
+    ASSERT_EQ(2, this->m_vTaskDelay_called_cnt);
+    // INFO log for the request
+    TEST_CHECK_LOG_RECORD(
+        ESP_LOG_INFO,
+        "Request from 192.168.1.100 to 192.168.1.114 (Host: 192.168.1.114): GET /status");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+
+    os_malloc_trace_dump();
+    ESP_LOG_WRAPPER_TEST_CHECK_LOG_RECORD("MEM_TRACE", ESP_LOG_INFO, "Num blocks allocated: 0");
+    ASSERT_TRUE(esp_log_wrapper_is_empty());
+    ASSERT_EQ(0, this->m_alloc_free_call_count);
+}
+
+TEST_F(TestHttpServerNetconnServeHandleReq, test_resp_403_delayed_by_brute_force_protection) // NOLINT
+{
+    char            req_buf[]     = "POST /connect.json HTTP/1.1\r\nHost: 10.0.0.1\r\n\r\n";
+    sta_ip_string_t local_ip_str  = { .buf = "10.0.0.1" };
+    sta_ip_string_t remote_ip_str = { .buf = "10.0.0.2" };
+
+    this->m_lan_blocked                      = false;
+    this->m_handle_req_resp.http_resp_code   = HTTP_RESP_CODE_403;
+    this->m_handle_req_resp.content_type     = HTTP_CONTENT_TYPE_TEXT_HTML;
+    this->m_handle_req_resp.content_location = HTTP_CONTENT_LOCATION_NO_CONTENT;
+
+    http_server_netconn_serve_handle_req(this->m_p_conn, req_buf, &local_ip_str, &remote_ip_str);
+
+    ASSERT_TRUE(this->m_handle_req_called);
+    ASSERT_TRUE(this->m_handle_req_flag_from_lan);
+    ASSERT_TRUE(this->m_resp_called);
+    // The 1000 ms delay is split into 500 ms steps to feed the task watchdog between them
+    ASSERT_EQ(2, this->m_vTaskDelay_called_cnt);
+    // INFO log for the request
+    TEST_CHECK_LOG_RECORD(ESP_LOG_INFO, "Request from 10.0.0.2 to 10.0.0.1 (Host: 10.0.0.1): POST /connect.json");
     ASSERT_TRUE(esp_log_wrapper_is_empty());
 
     os_malloc_trace_dump();
